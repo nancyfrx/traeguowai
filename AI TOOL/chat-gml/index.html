@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - 智普AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn sidebar" id="newChatBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    新对话
+                </button>
+            </div>
+            <div class="history-section">
+                <div class="history-header">
+                    <span>对话历史</span>
+                    <button class="clear-history-btn" id="clearHistoryBtn" title="清空历史">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="history-list" id="historyList">
+                </div>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="logo">AI Chat</h1>
+                    <div class="model-select-wrapper">
+                        <select class="model-select" id="modelSelect">
+                            <option value="glm-4" data-type="text">GLM-4</option>
+                            <option value="glm-4-flash" data-type="text">GLM-4 Flash</option>
+                            <option value="glm-4-plus" data-type="text">GLM-4 Plus</option>
+                            <option value="glm-4-air" data-type="text">GLM-4 Air</option>
+                            <option value="cogview-3-flash" data-type="image">CogView-3 Flash</option>
+                        </select>
+                        <span class="model-type-badge" id="modelTypeBadge">文本</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                </div>
+            </header>
+
+            <main class="chat-container" id="chatContainer">
+                <div class="welcome-message">
+                    <div class="welcome-icon">🤖</div>
+                    <h2>欢迎使用 AI Chat</h2>
+                    <p>基于智普AI大模型，为您提供智能对话服务</p>
+                </div>
+            </main>
+
+            <footer class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        class="message-input" 
+                        id="messageInput" 
+                        placeholder="输入消息，按 Enter 发送..."
+                        rows="1"
+                    ></textarea>
+                    <button class="send-button" id="sendButton">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-footer">
+                    <span class="hint">AI生成的内容可能不准确，请核实重要信息</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <div class="image-modal" id="imageModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <img class="modal-image" id="modalImage" src="" alt="预览图片">
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

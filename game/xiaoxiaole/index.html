@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宝石消消乐 - Gem Match</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui-layer">
+            <div id="hud">
+                <div class="hud-item">分数: <span id="score">0</span></div>
+                <div class="hud-item">连击: <span id="combo">0</span></div>
+                <div class="hud-item" id="timer-container">时间: <span id="timer">60</span>s</div>
+                <div class="hud-item" id="moves-container" style="display:none;">步数: <span id="moves">20</span></div>
+            </div>
+            <div id="controls">
+                <button id="pause-btn" class="small-btn">暂停</button>
+                <button id="level-btn" class="small-btn">关卡选择</button>
+                <button id="quit-btn" class="small-btn">结束游戏</button>
+                <button id="sound-toggle-btn" class="small-btn">音乐: 开</button>
+            </div>
+            <div id="target-container">
+                目标: <span id="target-desc">获得 1000 分</span>
+            </div>
+        </div>
+
+        <canvas id="game-canvas"></canvas>
+
+        <div id="start-screen" class="overlay">
+            <h1>宝石消消乐</h1>
+            <button id="start-game-btn">进入游戏</button>
+        </div>
+
+        <div id="overlay" class="hidden">
+            <div id="modal">
+                <h1 id="modal-title">游戏结束</h1>
+                <p id="modal-message">最终分数: 0</p>
+                <button id="restart-btn">重新开始</button>
+                <button id="level-select-btn">关卡选择</button>
+            </div>
+        </div>
+
+        <div id="level-select" class="hidden">
+            <h1>选择关卡</h1>
+            <div id="levels-grid"></div>
+            <button id="back-to-main">返回</button>
+        </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

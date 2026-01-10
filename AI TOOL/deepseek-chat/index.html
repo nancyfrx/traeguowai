@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" id="newChatBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    开启新对话
+                </button>
+            </div>
+            <div class="history-list" id="historyList">
+                <!-- 历史记录将在这里生成 -->
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">DS</div>
+                    <span class="user-name">DeepSeek User</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="model-info">
+                    <span class="model-name">DeepSeek-V3</span>
+                    <span class="model-status">在线</span>
+                </div>
+            </header>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="logo-large">
+                        <img src="https://chat.deepseek.com/favicon.svg" alt="DeepSeek" width="64">
+                    </div>
+                    <h1>我是 DeepSeek，很高兴见到你</h1>
+                    <p>我可以帮您写代码、解答问题、提供创意，快来试试吧。</p>
+                    <div class="suggestion-grid">
+                        <div class="suggestion-card" onclick="setPrompt('帮我写一个快速排序算法')">
+                            <h3>写代码</h3>
+                            <p>帮我写一个快速排序算法</p>
+                        </div>
+                        <div class="suggestion-card" onclick="setPrompt('如何学习 Python 编程？')">
+                            <h3>学知识</h3>
+                            <p>如何学习 Python 编程？</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 消息内容将在这里动态生成 -->
+            </div>
+
+            <footer class="input-area">
+                <div class="input-wrapper">
+                    <textarea id="messageInput" placeholder="给 DeepSeek 发送消息..." rows="1"></textarea>
+                    <button id="sendButton" class="send-btn" disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <p class="disclaimer">DeepSeek 可能会产生不准确的信息，请核实重要内容。</p>
+            </footer>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
