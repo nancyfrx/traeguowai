@@ -22,6 +22,8 @@ const Navbar = ({ isDark, setIsDark }) => {
   const { user } = useAuth();
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const isArticleDetail = location.pathname.startsWith('/article/');
+  const isTransparentHeroPage = isHomePage || isArticleDetail;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -32,19 +34,19 @@ const Navbar = ({ isDark, setIsDark }) => {
   return (    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
       isScrolled 
         ? 'bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-900 py-4' 
-        : isHomePage ? 'bg-transparent py-8' : 'bg-white dark:bg-black py-6'
+        : isTransparentHeroPage ? 'bg-transparent py-8' : 'bg-white dark:bg-black py-6'
     }`}>
       <div className="max-w-[1600px] mx-auto px-6 flex items-center justify-between">
         <Link to="/" className="text-2xl font-black tracking-tighter italic flex items-center gap-2">
-          <span className={!isScrolled && isHomePage ? 'text-white' : 'text-black dark:text-white'}>中文艺术博客.</span>
+          <span className={!isScrolled && isTransparentHeroPage ? 'text-white' : 'text-black dark:text-white'}>如雪艺术博客.</span>
         </Link>
 
         {/* 极简菜单 */}
         <div className={`hidden md:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] ${
-          !isScrolled && isHomePage ? 'text-white/70' : 'text-zinc-500'
+          !isScrolled && isTransparentHeroPage ? 'text-white/70' : 'text-zinc-500'
         }`}>
-          <Link to="/" className="hover:text-black dark:hover:text-white transition-colors">艺术市场</Link>
-          <Link to="/admin/article/new" className="hover:text-black dark:hover:text-white transition-colors text-rose-500 font-black">发布作品</Link>
+          <Link to="/" className="hover:text-black dark:hover:text-white transition-colors">首页</Link>
+          <Link to="/" className="hover:text-black dark:hover:text-white transition-colors text-rose-500 font-black">艺术市场</Link>
           <Link to="/" className="hover:text-black dark:hover:text-white transition-colors">特色专题</Link>
           <Link to="/" className="hover:text-black dark:hover:text-white transition-colors">关于我们</Link>
           {user && <Link to="/admin/dashboard" className="text-rose-500">管理后台</Link>}
@@ -59,13 +61,16 @@ const Navbar = ({ isDark, setIsDark }) => {
           >
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button className={`hidden md:block px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-            !isScrolled && isHomePage 
-              ? 'bg-white text-black hover:bg-zinc-200' 
-              : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-80'
-          }`}>
-            连接钱包
-          </button>
+          <Link 
+            to="/admin/article/new"
+            className={`hidden md:block px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+              !isScrolled && isHomePage 
+                ? 'bg-white text-black hover:bg-zinc-200' 
+                : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-80'
+            }`}
+          >
+            发布作品
+          </Link>
         </div>
       </div>
     </nav>
@@ -76,7 +81,7 @@ const Footer = () => (
   <footer className="border-t border-zinc-100 dark:border-zinc-900 py-32 px-6 bg-white dark:bg-black">
     <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-24">
       <div className="space-y-10">
-        <h3 className="text-3xl font-black uppercase tracking-tighter italic">中文艺术博客.</h3>
+        <h3 className="text-3xl font-black uppercase tracking-tighter italic">如雪艺术博客.</h3>
         <p className="text-sm text-zinc-500 leading-relaxed max-w-xs font-medium">
           全球领先的数字艺术画廊。在这里发现并收藏独一无二的数字艺术作品，探索创意的无限可能。
         </p>
@@ -90,7 +95,7 @@ const Footer = () => (
         </div>
       </div>
       <div>
-        <h4 className="font-black mb-10 text-[10px] uppercase tracking-[0.4em] text-zinc-300">艺术市场</h4>
+        <h4 className="font-black mb-10 text-[10px] uppercase tracking-[0.4em] text-zinc-300">首页</h4>
         <ul className="space-y-6 text-xs font-black uppercase tracking-[0.2em]">
           <li><a href="#" className="hover:text-zinc-400 transition-colors">所有作品</a></li>
           <li><a href="#" className="hover:text-zinc-400 transition-colors">系列专题</a></li>
@@ -116,7 +121,7 @@ const Footer = () => (
     </div>
     <div className="max-w-[1600px] mx-auto mt-32 pt-12 border-t border-zinc-100 dark:border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6">
       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
-        © 2024 中文艺术博客. ALL RIGHTS RESERVED.
+        © 2024 如雪艺术博客. 版权所有.
       </p>
       <div className="flex gap-8 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
         <a href="#" className="hover:text-black dark:hover:text-white transition-colors">隐私政策</a>

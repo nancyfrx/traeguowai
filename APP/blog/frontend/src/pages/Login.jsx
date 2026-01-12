@@ -22,7 +22,8 @@ const Login = () => {
       login(res.data);
       navigate('/admin/dashboard');
     } catch (err) {
-      setError('登录失败，请检查用户名或密码');
+      const message = err.response?.data?.message || err.response?.data || '登录失败，请检查用户名或密码';
+      setError(message);
     } finally {
       setLoading(false);
     }

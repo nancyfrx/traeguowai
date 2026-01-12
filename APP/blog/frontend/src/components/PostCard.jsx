@@ -66,8 +66,8 @@ const PostCard = ({ post }) => (
 
       <div className="pt-4 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-900">
         <div className="flex flex-col">
-          <span className="text-[8px] font-black text-zinc-300 uppercase tracking-[0.3em]">Current Value</span>
-          <span className="text-xs font-black uppercase tracking-widest">Priceless</span>
+          <span className="text-[8px] font-black text-zinc-300 uppercase tracking-[0.3em]">当前价值</span>
+          <span className="text-xs font-black uppercase tracking-widest">无价之宝</span>
         </div>
         <Link 
           to={`/article/${post.id}`}

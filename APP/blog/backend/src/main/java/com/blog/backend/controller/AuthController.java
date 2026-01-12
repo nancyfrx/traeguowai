@@ -33,13 +33,20 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        System.out.println("Login attempt for user: " + loginRequest.getUsername());
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(loginRequest.getUsername());
-        
-        return ResponseEntity.ok(new JwtResponse(jwt, loginRequest.getUsername()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(loginRequest.getUsername());
+            
+            System.out.println("Login successful for user: " + loginRequest.getUsername());
+            return ResponseEntity.ok(new JwtResponse(jwt, loginRequest.getUsername()));
+        } catch (Exception e) {
+            System.out.println("Login failed for user: " + loginRequest.getUsername() + " Error: " + e.getMessage());
+            return ResponseEntity.status(401).body("Error: " + e.getMessage());
+        }
     }
 
     @PostMapping("/signup")

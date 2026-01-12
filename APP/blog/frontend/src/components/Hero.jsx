@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const Hero = ({ featuredPost }) => {
+const Hero = ({ articles = [] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 使用图2风格的大图（美少女战士主题或高质量插画）
-  const slides = [
+  // 默认幻灯片数据
+  const defaultSlides = [
     {
       id: 1,
       image: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=2000&auto=format&fit=crop",
-      title: "月亮公主的环球旅行",
+      title: "幻影维度的艺术探索",
       subtitle: "探索艺术与梦幻的边界",
       author: "艺术收藏家"
     },
@@ -37,21 +38,35 @@ const Hero = ({ featuredPost }) => {
     }
   ];
 
+  // 如果有来自数据库的文章，则使用文章数据
+  const slides = articles.length > 0 
+    ? articles.map(art => ({
+        id: art.id,
+        image: art.coverImage || defaultSlides[0].image,
+        title: art.title,
+        subtitle: art.summary,
+        author: art.author?.nickname || "匿名艺术家"
+      })).slice(0, 4) // 只取前4篇
+    : defaultSlides;
+
   useEffect(() => {
+    if (slides.length === 0) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+
+  if (slides.length === 0) return null;
 
   return (
     <section className="relative w-full h-[90vh] min-h-[700px] overflow-hidden bg-black">
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentIndex}
+          key={`${slides[currentIndex].id}-${currentIndex}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -89,9 +104,12 @@ const Hero = ({ featuredPost }) => {
                 {slides[currentIndex].subtitle}
               </p>
               <div className="pt-8">
-                <button className="px-12 py-4 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105 active:scale-95 shadow-2xl">
+                <Link 
+                  to={slides[currentIndex].id ? `/article/${slides[currentIndex].id}` : "#"}
+                  className="inline-block px-12 py-4 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
+                >
                   查看详情
-                </button>
+                </Link>
               </div>
             </motion.div>
           </div>
