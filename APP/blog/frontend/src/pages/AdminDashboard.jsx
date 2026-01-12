@@ -1,27 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Edit3, Trash2, Eye, FileText, Settings, LogOut } from 'lucide-react';
+import { Plus, Edit3, Trash2, Eye, FileText, Settings, LogOut, Sparkles } from 'lucide-react';
 import { articleApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const AdminDashboard = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const { logout } = useAuth();
+  const [activeCategory, setActiveCategory] = useState('ALL');
+
+  const filteredArticles = activeCategory === 'ALL' 
+    ? articles 
+    : articles.filter(a => a.isFeatured && activeCategory === 'FEATURED');
 
   useEffect(() => {
     fetchArticles();
-  }, []);
+  }, [page]);
 
   const fetchArticles = async () => {
     try {
-      const res = await articleApi.getAll();
+      setLoading(true);
+      const res = await articleApi.getAll({
+        page,
+        size: 10,
+        sort: 'createdAt,desc',
+        publishedOnly: false,
+        featuredOnly: false
+      });
       setArticles(res.data.content);
+      setTotalPages(res.data.totalPages);
     } catch (error) {
       console.error('Failed to fetch articles:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleFeatured = async (article) => {
+    try {
+      await articleApi.update(article.id, {
+        ...article,
+        isFeatured: !article.isFeatured
+      });
+      fetchArticles();
+    } catch (error) {
+      console.error('Failed to toggle featured status:', error);
     }
   };
 
@@ -86,12 +113,12 @@ const AdminDashboard = () => {
                     <th className="px-8 py-6 font-semibold text-sm">标题</th>
                     <th className="px-8 py-6 font-semibold text-sm">分类</th>
                     <th className="px-8 py-6 font-semibold text-sm">状态</th>
-                    <th className="px-8 py-6 font-semibold text-sm">日期</th>
+                    <th className="px-8 py-6 font-semibold text-sm">精选</th>
                     <th className="px-8 py-6 font-semibold text-sm text-right">操作</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {articles.map((article) => (
+                  {filteredArticles.map((article) => (
                     <tr key={article.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors group">
                       <td className="px-8 py-6">
                         <div className="font-medium group-hover:text-rose-500 transition-colors line-clamp-1">{article.title}</div>
@@ -104,22 +131,37 @@ const AdminDashboard = () => {
                           {article.isDraft ? '草稿' : '已发布'}
                         </span>
                       </td>
-                      <td className="px-8 py-6 text-sm text-zinc-500">
-                        {new Date(article.createdAt).toLocaleDateString()}
+                      <td className="px-8 py-6">
+                        <button 
+                          onClick={() => toggleFeatured(article)}
+                          className={`p-2 rounded-lg transition-all ${article.isFeatured ? 'bg-amber-50 text-amber-500' : 'text-zinc-300 hover:text-zinc-500'}`}
+                          title={article.isFeatured ? '取消精选' : '设为精选'}
+                        >
+                          <Sparkles size={18} fill={article.isFeatured ? 'currentColor' : 'none'} />
+                        </button>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <div className="flex items-center justify-end gap-3">
-                          <Link to={`/article/${article.id}`} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-                            <Eye size={16} />
+                        <div className="flex items-center justify-end gap-2">
+                          <Link 
+                            to={`/article/${article.id}`}
+                            className="p-2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+                            title="预览"
+                          >
+                            <Eye size={18} />
                           </Link>
-                          <Link to={`/admin/article/edit/${article.id}`} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-                            <Edit3 size={16} />
+                          <Link 
+                            to={`/admin/article/edit/${article.id}`}
+                            className="p-2 text-zinc-400 hover:text-rose-500 transition-colors"
+                            title="编辑"
+                          >
+                            <Edit3 size={18} />
                           </Link>
                           <button 
                             onClick={() => handleDelete(article.id)}
-                            className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 rounded-lg transition-colors"
+                            className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
+                            title="删除"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </td>
@@ -133,6 +175,41 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
+
+            {/* Pagination UI */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                  disabled={page === 0}
+                  className="px-6 py-2 rounded-xl border border-zinc-100 dark:border-zinc-800 disabled:opacity-30 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors text-[10px] font-bold uppercase tracking-widest"
+                >
+                  上一页
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i)}
+                      className={`w-10 h-10 rounded-xl text-[10px] font-bold transition-all ${
+                        page === i 
+                          ? 'bg-black dark:bg-white text-white dark:text-black' 
+                          : 'hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-400'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setPage(prev => Math.min(totalPages - 1, prev + 1))}
+                  disabled={page === totalPages - 1}
+                  className="px-6 py-2 rounded-xl border border-zinc-100 dark:border-zinc-800 disabled:opacity-30 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors text-[10px] font-bold uppercase tracking-widest"
+                >
+                  下一页
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

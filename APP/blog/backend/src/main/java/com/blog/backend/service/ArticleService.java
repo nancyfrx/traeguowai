@@ -20,6 +20,14 @@ public class ArticleService {
         return articleRepository.findByIsDraftFalse(pageable);
     }
 
+    public Page<Article> getFeaturedArticles(Pageable pageable) {
+        return articleRepository.findByIsFeaturedTrueAndIsDraftFalse(pageable);
+    }
+
+    public Page<Article> getAllArticles(Pageable pageable) {
+        return articleRepository.findAll(pageable);
+    }
+
     public Optional<Article> getArticleById(Long id) {
         return articleRepository.findById(id);
     }
@@ -29,7 +37,21 @@ public class ArticleService {
         articleRepository.incrementViewCount(id);
     }
 
+    @Transactional
+    public void incrementLikeCount(Long id) {
+        articleRepository.incrementLikeCount(id);
+    }
+
+    @Transactional
+    public void decrementLikeCount(Long id) {
+        articleRepository.decrementLikeCount(id);
+    }
+
+    @Transactional
     public Article saveArticle(Article article) {
+        if (Boolean.TRUE.equals(article.getIsFeatured())) {
+            articleRepository.clearFeatured();
+        }
         return articleRepository.save(article);
     }
 

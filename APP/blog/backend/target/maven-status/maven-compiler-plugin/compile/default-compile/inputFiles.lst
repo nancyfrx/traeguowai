@@ -1,8 +1,10 @@
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/repository/TagRepository.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/repository/CategoryRepository.java
+/Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/config/WebConfig.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/security/AuthTokenFilter.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/controller/CommentController.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/controller/CategoryController.java
+/Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/service/SubscriptionService.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/config/WebSecurityConfig.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/repository/UserRepository.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/entity/Tag.java
@@ -10,6 +12,7 @@
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/entity/User.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/security/UserDetailsServiceImpl.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/service/CommentService.java
+/Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/entity/SubscriptionLog.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/dto/LoginRequest.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/controller/ArticleController.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/entity/Comment.java
@@ -17,9 +20,12 @@
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/dto/JwtResponse.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/repository/ArticleRepository.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/service/ArticleService.java
+/Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/controller/SubscriptionController.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/controller/AuthController.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/entity/Category.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/security/JwtUtils.java
+/Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/controller/FileUploadController.java
+/Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/repository/SubscriptionLogRepository.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/entity/Article.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/repository/CommentRepository.java
 /Users/fengruxue/Documents/traeguowai/APP/blog/backend/src/main/java/com/blog/backend/service/CategoryService.java

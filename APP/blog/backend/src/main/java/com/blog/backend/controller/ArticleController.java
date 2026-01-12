@@ -17,13 +17,40 @@ public class ArticleController {
     private ArticleService articleService;
 
     @GetMapping
-    public ResponseEntity<Page<Article>> getAllArticles(Pageable pageable) {
-        return ResponseEntity.ok(articleService.getAllPublishedArticles(pageable));
+    public ResponseEntity<Page<Article>> getAllArticles(
+            @RequestParam(required = false, defaultValue = "true") boolean publishedOnly,
+            @RequestParam(required = false, defaultValue = "false") boolean featuredOnly,
+            Pageable pageable) {
+        if (featuredOnly) {
+            return ResponseEntity.ok(articleService.getFeaturedArticles(pageable));
+        }
+        if (publishedOnly) {
+            return ResponseEntity.ok(articleService.getAllPublishedArticles(pageable));
+        } else {
+            return ResponseEntity.ok(articleService.getAllArticles(pageable));
+        }
+    }
+
+    @PostMapping("/{id}/like")
+    public ResponseEntity<Void> likeArticle(@PathVariable Long id) {
+        articleService.incrementLikeCount(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/unlike")
+    public ResponseEntity<Void> unlikeArticle(@PathVariable Long id) {
+        articleService.decrementLikeCount(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/view")
+    public ResponseEntity<Void> viewArticle(@PathVariable Long id) {
+        articleService.incrementViewCount(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Article> getArticle(@PathVariable Long id) {
-        articleService.incrementViewCount(id);
         return articleService.getArticleById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

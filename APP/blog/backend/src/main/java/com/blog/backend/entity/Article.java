@@ -29,8 +29,13 @@ public class Article {
 
     private String coverImage;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String contentBlocks;
+
     @Column(nullable = false)
     private Boolean isDraft = true;
+
+    private Boolean isFeatured = false;
 
     private LocalDateTime publishedAt;
 

@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { articleApi } from '../api';
 import PostCard from '../components/PostCard';
 import Hero from '../components/Hero';
-import Newsletter from '../components/Newsletter';
 import { Search, ArrowRight, Sparkles, Zap, Flame, ExternalLink } from 'lucide-react';
 
 const Home = () => {
@@ -34,6 +33,12 @@ const Home = () => {
       try {
         const res = await articleApi.getAll();
         setArticles(res.data.content);
+        
+        // Fetch featured articles
+        const featuredRes = await articleApi.getAll({ featuredOnly: true, size: 1 });
+        if (featuredRes.data.content && featuredRes.data.content.length > 0) {
+          setFeaturedFromDb(featuredRes.data.content[0]);
+        }
       } catch (error) {
         console.error('Failed to fetch articles:', error);
       } finally {
@@ -43,9 +48,9 @@ const Home = () => {
     fetchArticles();
   }, []);
 
-  const featuredPosts = articles.length > 0 ? articles.slice(0, 4) : [];
-  const spotlightPost = articles.length > 3 ? articles[3] : (articles.length > 0 ? articles[0] : null);
-  const recentPosts = articles.length > 4 ? articles.slice(4) : [];
+  const [featuredFromDb, setFeaturedFromDb] = useState(null);
+  const featuredPosts = featuredFromDb ? [featuredFromDb] : (articles.length > 0 ? articles.slice(0, 1) : []);
+  const recentPosts = articles.length > 1 ? articles.slice(1, 4) : [];
 
   return (
     <div className="bg-white dark:bg-black min-h-screen">
@@ -78,7 +83,10 @@ const Home = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 {/* 左侧：大图展示（复刻图1，带随机切换） */}
                 <div className="p-12 md:p-20 flex items-center justify-center bg-zinc-100/50 dark:bg-zinc-800/10">
-                  <div className="relative aspect-square w-full max-w-[500px] group">
+                  <Link 
+                    to={featuredPosts[0] ? `/article/${featuredPosts[0].id}` : '#'}
+                    className="relative aspect-square w-full max-w-[500px] group block"
+                  >
                     <AnimatePresence mode="wait">
                       <motion.img 
                         key={randomImageIndex}
@@ -92,7 +100,13 @@ const Home = () => {
                       />
                     </AnimatePresence>
                     <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/5 pointer-events-none" />
-                  </div>
+                    {/* 悬停提示 */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg flex items-center justify-center">
+                      <div className="px-6 py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-full shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        查看作品详情
+                      </div>
+                    </div>
+                  </Link>
                 </div>
 
                 {/* 右侧：文字内容（复刻图1） */}
@@ -177,10 +191,21 @@ const Home = () => {
               ))
             )}
           </div>
+
+          {!loading && articles.length > 4 && (
+            <div className="flex justify-center mt-20">
+              <Link 
+                to="/market" 
+                className="group flex items-center gap-4 px-12 py-5 border-2 border-black dark:border-white rounded-full text-xs font-black uppercase tracking-[0.4em] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-500 shadow-2xl hover:shadow-zinc-200 dark:hover:shadow-zinc-800"
+              >
+                <span>进入艺术市场</span>
+                <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+              </Link>
+            </div>
+          )}
         </section>
 
-        {/* 邮件订阅 */}
-        <Newsletter />
+        {/* 艺术市场链接等内容 */}
       </main>
     </div>
   );
