@@ -1,7 +1,4 @@
-import { BOARD_SIZE, GEM_TYPES, SPECIAL_TYPES, OBSTACLE_TYPES, CELL_SIZE } from './constants.js';
-import { Gem } from './gem.js';
-
-export class Board {
+window.Board = class Board {
     constructor() {
         this.grid = [];
         this.initialize();
@@ -42,12 +39,14 @@ export class Board {
 
     resolveInitialMatches() {
         let hasMatch = true;
-        while (hasMatch) {
+        let safetyCounter = 0;
+        while (hasMatch && safetyCounter < 100) {
+            safetyCounter++;
             hasMatch = false;
-            const matches = this.findMatches();
-            if (matches.length > 0) {
+            const { matchedGems } = this.findMatches();
+            if (matchedGems.length > 0) {
                 hasMatch = true;
-                for (const gem of matches) {
+                for (const gem of matchedGems) {
                     gem.type = (gem.type + 1) % GEM_TYPES;
                 }
             }
@@ -169,5 +168,21 @@ export class Board {
     getGemAt(r, c) {
         if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) return null;
         return this.grid[r][c];
+    }
+
+    hasPossibleMoves() {
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                // 尝试横向交换
+                if (c < BOARD_SIZE - 1) {
+                    if (this.checkMatch(r, c, r, c + 1)) return true;
+                }
+                // 尝试纵向交换
+                if (r < BOARD_SIZE - 1) {
+                    if (this.checkMatch(r, c, r + 1, c)) return true;
+                }
+            }
+        }
+        return false;
     }
 }

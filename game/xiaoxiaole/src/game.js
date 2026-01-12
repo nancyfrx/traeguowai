@@ -1,9 +1,4 @@
-import { Board } from './board.js';
-import { CELL_SIZE, OFFSET_X, OFFSET_Y, SPECIAL_TYPES, OBSTACLE_TYPES, BOARD_SIZE, GEM_COLORS } from './constants.js';
-import { getCanvasMousePos, wait, FloatingText, Particle } from './utils.js';
-import { AudioManager } from './audioManager.js';
-
-export class Game {
+window.Game = class Game {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
@@ -27,17 +22,24 @@ export class Game {
         this.gameState = 'START'; 
 
         this.initEvents();
-        this.lastTime = 0;
+        this.lastTime = performance.now();
         this.timerInterval = null;
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
     initEvents() {
         this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
-        document.getElementById('restart-btn').addEventListener('click', () => this.restart());
-        document.getElementById('quit-btn').addEventListener('click', () => this.endGame('游戏手动结束'));
-        document.getElementById('pause-btn').addEventListener('click', (e) => this.togglePause(e.target));
-        document.getElementById('sound-toggle-btn').addEventListener('click', (e) => this.toggleSound(e.target));
+        const restartBtn = document.getElementById('restart-btn');
+        if (restartBtn) restartBtn.addEventListener('click', () => this.restart());
+        
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) quitBtn.addEventListener('click', () => this.endGame('游戏手动结束'));
+        
+        const pauseBtn = document.getElementById('pause-btn');
+        if (pauseBtn) pauseBtn.addEventListener('click', (e) => this.togglePause(e.target));
+        
+        const soundBtn = document.getElementById('sound-toggle-btn');
+        if (soundBtn) soundBtn.addEventListener('click', (e) => this.toggleSound(e.target));
     }
 
     togglePause(btn) {
@@ -85,41 +87,60 @@ export class Game {
     }
 
     async trySwap(gem1, gem2) {
+        if (this.isProcessing) return;
         this.isProcessing = true;
-        this.audioManager.playSFX('swap');
         
-        // 如果是步数模式，扣除步数
-        if (this.mode === 'MOVES') {
-            this.movesLeft--;
-            this.updateUI();
-        }
+        try {
+            this.audioManager.playSFX('swap');
+            
+            // 如果是步数模式，扣除步数
+            if (this.mode === 'MOVES') {
+                this.movesLeft--;
+                this.updateUI();
+            }
 
-        // 执行动画交换
-        this.board.swapGemsData(gem1.row, gem1.col, gem2.row, gem2.col);
-        await wait(200);
-
-        const { matchedGems } = this.board.findMatches();
-        
-        // 特殊逻辑：彩虹球交换
-        if (gem1.special === SPECIAL_TYPES.RAINBOW || gem2.special === SPECIAL_TYPES.RAINBOW) {
-            await this.handleRainbowSwap(gem1, gem2);
-            await this.processMatches();
-        } else if (matchedGems.length > 0) {
-            await this.processMatches(gem1, gem2);
-        } else {
-            // 没有匹配，换回来
+            // 执行动画交换
             this.board.swapGemsData(gem1.row, gem1.col, gem2.row, gem2.col);
-            if (this.mode === 'MOVES') this.movesLeft++; // 交换失败返还步数
-            await wait(200);
-        }
+            await wait(250);
 
-        this.isProcessing = false;
-        this.checkWinCondition();
+            const { matchedGems } = this.board.findMatches();
+            
+            // 特殊逻辑：彩虹球交换
+            if (gem1.special === SPECIAL_TYPES.RAINBOW || gem2.special === SPECIAL_TYPES.RAINBOW) {
+                await this.handleRainbowSwap(gem1, gem2);
+                await this.processMatches();
+            } else if (matchedGems.length > 0) {
+                await this.processMatches(gem1, gem2);
+            } else {
+                // 没有匹配，换回来
+                this.board.swapGemsData(gem1.row, gem1.col, gem2.row, gem2.col);
+                if (this.mode === 'MOVES') this.movesLeft++; // 交换失败返还步数
+                await wait(250);
+            }
+
+            // 检查死局
+            if (!this.board.hasPossibleMoves()) {
+                this.effects.push(new FloatingText("无路可走，重置棋盘", this.canvas.width/2, this.canvas.height/2, '#e74c3c', 40));
+                await wait(1000);
+                this.board.initialize(this.currentLevel);
+            }
+
+            this.checkWinCondition();
+        } catch (error) {
+            console.error("Swap Error:", error);
+        } finally {
+            this.isProcessing = false;
+        }
     }
 
     checkWinCondition() {
+        if (this.score >= this.targetScore && this.gameState === 'PLAYING') {
+            this.endGame('关卡达成！');
+            return;
+        }
+        
         if (this.mode === 'MOVES' && this.movesLeft <= 0 && !this.isProcessing) {
-            this.endGame(this.score >= this.targetScore ? '关卡达成！' : '步数用尽');
+            this.endGame('步数用尽');
         }
     }
 
@@ -171,8 +192,10 @@ export class Game {
     async processMatches(swapGem1, swapGem2) {
         let hasMatches = true;
         this.combo = 0;
+        let safetyCounter = 0;
 
-        while (hasMatches) {
+        while (hasMatches && safetyCounter < 50) {
+            safetyCounter++;
             const { matches, matchedGems } = this.board.findMatches();
             if (matchedGems.length === 0) {
                 hasMatches = false;
@@ -231,13 +254,13 @@ export class Game {
                 this.handleObstacleClearing(gem);
             }
             
-            await wait(300);
+            await wait(250);
 
             // 掉落
             await this.board.applyGravity();
-            await wait(300);
+            await wait(250);
             
-            // 每次掉落后清除 swapGem1/swapGem2，因为后续的 match 不是由它们触发的
+            // 每次掉落后清除 swapGem1/swapGem2
             swapGem1 = null;
             swapGem2 = null;
         }
@@ -396,11 +419,13 @@ export class Game {
 
     start(mode = 'TIME', level = 1) {
         this.mode = mode;
+        this.currentLevel = level;
         this.score = 0;
         this.combo = 0;
         this.gameState = 'PLAYING';
         this.isProcessing = false;
         this.isPaused = false;
+        this.effects = [];
         this.board.initialize(level);
         this.audioManager.playBGM();
         

@@ -1,5 +1,3 @@
-import { Game } from './game.js';
-
 window.addEventListener('load', () => {
     const canvas = document.getElementById('game-canvas');
     const game = new Game(canvas);
@@ -42,8 +40,23 @@ window.addEventListener('load', () => {
         }
     };
 
-    document.getElementById('start-game-btn').onclick = () => {
-        document.getElementById('start-screen').classList.add('hidden');
-        levelSelect.classList.remove('hidden');
-    };
+    const startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        console.log('Start game button found');
+        startGameBtn.onclick = (e) => {
+            console.log('Start game button clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            const startScreen = document.getElementById('start-screen');
+            if (startScreen) startScreen.classList.add('hidden');
+            if (levelSelect) levelSelect.classList.remove('hidden');
+        };
+        // 同时也保留 addEventListener 作为备份
+        startGameBtn.addEventListener('click', (e) => {
+            console.log('Start game button clicked (listener)');
+            const startScreen = document.getElementById('start-screen');
+            if (startScreen) startScreen.classList.add('hidden');
+            if (levelSelect) levelSelect.classList.remove('hidden');
+        });
+    }
 });

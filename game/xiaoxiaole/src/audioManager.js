@@ -1,4 +1,4 @@
-export class AudioManager {
+window.AudioManager = class AudioManager {
     constructor() {
         this.bgm = null;
         this.sounds = {};

@@ -1,8 +1,8 @@
-export const lerp = (a, b, t) => a + (b - a) * t;
+var lerp = (a, b, t) => a + (b - a) * t;
 
-export const easeInOutQuad = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+var easeInOutQuad = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
-export function getCanvasMousePos(canvas, evt) {
+window.getCanvasMousePos = function(canvas, evt) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
@@ -10,13 +10,13 @@ export function getCanvasMousePos(canvas, evt) {
         x: (evt.clientX - rect.left) * scaleX,
         y: (evt.clientY - rect.top) * scaleY
     };
-}
+};
 
-export function wait(ms) {
+window.wait = function(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
+};
 
-export class FloatingText {
+window.FloatingText = class FloatingText {
     constructor(text, x, y, color = 'white', fontSize = 24) {
         this.text = text;
         this.x = x;
@@ -43,9 +43,9 @@ export class FloatingText {
         ctx.fillText(this.text, this.x, this.y);
         ctx.restore();
     }
-}
+};
 
-export class Particle {
+window.Particle = class Particle {
     constructor(x, y, color) {
         this.x = x;
         this.y = y;
@@ -74,4 +74,4 @@ export class Particle {
         ctx.fill();
         ctx.restore();
     }
-}
+};

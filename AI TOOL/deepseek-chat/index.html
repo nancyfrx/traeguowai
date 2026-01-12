@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepSeek Chat</title>
+    <title>Zhipu AI Assistant</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -24,16 +24,30 @@
             </div>
             <div class="sidebar-footer">
                 <div class="user-info">
-                    <div class="user-avatar">DS</div>
-                    <span class="user-name">DeepSeek User</span>
+                    <div class="user-avatar">AI</div>
+                    <span class="user-name">Zhipu Explorer</span>
                 </div>
             </div>
         </aside>
 
         <main class="main-content">
             <header class="header">
-                <div class="model-info">
-                    <span class="model-name">DeepSeek-V3</span>
+                <div class="header-left">
+                    <div class="model-selector-wrapper">
+                        <select id="modelSelector" class="model-select">
+                            <optgroup label="文本模型 (GLM)">
+                                <option value="glm-4-flash" selected>GLM-4-Flash (对话/通用)</option>
+                            </optgroup>
+                            <optgroup label="文生图模型 (CogView)">
+                                <option value="cogview-3-flash">Cogview-3-Flash (图片生成)</option>
+                            </optgroup>
+                            <optgroup label="文生视频模型 (CogVideo)">
+                                <option value="cogvideoX-flash">CogVideoX-Flash (视频生成)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <div class="header-right">
                     <span class="model-status">在线</span>
                 </div>
             </header>
@@ -41,10 +55,10 @@
             <div class="chat-container" id="chatContainer">
                 <div class="welcome-screen" id="welcomeScreen">
                     <div class="logo-large">
-                        <img src="https://chat.deepseek.com/favicon.svg" alt="DeepSeek" width="64">
+                        <span style="font-size: 64px;">🤖</span>
                     </div>
-                    <h1>我是 DeepSeek，很高兴见到你</h1>
-                    <p>我可以帮您写代码、解答问题、提供创意，快来试试吧。</p>
+                    <h1>欢迎使用智谱 AI 助手</h1>
+                    <p>我集成了 GLM-4 文本对话、CogView 绘图及 CogVideo 视频生成能力。</p>
                     <div class="suggestion-grid">
                         <div class="suggestion-card" onclick="setPrompt('帮我写一个快速排序算法')">
                             <h3>写代码</h3>
@@ -61,7 +75,7 @@
 
             <footer class="input-area">
                 <div class="input-wrapper">
-                    <textarea id="messageInput" placeholder="给 DeepSeek 发送消息..." rows="1"></textarea>
+                    <textarea id="messageInput" placeholder="给助手发送消息或描述生成内容..." rows="1"></textarea>
                     <button id="sendButton" class="send-btn" disabled>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -69,9 +83,18 @@
                         </svg>
                     </button>
                 </div>
-                <p class="disclaimer">DeepSeek 可能会产生不准确的信息，请核实重要内容。</p>
+                <p class="disclaimer">AI 助手可能会产生不准确的信息，请核实重要内容。</p>
             </footer>
         </main>
+    </div>
+    <div class="media-modal" id="mediaModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modalMediaContainer"></div>
+            <div class="modal-actions">
+                <button id="modalDownloadBtn" class="modal-btn">下载</button>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

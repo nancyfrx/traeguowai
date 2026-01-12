@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TraceGuowai 项目整合平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 抑制 Tailwind Play CDN 的生产环境警告
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            console.warn = () => {};
+        }
+        
+        tailwind.config = {
+            theme: {
+                extend: {
+                    // 抑制生产环境警告的配置（如果支持）
+                }
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -39,6 +53,27 @@
             height: 100%;
             border: none;
             background: white;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Mobile View Styles */
+        #viewport-container.mobile-mode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1f2937;
+            padding: 2rem;
+            perspective: 1000px;
+        }
+        #viewport-container.mobile-mode iframe {
+            width: 375px;
+            height: 812px;
+            max-height: 100%;
+            border-radius: 40px;
+            box-shadow: 
+                0 0 0 12px #111827,
+                0 0 0 14px #374151,
+                0 20px 50px rgba(0,0,0,0.5);
+            margin: auto;
         }
         .status-dot {
             width: 8px;
@@ -99,6 +134,10 @@
             
             <div class="flex items-center gap-4">
                 <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                    <button id="mobile-toggle-btn" class="p-1.5 hover:bg-white rounded-md transition-all text-gray-500 hover:text-blue-600" title="移动端视图">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    </button>
+                    <div class="w-[1px] h-4 bg-gray-300 mx-0.5"></div>
                     <button id="refresh-btn" class="p-1.5 hover:bg-white rounded-md transition-all text-gray-500 hover:text-blue-600" title="刷新项目">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
                     </button>
@@ -137,18 +176,20 @@
                 name: 'AI TOOL',
                 icon: '🛠️',
                 children: [
-                    { id: 'ai-tool-2', name: 'AI TOOL2', icon: '🎨', type: 'static', url: './AI TOOL/AI TOOL2/三种生成模型.html', path: './AI TOOL/AI TOOL2' },
-                    { id: 'ai-tool-main', name: 'AI 工具', icon: '🔧', type: 'vite', url: 'http://localhost:5173', path: './AI TOOL/AI 工具' },
-                    { id: 'chat-gml', name: '智谱 AI 聊天', icon: '💬', type: 'static', url: './AI TOOL/chat-gml/index.html', path: './AI TOOL/chat-gml' },
-                    { id: 'doubao', name: '豆包多模态', icon: '📦', type: 'node', url: 'http://localhost:3000', path: './AI TOOL/doubao' },
-                    { id: 'deepseek-chat', name: 'DeepSeek Chat', icon: '🧠', type: 'static', url: './AI TOOL/deepseek-chat/index.html', path: './AI TOOL/deepseek-chat' }
+                    { id: 'chat-gml', name: '智谱 AI 聊天', icon: '💬', type: 'static', url: './AI%20TOOL/chat-gml/index.html', path: './AI TOOL/chat-gml' },
+                    { id: 'deepseek-chat', name: 'DeepSeek Chat', icon: '🧠', type: 'static', url: './AI%20TOOL/deepseek-chat/index.html', path: './AI TOOL/deepseek-chat' }
                 ]
             },
             {
                 name: 'APP',
                 icon: '📱',
                 children: [
-                    { id: 'douyin', name: '抖音', icon: '🎵', type: 'vite', url: 'http://localhost:5174', path: './APP/douyin' }
+                    { id: 'qqmusic', name: 'QQ音乐', icon: '🎵', type: 'vite', url: 'http://localhost:3000', path: './APP/QQMusic' },
+                    { id: 'douyin', name: '抖音', icon: '📱', type: 'vite', url: 'http://localhost:5173', path: './APP/douyin' },
+                    { id: 'amap-ranking', name: '高德扫街', icon: '📍', type: 'vite', url: 'http://localhost:5177', path: './APP/amap-ranking' },
+                    { id: 'wechat-clone', name: '微信', icon: '💬', type: 'static', url: './APP/wechat-clone/index.html', path: './APP/wechat-clone' },
+                    { id: 'weixin', name: '新版微信', icon: '💬', type: 'vite', url: 'http://localhost:5179', path: './APP/weixin' },
+                    { id: 'boke', name: '博客', icon: '📝', type: 'vite', url: 'http://localhost:3001', path: './APP/boke/frontend-react' }
                 ]
             },
             {
@@ -165,9 +206,8 @@
                 icon: '📂',
                 children: [
                     { id: 'animal', name: '动物百科', icon: '🐾', type: 'static', url: './other/animal/index.html', path: './other/animal' },
-                    { id: 'china-map', name: '中国地图', icon: '🗺️', type: 'static', url: './other/china map/china-map (4).html', path: './other/china map' },
-                    { id: 'rili', name: '万年历', icon: '📅', type: 'vite', url: 'http://localhost:5176', path: './other/rili' },
-                    { id: 'three-models', name: '三种生成模型', icon: '📄', type: 'static', url: './other/三种生成模型.html', path: './other' }
+                    { id: 'china-map', name: '中国地图', icon: '🗺️', type: 'static', url: './other/china%20map/china-map%20(4).html', path: './other/china map' },
+                    { id: 'rili', name: '万年历', icon: '📅', type: 'vite', url: 'http://localhost:5176', path: './other/rili' }
                 ]
             }
         ];
@@ -181,8 +221,11 @@
         const typeTag = document.getElementById('project-type-tag');
         const refreshBtn = document.getElementById('refresh-btn');
         const openNewTabBtn = document.getElementById('open-new-tab');
+        const mobileToggleBtn = document.getElementById('mobile-toggle-btn');
+        const viewportContainer = document.getElementById('viewport-container');
 
         let activeProjectId = null;
+        let isMobileMode = false;
 
         function init() {
             menuData.forEach((category, index) => {
@@ -232,6 +275,14 @@
                     const project = findProjectById(activeProjectId);
                     if (project) iframe.src = project.url + '?t=' + Date.now();
                 }
+            };
+
+            mobileToggleBtn.onclick = () => {
+                isMobileMode = !isMobileMode;
+                viewportContainer.classList.toggle('mobile-mode', isMobileMode);
+                mobileToggleBtn.classList.toggle('text-blue-600', isMobileMode);
+                mobileToggleBtn.classList.toggle('bg-white', isMobileMode);
+                mobileToggleBtn.classList.toggle('shadow-sm', isMobileMode);
             };
 
             openNewTabBtn.onclick = () => {

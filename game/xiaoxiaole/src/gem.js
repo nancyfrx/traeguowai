@@ -1,6 +1,4 @@
-import { SPECIAL_TYPES, OBSTACLE_TYPES, GEM_COLORS, CELL_SIZE } from './constants.js';
-
-export class Gem {
+window.Gem = class Gem {
     constructor(row, col, type, special = SPECIAL_TYPES.NONE) {
         this.row = row;
         this.col = col;

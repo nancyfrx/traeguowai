@@ -43,6 +43,11 @@ export default function App() {
     }
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setIsPublishing(false);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'shop':
@@ -113,14 +118,14 @@ export default function App() {
       {/* Bottom Navigation */}
       <div className="w-full z-50 bg-black border-t border-white/10 px-6 py-2 pb-6 flex items-center justify-between">
         <button 
-          onClick={() => setActiveTab('home')}
+          onClick={() => handleTabChange('home')}
           className={cn("flex flex-col items-center", activeTab === 'home' ? "text-white" : "text-white/40")}
         >
           <Home className="w-6 h-6" />
           <span className="text-[10px] mt-1">首页</span>
         </button>
         <button 
-          onClick={() => setActiveTab('shop')}
+          onClick={() => handleTabChange('shop')}
           className={cn("flex flex-col items-center", activeTab === 'shop' ? "text-white" : "text-white/40")}
         >
           <ShoppingBag className="w-6 h-6" />
@@ -137,14 +142,14 @@ export default function App() {
           </div>
         </div>
         <button 
-          onClick={() => setActiveTab('message')}
+          onClick={() => handleTabChange('message')}
           className={cn("flex flex-col items-center", activeTab === 'message' ? "text-white" : "text-white/40")}
         >
           <MessageSquare className="w-6 h-6" />
           <span className="text-[10px] mt-1">消息</span>
         </button>
         <button 
-          onClick={() => setActiveTab('profile')}
+          onClick={() => handleTabChange('profile')}
           className={cn("flex flex-col items-center", activeTab === 'profile' ? "text-white" : "text-white/40")}
         >
           <User className="w-6 h-6" />

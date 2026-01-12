@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #000;
+}
+
+@theme {
+  --color-wechat-green: #07c160;
+  --color-wechat-bg: #ededed;
+  --color-wechat-tab: #f7f7f7;
+  --color-wechat-text: #000000;
+  --color-wechat-sub: #888888;
+  --color-wechat-link: #576b95;
+  --color-wechat-border: #e5e5e5;
+  --color-wechat-red: #fa5151;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background-color: #000;
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 微信风格滚动条 */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+@keyframes heart-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  15% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-heart-pop {
+  animation: heart-pop 0.8s ease-out forwards;
+}

@@ -83,6 +83,29 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 100;
+    pointer-events: auto; /* 确保可以接收点击 */
+}
+
+#start-game-btn {
+    position: relative;
+    z-index: 110;
+    padding: 15px 40px;
+    font-size: 24px;
+    background-color: #27ae60;
+    cursor: pointer;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+#start-game-btn:hover {
+    background-color: #2ecc71;
+    transform: translateY(-2px);
+}
+
+#start-game-btn:active {
+    transform: translateY(0);
 }
 
 #overlay {
