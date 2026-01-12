@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import ArticleEdit from './pages/ArticleEdit';
 import Marketplace from './pages/Marketplace';
+import ProductDetail from './pages/ProductDetail';
 import SubscriptionModal from './components/SubscriptionModal';
 import { useAuth } from './context/AuthContext';
 
@@ -62,9 +63,7 @@ const Navbar = ({ isDark, setIsDark }) => {
           }`}>
             <Link to="/" className={`hover:text-black dark:hover:text-white transition-colors ${isHomePage ? 'text-black dark:text-white' : ''}`}>首页</Link>
             <Link to="/market" className={`hover:text-black dark:hover:text-white transition-colors ${isMarketPage ? 'text-rose-500' : ''}`}>艺术市场</Link>
-            <Link to="/" className="hover:text-black dark:hover:text-white transition-colors">特色专题</Link>
-            <Link to="/" className="hover:text-black dark:hover:text-white transition-colors">关于我们</Link>
-            {user && <Link to="/admin/dashboard" className="text-rose-500">管理后台</Link>}
+            <Link to="/admin/dashboard" className="hover:text-black dark:hover:text-white transition-colors">管理后台</Link>
           </div>
 
           <div className="flex items-center gap-6">
@@ -105,28 +104,6 @@ const Navbar = ({ isDark, setIsDark }) => {
 
 const Footer = () => (
   <footer className="bg-white dark:bg-black mt-20">
-    {/* 画廊风格横幅 */}
-    <div className="max-w-[1600px] mx-auto px-6 mb-20">
-      <div className="relative h-[400px] w-full overflow-hidden rounded-sm group">
-        <img 
-          src="https://images.unsplash.com/photo-1493306454983-c5c073fba6bd?q=80&w=2000&auto=format&fit=crop" 
-          alt="Art Gallery" 
-          className="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]"
-        />
-        {/* 文字叠加层 */}
-        <div className="absolute inset-0 p-10 flex flex-col justify-between text-white font-medium tracking-widest text-xs uppercase">
-          <div className="flex justify-between items-start">
-            <span className="backdrop-blur-sm bg-black/10 px-2 py-1">离线...</span>
-            <span className="backdrop-blur-sm bg-black/10 px-2 py-1">画廊由</span>
-          </div>
-          <div className="flex justify-between items-end">
-            <span className="text-lg font-black tracking-tighter italic">如雪艺术博客</span>
-            <span className="backdrop-blur-sm bg-black/10 px-2 py-1">243 Bowery NYC</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
     {/* 底部链接 */}
     <div className="max-w-[1600px] mx-auto px-6 pb-20">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pt-20 border-t border-zinc-100 dark:border-zinc-900">
@@ -210,6 +187,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/market" element={<Marketplace />} />
           <Route path="/article/:id" element={<ArticleDetail />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/dashboard" element={
             <ProtectedRoute>

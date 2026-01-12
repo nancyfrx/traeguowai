@@ -41,6 +41,8 @@ public class Article {
 
     private Long viewCount = 0L;
     private Long likeCount = 0L;
+    
+    private Double price;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")

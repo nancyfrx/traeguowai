@@ -109,8 +109,23 @@ public class BackendApplication {
                     article.setPublishedAt(LocalDateTime.now());
                     article.setViewCount((long) (Math.random() * 1000));
                     article.setLikeCount((long) (Math.random() * 500));
+                    article.setPrice(0.1 + Math.random() * 2.0); // 随机生成 0.1 - 2.1 之间的价格
                     articleRepository.save(article);
                 }
+            }
+
+            // 为所有没有价格的文章生成随机价格
+            List<Article> allArticles = articleRepository.findAll();
+            boolean updated = false;
+            for (Article article : allArticles) {
+                if (article.getPrice() == null) {
+                    article.setPrice(0.1 + Math.random() * 2.0);
+                    articleRepository.save(article);
+                    updated = true;
+                }
+            }
+            if (updated) {
+                System.out.println("Initialized prices for existing articles.");
             }
         };
     }

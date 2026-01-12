@@ -4,12 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { articleApi } from '../api';
 import PostCard from '../components/PostCard';
 import Hero from '../components/Hero';
+import MarqueeSection from '../components/MarqueeSection';
 import { Search, ArrowRight, Sparkles, Zap, Flame, ExternalLink } from 'lucide-react';
 
 const Home = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [randomImageIndex, setRandomImageIndex] = useState(0);
+  const [featuredFromDb, setFeaturedFromDb] = useState(null);
+
+  // 计算推荐和最新文章
+  const featuredPosts = featuredFromDb ? [featuredFromDb] : (articles.length > 0 ? articles.slice(0, 1) : []);
+  const recentPosts = articles.length > 1 ? articles.slice(1, 4) : [];
 
   // 模拟“文件夹”中的随机图片（图2风格的抽象艺术）
   const galleryImages = [
@@ -20,13 +26,38 @@ const Home = () => {
     "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop"
   ];
 
+  // 提取推荐文章的图片
+  const featuredImages = React.useMemo(() => {
+    const post = featuredPosts[0];
+    if (!post) return galleryImages;
+    
+    const images = [];
+    if (post.coverImage) images.push(post.coverImage);
+    
+    if (post.contentBlocks) {
+      try {
+        const blocks = typeof post.contentBlocks === 'string' 
+          ? JSON.parse(post.contentBlocks) 
+          : post.contentBlocks;
+        blocks.forEach(block => {
+          if (block.image) images.push(block.image);
+        });
+      } catch (e) {
+        console.error('Failed to parse content blocks', e);
+      }
+    }
+    
+    return images.length > 0 ? images : galleryImages;
+  }, [featuredPosts]);
+
   useEffect(() => {
     // 随机切换图片逻辑
+    if (featuredImages.length <= 1) return;
     const interval = setInterval(() => {
-      setRandomImageIndex(Math.floor(Math.random() * galleryImages.length));
+      setRandomImageIndex(prev => (prev + 1) % featuredImages.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [featuredImages]);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -47,10 +78,6 @@ const Home = () => {
     };
     fetchArticles();
   }, []);
-
-  const [featuredFromDb, setFeaturedFromDb] = useState(null);
-  const featuredPosts = featuredFromDb ? [featuredFromDb] : (articles.length > 0 ? articles.slice(0, 1) : []);
-  const recentPosts = articles.length > 1 ? articles.slice(1, 4) : [];
 
   return (
     <div className="bg-white dark:bg-black min-h-screen">
@@ -83,6 +110,7 @@ const Home = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 {/* 左侧：大图展示（复刻图1，带随机切换） */}
                 <div className="p-12 md:p-20 flex items-center justify-center bg-zinc-100/50 dark:bg-zinc-800/10">
+                  {/* 这里删除了 art gallery 图片栏，仅保留精选推荐的图片展示逻辑 */}
                   <Link 
                     to={featuredPosts[0] ? `/article/${featuredPosts[0].id}` : '#'}
                     className="relative aspect-square w-full max-w-[500px] group block"
@@ -90,7 +118,7 @@ const Home = () => {
                     <AnimatePresence mode="wait">
                       <motion.img 
                         key={randomImageIndex}
-                        src={galleryImages[randomImageIndex]} 
+                        src={featuredImages[randomImageIndex] || galleryImages[0]} 
                         alt="Featured Art" 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -207,6 +235,9 @@ const Home = () => {
 
         {/* 艺术市场链接等内容 */}
       </main>
+
+      {/* 无限滚动走马灯 */}
+      <MarqueeSection articles={articles} />
     </div>
   );
 };

@@ -165,7 +165,7 @@ const ArtCard = ({ item, layout, navigate }) => {
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       className={`group cursor-pointer ${isLarge ? 'flex gap-12 items-center mb-12' : 'space-y-4'}`}
-      onClick={() => navigate(`/article/${item.id}`)}
+      onClick={() => navigate(`/product/${item.id}`)}
     >
       {/* Image Container with Grey Background - 复刻图示样式 */}
       <div className={`relative bg-zinc-50 dark:bg-zinc-900/50 rounded-[1px] overflow-hidden flex items-center justify-center p-4 transition-all duration-500 group-hover:bg-zinc-100 dark:group-hover:bg-zinc-800/50 shadow-sm group-hover:shadow-md perspective-1000 ${
@@ -176,12 +176,12 @@ const ArtCard = ({ item, layout, navigate }) => {
             src={item.coverImage} 
             alt={item.title}
             className="max-w-[90%] max-h-[90%] object-contain 
-              shadow-[0_15px_30px_rgba(0,0,0,0.15)] 
-              ring-1 ring-black/5
+              shadow-[0_20px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.6)]
+              ring-1 ring-black/10 dark:ring-white/10
               transition-all duration-500
-              group-hover:scale-[1.02] 
-              group-hover:shadow-[0_30px_60px_rgba(0,0,0,0.25)]
-              group-hover:-translate-y-2"
+              group-hover:scale-[1.04] 
+              group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.4)] dark:group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.8)]
+              group-hover:-translate-y-3"
           />
         </div>
         
@@ -211,17 +211,32 @@ const ArtCard = ({ item, layout, navigate }) => {
         </div>
 
         {!isCompact && (
-          <div className="pt-3 grid grid-cols-2 gap-4 border-t border-zinc-100 dark:border-zinc-900">
+          <div className="pt-4 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-900">
             <div className="space-y-0.5">
-              <p className="text-[9px] font-medium text-zinc-400 uppercase tracking-wider">挂单</p>
-              <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">-</p>
+              <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">最近成交价</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">
+                  {item.price ? item.price.toFixed(3) : (item.likeCount / 1000).toFixed(3)}Ξ
+                </span>
+                <span className="text-[10px] font-medium text-zinc-400">
+                  (${(item.price ? item.price * 3100 : item.likeCount * 3.1).toFixed(0)})
+                </span>
+              </div>
             </div>
-            <div className="space-y-0.5">
-              <p className="text-[9px] font-medium text-zinc-400 uppercase tracking-wider">最近成交价</p>
-              <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
-                {(item.likeCount / 1000).toFixed(3)}Ξ <span className="text-zinc-400 font-medium">(${(item.likeCount * 3.1).toFixed(0)})</span>
-              </p>
-            </div>
+            
+            <button 
+              className="px-6 py-2 bg-transparent text-black dark:text-white text-[10px] font-black uppercase tracking-[0.1em] rounded-md transition-all 
+                border-2 border-black dark:border-white
+                shadow-[0_4px_0_0_#000] dark:shadow-[0_4px_0_0_#fff] 
+                hover:shadow-[0_2px_0_0_#000] dark:hover:shadow-[0_2px_0_0_#fff] hover:translate-y-[2px]
+                active:shadow-none active:translate-y-[4px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/product/${item.id}`);
+              }}
+            >
+              BUY
+            </button>
           </div>
         )}
       </div>
