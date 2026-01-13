@@ -18,19 +18,19 @@ const Home = ({ onNavigate, onPlaySong }) => {
 
   const getRandomCover = () => {
     const randomName = localCovers[Math.floor(Math.random() * localCovers.length)]
-    return `/covers/${randomName}`
+    return `covers/${randomName}`
   }
 
   const hotSongs = [
-    { id: 'local_01', title: '晴天', artist: '周杰伦', cover: '/covers/3b0660743d436e058b8e4860a367c7d1.jpeg', tag: '本周热播', likes: '100w+', platform: 'local', localUrl: '/songs/000140.mp3' },
-    { id: 'local_02', title: '红玫瑰', artist: '陈奕迅', cover: '/covers/4cb202700292fde278e90e3b79499a6a.jpg', tag: '经典粤语', likes: '50w+', platform: 'local', localUrl: '/songs/000709.mp3' },
-    { id: 'local_03', title: '富士山下', artist: '陈奕迅', cover: '/covers/5ac5bf54ca1f4e288bf9ecf10d71d8d4.jpeg', tag: '深夜必听', likes: '80w+', platform: 'local', localUrl: '/songs/006367.mp3' },
-    { id: 'local_04', title: '七里香', artist: '周杰伦', cover: '/covers/5bc88c69f1dc2fa567fae3762193da2a.jpeg', tag: '夏日回忆', likes: '120w+', platform: 'local', localUrl: '/songs/006406.mp3' },
-    { id: 'local_mp4_01', title: '岁月如歌', artist: '陈奕迅', cover: '/covers/0569e542d658c81c9f17d63f0836f7f5.jpeg', tag: '经典金曲', likes: '90w+', platform: 'local', localUrl: '/songs/岁月如歌.mp4' },
-    { id: 'local_mp4_02', title: '葡萄成熟时', artist: '陈奕迅', cover: '/covers/0f87796747695b36a0e03dad0eb64a5e.jpg', tag: '深夜治愈', likes: '75w+', platform: 'local', localUrl: '/songs/葡萄成熟时.mp4' },
-    { id: 'local_mp4_03', title: '黑暗中漫舞', artist: '陈奕迅', cover: '/covers/141cf4294f8242d8bb64f2bea76ed0f3.jpg', tag: '小众神曲', likes: '40w+', platform: 'local', localUrl: '/songs/黑暗中暗舞.mp4' },
-    { id: 'local_mp4_04', title: '用背脊唱情歌', artist: '陈奕迅', cover: '/covers/34810b229c6b37af0613cbf7a817fbd5.jpg', tag: '动人旋律', likes: '60w+', platform: 'local', localUrl: '/songs/用背脊唱情歌.mp4' },
-    { id: 'local_mp4_05', title: '稻香', artist: '周杰伦', cover: '/covers/3b0660743d436e058b8e4860a367c7d1.jpeg', tag: '童年回忆', likes: '200w+', platform: 'local', localUrl: '/songs/稻香.mp4' },
+    { id: 'local_01', title: '晴天', artist: '周杰伦', cover: 'covers/3b0660743d436e058b8e4860a367c7d1.jpeg', tag: '本周热播', likes: '100w+', platform: 'local', localUrl: 'songs/000140.mp3' },
+    { id: 'local_02', title: '红玫瑰', artist: '陈奕迅', cover: 'covers/4cb202700292fde278e90e3b79499a6a.jpg', tag: '经典粤语', likes: '50w+', platform: 'local', localUrl: 'songs/000709.mp3' },
+    { id: 'local_03', title: '富士山下', artist: '陈奕迅', cover: 'covers/5ac5bf54ca1f4e288bf9ecf10d71d8d4.jpeg', tag: '深夜必听', likes: '80w+', platform: 'local', localUrl: 'songs/006367.mp3' },
+    { id: 'local_04', title: '七里香', artist: '周杰伦', cover: 'covers/5bc88c69f1dc2fa567fae3762193da2a.jpeg', tag: '夏日回忆', likes: '120w+', platform: 'local', localUrl: 'songs/006406.mp3' },
+    { id: 'local_mp4_01', title: '岁月如歌', artist: '陈奕迅', cover: 'covers/0569e542d658c81c9f17d63f0836f7f5.jpeg', tag: '经典金曲', likes: '90w+', platform: 'local', localUrl: 'songs/岁月如歌.mp4' },
+    { id: 'local_mp4_02', title: '葡萄成熟时', artist: '陈奕迅', cover: 'covers/0f87796747695b36a0e03dad0eb64a5e.jpg', tag: '深夜治愈', likes: '75w+', platform: 'local', localUrl: 'songs/葡萄成熟时.mp4' },
+    { id: 'local_mp4_03', title: '黑暗中漫舞', artist: '陈奕迅', cover: 'covers/141cf4294f8242d8bb64f2bea76ed0f3.jpg', tag: '小众神曲', likes: '40w+', platform: 'local', localUrl: 'songs/黑暗中暗舞.mp4' },
+    { id: 'local_mp4_04', title: '用背脊唱情歌', artist: '陈奕迅', cover: 'covers/34810b229c6b37af0613cbf7a817fbd5.jpg', tag: '动人旋律', likes: '60w+', platform: 'local', localUrl: 'songs/用背脊唱情歌.mp4' },
+    { id: 'local_mp4_05', title: '稻香', artist: '周杰伦', cover: 'covers/3b0660743d436e058b8e4860a367c7d1.jpeg', tag: '童年回忆', likes: '200w+', platform: 'local', localUrl: 'songs/稻香.mp4' },
   ]
 
   return (
@@ -64,7 +64,7 @@ const Home = ({ onNavigate, onPlaySong }) => {
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
             <img 
-              src="/covers/avatar.jpg" 
+              src="covers/avatar.jpg" 
               className="w-full h-full object-cover" 
               onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=F' }}
             />

@@ -19,7 +19,7 @@ const Player = ({ song, isPlaying, onTogglePlay, onBack, onPrev, onNext, current
 
   const getRandomCover = () => {
     const randomName = localCovers[Math.floor(Math.random() * localCovers.length)]
-    return `/covers/${randomName}`
+    return `covers/${randomName}`
   }
 
   const formatTime = (seconds) => {

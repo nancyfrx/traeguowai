@@ -15,23 +15,23 @@ function App() {
     id: 'local_05',
     title: '黄金时代',
     artist: '陈奕迅',
-    cover: '/covers/0569e542d658c81c9f17d63f0836f7f5.jpeg',
-    url: '/songs/013362.mp3',
-    localUrl: '/songs/013362.mp3',
+    cover: 'covers/0569e542d658c81c9f17d63f0836f7f5.jpeg',
+    url: 'songs/013362.mp3',
+    localUrl: 'songs/013362.mp3',
     lyrics: '[00:00.00] 暂无歌词',
     isVip: true
   })
   const [playList, setPlayList] = useState([
-    { id: 'local_05', title: '黄金时代', artist: '陈奕迅', cover: '/covers/0569e542d658c81c9f17d63f0836f7f5.jpeg', localUrl: '/songs/013362.mp3', isVip: true },
-    { id: 'local_01', title: '晴天', artist: '周杰伦', cover: '/covers/3b0660743d436e058b8e4860a367c7d1.jpeg', localUrl: '/songs/000140.mp3', isVip: true },
-    { id: 'local_02', title: '红玫瑰', artist: '陈奕迅', cover: '/covers/4cb202700292fde278e90e3b79499a6a.jpg', localUrl: '/songs/000709.mp3', isVip: true },
-    { id: 'local_03', title: '富士山下', artist: '陈奕迅', cover: '/covers/5ac5bf54ca1f4e288bf9ecf10d71d8d4.jpeg', localUrl: '/songs/006367.mp3', isVip: true },
-    { id: 'local_04', title: '七里香', artist: '周杰伦', cover: '/covers/5bc88c69f1dc2fa567fae3762193da2a.jpeg', localUrl: '/songs/006406.mp3', isVip: true },
-    { id: 'local_mp4_01', title: '岁月如歌', artist: '陈奕迅', cover: '/covers/0569e542d658c81c9f17d63f0836f7f5.jpeg', localUrl: '/songs/岁月如歌.mp4', isVip: true },
-    { id: 'local_mp4_02', title: '葡萄成熟时', artist: '陈奕迅', cover: '/covers/0f87796747695b36a0e03dad0eb64a5e.jpg', localUrl: '/songs/葡萄成熟时.mp4', isVip: true },
-    { id: 'local_mp4_03', title: '黑暗中漫舞', artist: '陈奕迅', cover: '/covers/141cf4294f8242d8bb64f2bea76ed0f3.jpg', localUrl: '/songs/黑暗中暗舞.mp4', isVip: true },
-    { id: 'local_mp4_04', title: '用背脊唱情歌', artist: '陈奕迅', cover: '/covers/34810b229c6b37af0613cbf7a817fbd5.jpg', localUrl: '/songs/用背脊唱情歌.mp4', isVip: true },
-    { id: 'local_mp4_05', title: '稻香', artist: '周杰伦', cover: '/covers/3b0660743d436e058b8e4860a367c7d1.jpeg', localUrl: '/songs/稻香.mp4', isVip: true },
+    { id: 'local_05', title: '黄金时代', artist: '陈奕迅', cover: 'covers/0569e542d658c81c9f17d63f0836f7f5.jpeg', localUrl: 'songs/013362.mp3', isVip: true },
+    { id: 'local_01', title: '晴天', artist: '周杰伦', cover: 'covers/3b0660743d436e058b8e4860a367c7d1.jpeg', localUrl: 'songs/000140.mp3', isVip: true },
+    { id: 'local_02', title: '红玫瑰', artist: '陈奕迅', cover: 'covers/4cb202700292fde278e90e3b79499a6a.jpg', localUrl: 'songs/000709.mp3', isVip: true },
+    { id: 'local_03', title: '富士山下', artist: '陈奕迅', cover: 'covers/5ac5bf54ca1f4e288bf9ecf10d71d8d4.jpeg', localUrl: 'songs/006367.mp3', isVip: true },
+    { id: 'local_04', title: '七里香', artist: '周杰伦', cover: 'covers/5bc88c69f1dc2fa567fae3762193da2a.jpeg', localUrl: 'songs/006406.mp3', isVip: true },
+    { id: 'local_mp4_01', title: '岁月如歌', artist: '陈奕迅', cover: 'covers/0569e542d658c81c9f17d63f0836f7f5.jpeg', localUrl: 'songs/岁月如歌.mp4', isVip: true },
+    { id: 'local_mp4_02', title: '葡萄成熟时', artist: '陈奕迅', cover: 'covers/0f87796747695b36a0e03dad0eb64a5e.jpg', localUrl: 'songs/葡萄成熟时.mp4', isVip: true },
+    { id: 'local_mp4_03', title: '黑暗中漫舞', artist: '陈奕迅', cover: 'covers/141cf4294f8242d8bb64f2bea76ed0f3.jpg', localUrl: 'songs/黑暗中暗舞.mp4', isVip: true },
+    { id: 'local_mp4_04', title: '用背脊唱情歌', artist: '陈奕迅', cover: 'covers/34810b229c6b37af0613cbf7a817fbd5.jpg', localUrl: 'songs/用背脊唱情歌.mp4', isVip: true },
+    { id: 'local_mp4_05', title: '稻香', artist: '周杰伦', cover: 'covers/3b0660743d436e058b8e4860a367c7d1.jpeg', localUrl: 'songs/稻香.mp4', isVip: true },
   ])
 
   const [isLoading, setIsLoading] = useState(false)

@@ -18,7 +18,7 @@ const MiniPlayer = ({ song, isPlaying, onTogglePlay, onClick, onOpenList }) => {
 
   const getRandomCover = () => {
     const randomName = localCovers[Math.floor(Math.random() * localCovers.length)]
-    return `/covers/${randomName}`
+    return `covers/${randomName}`
   }
 
   return (

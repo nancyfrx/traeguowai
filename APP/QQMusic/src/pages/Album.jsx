@@ -13,7 +13,7 @@ const Album = ({ onBack, onPlaySong }) => {
 
   const albumInfo = {
     title: '华语经典金曲',
-    cover: '/covers/9b236fc2382c8fb995b50a24d834a3ca.jpeg',
+    cover: 'covers/9b236fc2382c8fb995b50a24d834a3ca.jpeg',
     author: 'QQ音乐官方',
     desc: '精选华语乐坛最具代表性的经典金曲，带你重温那些感动瞬间。',
     playCount: '1.2亿',
