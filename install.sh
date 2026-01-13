@@ -45,12 +45,14 @@ FAILED=0
 check_cmd "git" || FAILED=1
 check_cmd "node" || FAILED=1
 check_cmd "java" || FAILED=1
+check_cmd "javac" || FAILED=1
 check_cmd "nginx" || FAILED=1
 check_cmd "mysql" || FAILED=1
 
 if [ $FAILED -eq 1 ]; then
     echo -e "\n${RED}⚠️ 请安装缺失的依赖后再运行此脚本。${NC}"
-    echo -e "${YELLOW}提示: 如果是 MySQL，请确保服务已启动。${NC}"
+    echo -e "${YELLOW}提示: 如果缺少 javac，说明您安装的是 JRE 而非 JDK。${NC}"
+    echo -e "${YELLOW}请运行: sudo yum install -y java-17-openjdk-devel${NC}"
     exit 1
 fi
 
