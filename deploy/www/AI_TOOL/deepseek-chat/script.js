@@ -38,6 +38,23 @@ async function generateJWT() {
     const sPayload = btoa(JSON.stringify(payload)).replace(/=/g, '');
     const unsignedToken = `${sHeader}.${sPayload}`;
 
+    // 优先使用 CryptoJS (支持 HTTP 环境)
+    if (typeof CryptoJS !== 'undefined') {
+        try {
+            const signature = CryptoJS.HmacSHA256(unsignedToken, API_SECRET);
+            const sSignature = CryptoJS.enc.Base64.stringify(signature)
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+            return `${unsignedToken}.${sSignature}`;
+        } catch (e) {
+            console.error('CryptoJS 签名失败:', e);
+        }
+    }
+
+    // 回退到原生 Crypto API (仅 HTTPS 可用)
+    if (!window.crypto || !window.crypto.subtle) {
+        throw new Error('当前环境安全限制导致签名失败。已尝试加载 CryptoJS 但未成功，请检查网络或使用 HTTPS 访问。');
+    }
+
     const encoder = new TextEncoder();
     const keyData = encoder.encode(API_SECRET);
     const cryptoKey = await crypto.subtle.importKey(

@@ -49,12 +49,23 @@ async function generateJWT(apiKey) {
     const encodedPayload = base64UrlEncode(payload);
     const data = `${encodedHeader}.${encodedPayload}`;
 
-    // 如果 crypto.subtle 不可用 (如 http 环境)，则抛出更友好的错误或提示用户
+    // 优先使用 CryptoJS (支持 HTTP 环境)，如果不可用再尝试原生 API
+    if (typeof CryptoJS !== 'undefined') {
+        try {
+            const signature = CryptoJS.HmacSHA256(data, secret);
+            const base64Signature = CryptoJS.enc.Base64.stringify(signature)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+            return `${data}.${base64Signature}`;
+        } catch (e) {
+            console.error('CryptoJS 签名失败:', e);
+        }
+    }
+
+    // 如果没有引入 CryptoJS 且 crypto.subtle 不可用 (如 http 环境)，则抛出错误
     if (!window.crypto || !window.crypto.subtle) {
-        console.error('Crypto API 不可用，请确保在 HTTPS 环境下运行');
-        // 如果智谱支持不带签名的鉴权或者有其他方式，可以在这里尝试
-        // 但 JWT 通常必须签名，所以这里提示用户
-        throw new Error('当前环境安全限制导致签名失败，请使用 HTTPS 访问以修复此问题。');
+        throw new Error('当前环境安全限制导致签名失败。已尝试加载 CryptoJS 但未成功，请检查网络或使用 HTTPS 访问。');
     }
     
     const hmac = new TextEncoder().encode(data);

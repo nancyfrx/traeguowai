@@ -43,10 +43,30 @@ function generateJWT(apiKey) {
     const encodedHeader = base64UrlEncode(header);
     const encodedPayload = base64UrlEncode(payload);
     const data = `${encodedHeader}.${encodedPayload}`;
-    
+
+    // 优先使用 CryptoJS (支持 HTTP 环境)
+    if (typeof CryptoJS !== 'undefined') {
+        try {
+            const signature = CryptoJS.HmacSHA256(data, secret);
+            const base64Signature = CryptoJS.enc.Base64.stringify(signature)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+            return Promise.resolve(`${data}.${base64Signature}`);
+        } catch (e) {
+            console.error('CryptoJS 签名失败:', e);
+        }
+    }
+
     const signData = (data, secret) => {
+        // 如果 crypto.subtle 不可用 (如 http 环境)
+        if (!window.crypto || !window.crypto.subtle) {
+            return Promise.reject(new Error('当前环境安全限制导致签名失败。已尝试加载 CryptoJS 但未成功，请检查网络或使用 HTTPS 访问。'));
+        }
+        
         const hmac = new TextEncoder().encode(data);
         const key = new TextEncoder().encode(secret);
+        
         return crypto.subtle.importKey(
             'raw',
             key,
