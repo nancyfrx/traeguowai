@@ -170,27 +170,31 @@
     </main>
 
     <script>
-        // Project configuration mapping nested structure
+        // 环境检测：判断是否在本地运行 (localhost 或 file:// 协议)
+        const isLocal = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' || 
+                       window.location.protocol === 'file:';
+        const isProd = !isLocal;
+
         const menuData = [
             {
-                name: 'AI TOOL',
+                name: 'AI_TOOL',
                 icon: '🛠️',
                 children: [
-                    { id: 'chat-gml', name: '智谱 AI 聊天', icon: '💬', type: 'static', url: './AI%20TOOL/chat-gml/index.html', path: './AI TOOL/chat-gml' },
-                    { id: 'deepseek-chat', name: 'DeepSeek Chat', icon: '🧠', type: 'static', url: './AI%20TOOL/deepseek-chat/index.html', path: './AI TOOL/deepseek-chat' }
+                    { id: 'chat-gml', name: '智谱 AI 聊天', icon: '💬', type: 'static', url: './AI_TOOL/chat-gml/', path: './AI_TOOL/chat-gml' },
+                    { id: 'deepseek-chat', name: 'DeepSeek Chat', icon: '🧠', type: 'static', url: './AI_TOOL/deepseek-chat/', path: './AI_TOOL/deepseek-chat' }
                 ]
             },
             {
                 name: 'APP',
                 icon: '📱',
                 children: [
-                    { id: 'qqmusic', name: 'QQ音乐', icon: '🎵', type: 'vite', url: 'http://localhost:3000', path: './APP/QQMusic' },
-                    { id: 'douyin', name: '抖音', icon: '📱', type: 'vite', url: 'http://localhost:5173', path: './APP/douyin' },
-                    { id: 'amap-ranking', name: '高德扫街', icon: '📍', type: 'vite', url: 'http://localhost:5177', path: './APP/amap-ranking' },
-                    { id: 'wechat-clone', name: '微信', icon: '💬', type: 'static', url: './APP/wechat-clone/index.html', path: './APP/wechat-clone' },
-                    { id: 'weixin', name: '新版微信', icon: '💬', type: 'vite', url: 'http://localhost:5179', path: './APP/weixin' },
-                    { id: 'boke', name: '博客', icon: '📝', type: 'vite', url: 'http://localhost:3001', path: './APP/boke/frontend-react' },
-                    { id: 'blog', name: '艺术市场', icon: '🎨', type: 'vite', url: 'http://localhost:5175', path: './APP/blog/frontend' }
+                    { id: 'qqmusic', name: 'QQ音乐', icon: '🎵', type: 'vite', localUrl: 'http://localhost:3000', prodUrl: './app/qqmusic/index.html', path: './APP/QQMusic' },
+                    { id: 'douyin', name: '抖音', icon: '📱', type: 'vite', localUrl: 'http://localhost:5173', prodUrl: './app/douyin/index.html', path: './APP/douyin' },
+                    { id: 'amap-ranking', name: '高德扫街', icon: '📍', type: 'vite', localUrl: 'http://localhost:5177', prodUrl: './app/amap-ranking/index.html', path: './APP/amap-ranking' },
+                    { id: 'wechat-clone', name: '微信', icon: '💬', type: 'static', url: './APP/wechat-clone/', path: './APP/wechat-clone' },
+                    { id: 'weixin', name: '新版微信', icon: '💬', type: 'vite', localUrl: 'http://localhost:5179', prodUrl: './app/weixin/index.html', path: './APP/weixin' },
+                    { id: 'blog', name: '艺术市场', icon: '🎨', type: 'vite', localUrl: 'http://localhost:5175', prodUrl: './app/blog/index.html', path: './APP/blog/frontend' }
                 ]
             },
             {
@@ -198,21 +202,30 @@
                 icon: '🎮',
                 children: [
                     { id: 'eluosi', name: '俄罗斯方块', icon: '🧱', type: 'static', url: './game/eluosifangkuan/tetris.html', path: './game/eluosifangkuan' },
-                    { id: 'feij', name: '坦克大战飞机', icon: '✈️', type: 'static', url: './game/feij/index.html', path: './game/feij' },
-                    { id: 'xiaoxiaole', name: '消消乐', icon: '💎', type: 'static', url: './game/xiaoxiaole/index.html', path: './game/xiaoxiaole' }
+                    { id: 'feij', name: '坦克大战飞机', icon: '✈️', type: 'static', url: './game/feij/', path: './game/feij' },
+                    { id: 'xiaoxiaole', name: '消消乐', icon: '💎', type: 'static', url: './game/xiaoxiaole/', path: './game/xiaoxiaole' }
                 ]
             },
             {
                 name: 'OTHER',
                 icon: '📂',
                 children: [
-                    { id: 'animal', name: '动物百科', icon: '🐾', type: 'static', url: './other/animal/index.html', path: './other/animal' },
-                    { id: 'china-map', name: '中国地图', icon: '🗺️', type: 'static', url: './other/china%20map/china-map%20(4).html', path: './other/china map' },
-                    { id: 'rili', name: '万年历', icon: '📅', type: 'vite', url: 'http://localhost:5176', path: './other/rili' },
+                    { id: 'animal', name: '动物百科', icon: '🐾', type: 'static', url: './other/animal/', path: './other/animal' },
+                    { id: 'china-map', name: '中国地图', icon: '🗺️', type: 'static', url: './other/china_map/china-map (4).html', path: './other/china_map' },
+                    { id: 'rili', name: '万年历', icon: '📅', type: 'vite', localUrl: 'http://localhost:5176', prodUrl: './other/rili/index.html', path: './other/rili' },
                     { id: 'docs', name: '技术文档', icon: '📖', type: 'static', url: './other/docs.html', path: './other' }
                 ]
             }
         ];
+
+        // Process URLs based on environment
+        menuData.forEach(cat => {
+            cat.children.forEach(project => {
+                if (project.type === 'vite') {
+                    project.url = isProd ? project.prodUrl : project.localUrl;
+                }
+            });
+        });
 
         const sidebar = document.getElementById('sidebar');
         const iframe = document.getElementById('project-iframe');

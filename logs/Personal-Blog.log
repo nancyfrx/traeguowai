@@ -1,0 +1,10 @@
+
+> frontend-react@0.0.0 dev
+> vite --port 3001
+
+
+  VITE v5.4.21  ready in 258 ms
+
+  ➜  Local:   http://localhost:3001/
+  ➜  Network: http://192.168.0.4:3001/
+  ➜  Network: http://169.254.96.93:3001/

@@ -37,10 +37,18 @@ const ArticleDetail = () => {
       }
 
       try {
-        const [articleRes, commentsRes] = await Promise.all([
-          articleApi.getById(id),
-          commentApi.getByArticle(id)
-        ]);
+        const articleRes = await articleApi.getById(id);
+        setArticle(articleRes.data);
+        
+        // 分开获取评论，避免评论接口失败导致整页报错
+        try {
+          const commentsRes = await commentApi.getByArticle(id);
+          setComments(commentsRes.data);
+        } catch (commentError) {
+          console.error('Failed to fetch comments:', commentError);
+          setComments([]);
+        }
+        
         const data = articleRes.data;
         // 增加对 contentBlocks 的鲁棒性处理
         if (data.contentBlocks) {
@@ -57,7 +65,6 @@ const ArticleDetail = () => {
         }
         
         setArticle(data);
-        setComments(commentsRes.data);
       } catch (error) {
         console.error('Failed to fetch article details:', error);
       } finally {

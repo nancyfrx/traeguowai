@@ -1,0 +1,10 @@
+
+> rili@0.0.0 dev
+> vite --port 5176
+
+
+  VITE v6.4.1  ready in 295 ms
+
+  ➜  Local:   http://localhost:5176/
+  ➜  Network: http://192.168.0.4:5176/
+  ➜  Network: http://169.254.96.93:5176/

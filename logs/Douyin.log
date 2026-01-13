@@ -1,0 +1,10 @@
+
+> douyin-clone@0.0.0 dev
+> vite --port 5173
+
+
+  VITE v4.5.14  ready in 537 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.0.4:5173/
+  ➜  Network: http://169.254.96.93:5173/

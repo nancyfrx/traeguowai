@@ -1,0 +1,12 @@
+
+> blog-frontend@0.1.0 dev
+> vite --port 5175
+
+
+  VITE v5.4.21  ready in 323 ms
+
+  ➜  Local:   http://localhost:5175/
+  ➜  Network: use --host to expose
+00:07:06 [vite] hmr update /src/pages/ArticleDetail.jsx, /src/index.css
+01:10:59 [vite] hmr update /src/index.css, /src/pages/Login.jsx, /src/pages/Home.jsx, /src/pages/AdminDashboard.jsx, /src/pages/Marketplace.jsx, /src/pages/ArticleEdit.jsx, /src/components/SubscriptionModal.jsx, /src/pages/ProductDetail.jsx, /src/pages/ArticleDetail.jsx
+01:12:22 [vite] hmr update /src/pages/ArticleEdit.jsx, /src/index.css

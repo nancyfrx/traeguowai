@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: traeguowai-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./www:/usr/share/nginx/html
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - blog-backend
+    networks:
+      - traeguowai-network
+
+  blog-backend:
+    build:
+      context: ../APP/blog/backend
+      dockerfile: Dockerfile
+    container_name: blog-backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/blog_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - mysql
+    networks:
+      - traeguowai-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: traeguowai-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=blog_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - traeguowai-network
+
+networks:
+  traeguowai-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

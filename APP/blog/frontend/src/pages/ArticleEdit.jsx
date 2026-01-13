@@ -58,7 +58,10 @@ const ArticleEdit = () => {
     setUploading(true);
     try {
       const res = await uploadApi.upload(file);
-      const fileUrl = `http://localhost:8080${res.data.url}`;
+      const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:8080' 
+        : '';
+      const fileUrl = `${baseUrl}${res.data.url}`;
       
       if (index !== null) {
         const newBlocks = [...formData.contentBlocks];

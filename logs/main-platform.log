@@ -1,0 +1,453 @@
+ INFO  Accepting connections at http://localhost:8082
+ HTTP  2026/1/13 00:04:14 ::1 HEAD /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:04:14 ::1 Returned 200 in 22 ms
+ HTTP  2026/1/13 00:14:09 ::1 GET /
+ HTTP  2026/1/13 00:14:09 ::1 Returned 200 in 21 ms
+ HTTP  2026/1/13 00:15:10 ::1 GET /game/eluosifangkuan/tetris
+ HTTP  2026/1/13 00:15:10 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:15:21 ::1 GET /game/feij
+ HTTP  2026/1/13 00:15:21 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:15:21 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:21 ::1 GET /game/game.js
+ HTTP  2026/1/13 00:15:21 ::1 Returned 404 in 12 ms
+ HTTP  2026/1/13 00:15:21 ::1 Returned 404 in 17 ms
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/xiaoxiaole
+ HTTP  2026/1/13 00:15:24 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/src/constants.js
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/src/audioManager.js
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/src/utils.js
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/src/gem.js
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/src/board.js
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 9 ms
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 10 ms
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 8 ms
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 8 ms
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 9 ms
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 8 ms
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/src/game.js
+ HTTP  2026/1/13 00:15:24 ::1 GET /game/src/main.js
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 9 ms
+ HTTP  2026/1/13 00:15:24 ::1 Returned 404 in 8 ms
+ HTTP  2026/1/13 00:15:25 ::1 GET /game/feij
+ HTTP  2026/1/13 00:15:25 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:15:25 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:25 ::1 GET /game/game.js
+ HTTP  2026/1/13 00:15:25 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:15:25 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/xiaoxiaole
+ HTTP  2026/1/13 00:15:26 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/src/constants.js
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/src/utils.js
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/src/gem.js
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/src/audioManager.js
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/src/board.js
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 4 ms
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 4 ms
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/src/game.js
+ HTTP  2026/1/13 00:15:26 ::1 GET /game/src/main.js
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 4 ms
+ HTTP  2026/1/13 00:15:26 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:27 ::1 GET /
+ HTTP  2026/1/13 00:15:27 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/xiaoxiaole
+ HTTP  2026/1/13 00:15:29 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/src/constants.js
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/src/utils.js
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/src/gem.js
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/src/audioManager.js
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/src/board.js
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/src/game.js
+ HTTP  2026/1/13 00:15:29 ::1 GET /game/src/main.js
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:15:29 ::1 Returned 404 in 3 ms
+ HTTP  2026/1/13 00:15:30 ::1 GET /game/feij
+ HTTP  2026/1/13 00:15:30 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:31 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:31 ::1 GET /game/game.js
+ HTTP  2026/1/13 00:15:31 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:15:31 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:15:31 ::1 GET /game/eluosifangkuan/tetris
+ HTTP  2026/1/13 00:15:31 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:15:33 ::1 GET /game/feij
+ HTTP  2026/1/13 00:15:33 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:33 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:33 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:15:33 ::1 GET /game/game.js
+ HTTP  2026/1/13 00:15:33 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:15:34 ::1 GET /other/animal/
+ HTTP  2026/1/13 00:15:34 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:15:34 ::1 GET /other/animal/data.js
+ HTTP  2026/1/13 00:15:34 ::1 GET /other/animal/styles.css
+ HTTP  2026/1/13 00:15:34 ::1 GET /other/animal/script.js
+ HTTP  2026/1/13 00:15:34 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:15:34 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:15:34 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:15:35 ::1 GET /other/china_map/china-map%20(4)
+ HTTP  2026/1/13 00:15:35 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:15:39 ::1 GET /other/docs
+ HTTP  2026/1/13 00:15:39 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:42 ::1 GET /other/doc-detail
+ HTTP  2026/1/13 00:15:42 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:55 ::1 GET /other/china_map/china-map%20(4)
+ HTTP  2026/1/13 00:15:55 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/xiaoxiaole
+ HTTP  2026/1/13 00:15:56 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/src/constants.js
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/src/utils.js
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/src/gem.js
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/src/audioManager.js
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 9 ms
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/src/board.js
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 8 ms
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 9 ms
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 11 ms
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/src/game.js
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 11 ms
+ HTTP  2026/1/13 00:15:56 ::1 GET /game/src/main.js
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 13 ms
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 8 ms
+ HTTP  2026/1/13 00:15:56 ::1 Returned 404 in 9 ms
+ HTTP  2026/1/13 00:15:57 ::1 GET /game/feij
+ HTTP  2026/1/13 00:15:57 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:15:57 ::1 GET /game/style.css
+ HTTP  2026/1/13 00:15:57 ::1 GET /game/game.js
+ HTTP  2026/1/13 00:15:57 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:15:57 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:16:04 ::1 GET /AI_TOOL/chat-gml
+ HTTP  2026/1/13 00:16:04 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:16:04 ::1 GET /AI_TOOL/style.css
+ HTTP  2026/1/13 00:16:04 ::1 GET /AI_TOOL/script.js
+ HTTP  2026/1/13 00:16:04 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:16:04 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:16:05 ::1 GET /AI_TOOL/chat-gml
+ HTTP  2026/1/13 00:16:05 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:16:05 ::1 GET /AI_TOOL/style.css
+ HTTP  2026/1/13 00:16:05 ::1 GET /AI_TOOL/script.js
+ HTTP  2026/1/13 00:16:05 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:16:05 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:16:06 ::1 GET /AI_TOOL/deepseek-chat
+ HTTP  2026/1/13 00:16:06 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:16:06 ::1 GET /AI_TOOL/style.css
+ HTTP  2026/1/13 00:16:06 ::1 GET /AI_TOOL/script.js
+ HTTP  2026/1/13 00:16:06 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:16:06 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:16:07 ::1 GET /AI_TOOL/chat-gml
+ HTTP  2026/1/13 00:16:07 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:16:07 ::1 GET /AI_TOOL/style.css
+ HTTP  2026/1/13 00:16:07 ::1 GET /AI_TOOL/script.js
+ HTTP  2026/1/13 00:16:07 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:16:07 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:16:50 ::1 GET /
+ HTTP  2026/1/13 00:16:50 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:16:52 ::1 GET /AI_TOOL/chat-gml
+ HTTP  2026/1/13 00:16:52 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:16:52 ::1 GET /AI_TOOL/style.css
+ HTTP  2026/1/13 00:16:52 ::1 GET /AI_TOOL/script.js
+ HTTP  2026/1/13 00:16:52 ::1 Returned 404 in 2 ms
+ HTTP  2026/1/13 00:16:52 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:16:54 ::1 GET /AI_TOOL/deepseek-chat
+ HTTP  2026/1/13 00:16:54 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:16:54 ::1 GET /AI_TOOL/style.css
+ HTTP  2026/1/13 00:16:54 ::1 GET /AI_TOOL/script.js
+ HTTP  2026/1/13 00:16:54 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:16:54 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:17:36 ::1 HEAD /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:17:36 ::1 Returned 200 in 3 ms
+ HTTP  2026/1/13 00:18:54 ::1 HEAD /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:18:54 ::1 Returned 200 in 2 ms
+ HTTP  2026/1/13 00:20:38 ::1 GET /
+ HTTP  2026/1/13 00:20:38 ::1 Returned 200 in 2 ms
+ HTTP  2026/1/13 00:20:41 ::1 GET /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:20:41 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:41 ::1 GET /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:20:41 ::1 GET /AI_TOOL/chat-gml/script.js
+ HTTP  2026/1/13 00:20:41 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:41 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:20:43 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:20:43 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:43 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:20:43 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:20:43 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:20:43 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:20:43 ::1 GET /game/eluosifangkuan/tetris
+ HTTP  2026/1/13 00:20:43 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:47 ::1 GET /game/eluosifangkuan/tetris
+ HTTP  2026/1/13 00:20:47 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:50 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:20:50 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:50 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:20:50 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:50 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:20:50 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/src/constants.js
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/style.css
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/src/gem.js
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/src/utils.js
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/src/audioManager.js
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/src/board.js
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/src/game.js
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 7 ms
+ HTTP  2026/1/13 00:20:58 ::1 GET /game/xiaoxiaole/src/main.js
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 7 ms
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 6 ms
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 7 ms
+ HTTP  2026/1/13 00:20:58 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:21:04 ::1 GET /favicon.ico
+ HTTP  2026/1/13 00:21:04 ::1 Returned 404 in 1 ms
+ HTTP  2026/1/13 00:21:31 ::1 GET /
+ HTTP  2026/1/13 00:21:31 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:21:37 ::1 GET /other/docs
+ HTTP  2026/1/13 00:21:37 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:21:42 ::1 GET /other/doc-detail
+ HTTP  2026/1/13 00:21:42 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:21:54 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:21:54 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:21:54 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:21:54 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:21:54 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:21:54 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:22:28 ::1 GET /other/docs
+ HTTP  2026/1/13 00:22:28 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:27:12 ::1 GET /favicon.ico
+ HTTP  2026/1/13 00:27:12 ::1 Returned 404 in 26 ms
+ HTTP  2026/1/13 00:29:03 ::1 GET /
+ HTTP  2026/1/13 00:29:03 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:33:19 ::1 GET /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:33:19 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:33:19 ::1 GET /AI_TOOL/chat-gml/script.js
+ HTTP  2026/1/13 00:33:19 ::1 Returned 304 in 8 ms
+ HTTP  2026/1/13 00:33:19 ::1 GET /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:33:19 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:33:20 ::1 GET /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:33:20 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:33:20 ::1 GET /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:33:20 ::1 GET /AI_TOOL/chat-gml/script.js
+ HTTP  2026/1/13 00:33:20 ::1 Returned 304 in 20 ms
+ HTTP  2026/1/13 00:33:20 ::1 Returned 304 in 25 ms
+ HTTP  2026/1/13 00:33:28 ::1 GET /AI_TOOL/deepseek-chat/
+ HTTP  2026/1/13 00:33:28 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:33:28 ::1 GET /AI_TOOL/deepseek-chat/style.css
+ HTTP  2026/1/13 00:33:28 ::1 GET /AI_TOOL/deepseek-chat/script.js
+ HTTP  2026/1/13 00:33:28 ::1 Returned 304 in 11 ms
+ HTTP  2026/1/13 00:33:28 ::1 Returned 304 in 9 ms
+ HTTP  2026/1/13 00:33:38 ::1 GET /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:33:38 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:33:38 ::1 GET /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:33:38 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:33:38 ::1 GET /AI_TOOL/chat-gml/script.js
+ HTTP  2026/1/13 00:33:38 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:33:42 ::1 GET /AI_TOOL/deepseek-chat/
+ HTTP  2026/1/13 00:33:42 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:33:42 ::1 GET /AI_TOOL/deepseek-chat/style.css
+ HTTP  2026/1/13 00:33:42 ::1 GET /AI_TOOL/deepseek-chat/script.js
+ HTTP  2026/1/13 00:33:42 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:33:42 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:34:43 ::1 GET /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:34:43 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:34:43 ::1 GET /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:34:43 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:34:43 ::1 GET /AI_TOOL/chat-gml/script.js
+ HTTP  2026/1/13 00:34:43 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:34:47 ::1 GET /AI_TOOL/deepseek-chat/
+ HTTP  2026/1/13 00:34:47 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:34:47 ::1 GET /AI_TOOL/deepseek-chat/style.css
+ HTTP  2026/1/13 00:34:47 ::1 GET /AI_TOOL/deepseek-chat/script.js
+ HTTP  2026/1/13 00:34:47 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:34:47 ::1 Returned 304 in 8 ms
+ HTTP  2026/1/13 00:35:10 ::1 GET /favicon.ico
+ HTTP  2026/1/13 00:35:10 ::1 Returned 404 in 5 ms
+ HTTP  2026/1/13 00:36:58 ::1 GET /APP/wechat-clone/
+ HTTP  2026/1/13 00:36:58 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:36:58 ::1 GET /APP/wechat-clone/style.css
+ HTTP  2026/1/13 00:36:58 ::1 GET /APP/wechat-clone/script.js
+ HTTP  2026/1/13 00:36:58 ::1 Returned 304 in 11 ms
+ HTTP  2026/1/13 00:36:58 ::1 Returned 304 in 8 ms
+ HTTP  2026/1/13 00:40:51 ::1 GET /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:40:51 ::1 Returned 304 in 8 ms
+ HTTP  2026/1/13 00:40:51 ::1 GET /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:40:51 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:40:51 ::1 GET /AI_TOOL/chat-gml/script.js
+ HTTP  2026/1/13 00:40:51 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:40:54 ::1 GET /AI_TOOL/deepseek-chat/
+ HTTP  2026/1/13 00:40:54 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:40:54 ::1 GET /AI_TOOL/deepseek-chat/style.css
+ HTTP  2026/1/13 00:40:54 ::1 GET /AI_TOOL/deepseek-chat/script.js
+ HTTP  2026/1/13 00:40:54 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:40:54 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:43:20 ::1 GET /AI_TOOL/chat-gml/
+ HTTP  2026/1/13 00:43:20 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:43:20 ::1 GET /AI_TOOL/chat-gml/style.css
+ HTTP  2026/1/13 00:43:20 ::1 Returned 304 in 11 ms
+ HTTP  2026/1/13 00:43:20 ::1 GET /AI_TOOL/chat-gml/script.js
+ HTTP  2026/1/13 00:43:20 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:43:24 ::1 GET /AI_TOOL/deepseek-chat/
+ HTTP  2026/1/13 00:43:24 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:43:24 ::1 GET /AI_TOOL/deepseek-chat/style.css
+ HTTP  2026/1/13 00:43:24 ::1 GET /AI_TOOL/deepseek-chat/script.js
+ HTTP  2026/1/13 00:43:24 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:43:24 ::1 Returned 304 in 7 ms
+ HTTP  2026/1/13 00:45:07 ::1 GET /APP/wechat-clone/
+ HTTP  2026/1/13 00:45:07 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:45:07 ::1 GET /APP/wechat-clone/style.css
+ HTTP  2026/1/13 00:45:07 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:45:07 ::1 GET /APP/wechat-clone/script.js
+ HTTP  2026/1/13 00:45:07 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:48:15 ::1 GET /game/eluosifangkuan/tetris
+ HTTP  2026/1/13 00:48:15 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:48:24 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:48:24 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:48:24 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:48:24 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:48:24 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:48:24 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/style.css
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/src/constants.js
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/src/game.js
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/src/utils.js
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/src/main.js
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/src/gem.js
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/src/audioManager.js
+ HTTP  2026/1/13 00:48:39 ::1 GET /game/xiaoxiaole/src/board.js
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:48:39 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:51:58 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:51:58 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:51:58 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:51:58 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:51:58 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:51:58 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:51:59 ::1 GET /game/eluosifangkuan/tetris
+ HTTP  2026/1/13 00:51:59 ::1 Returned 304 in 6 ms
+ HTTP  2026/1/13 00:52:09 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:52:09 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:52:09 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:52:09 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:52:09 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:52:09 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:52:29 ::1 GET /game/xiaoxiaole/
+ HTTP  2026/1/13 00:52:29 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/style.css
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/src/constants.js
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/src/utils.js
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/src/game.js
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/src/audioManager.js
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 11 ms
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/src/main.js
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/src/gem.js
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 12 ms
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 6 ms
+ HTTP  2026/1/13 00:52:30 ::1 GET /game/xiaoxiaole/src/board.js
+ HTTP  2026/1/13 00:52:30 ::1 Returned 304 in 4 ms
+ HTTP  2026/1/13 00:52:53 ::1 GET /other/animal/
+ HTTP  2026/1/13 00:52:53 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:52:54 ::1 GET /other/animal/data.js
+ HTTP  2026/1/13 00:52:54 ::1 GET /other/animal/styles.css
+ HTTP  2026/1/13 00:52:54 ::1 Returned 304 in 44 ms
+ HTTP  2026/1/13 00:52:54 ::1 GET /other/animal/script.js
+ HTTP  2026/1/13 00:52:54 ::1 Returned 304 in 49 ms
+ HTTP  2026/1/13 00:52:54 ::1 Returned 304 in 6 ms
+ HTTP  2026/1/13 00:52:59 ::1 GET /other/china_map/china-map%20(4)
+ HTTP  2026/1/13 00:52:59 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:53:17 ::1 GET /other/docs
+ HTTP  2026/1/13 00:53:17 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:53:23 ::1 GET /other/doc-detail
+ HTTP  2026/1/13 00:53:23 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/style.css
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/src/constants.js
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/src/game.js
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/src/utils.js
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 5 ms
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/src/main.js
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/src/gem.js
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 7 ms
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 10 ms
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/src/audioManager.js
+ HTTP  2026/1/13 00:53:54 ::1 GET /game/xiaoxiaole/src/board.js
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:53:54 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:54:14 ::1 GET /
+ HTTP  2026/1/13 00:54:14 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:54:31 ::1 GET /favicon.ico
+ HTTP  2026/1/13 00:54:31 ::1 Returned 404 in 20 ms
+ HTTP  2026/1/13 00:57:05 ::1 GET /game/eluosifangkuan/tetris
+ HTTP  2026/1/13 00:57:05 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:20 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:57:20 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:21 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:57:21 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:21 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:57:21 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:21 ::1 GET /game/feij/
+ HTTP  2026/1/13 00:57:21 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:21 ::1 GET /game/feij/style.css
+ HTTP  2026/1/13 00:57:21 ::1 GET /game/feij/game.js
+ HTTP  2026/1/13 00:57:21 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:21 ::1 Returned 304 in 9 ms
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 0 ms
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/style.css
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/src/constants.js
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/src/board.js
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/src/utils.js
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/src/game.js
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/src/gem.js
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 9 ms
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/src/main.js
+ HTTP  2026/1/13 00:57:35 ::1 GET /game/xiaoxiaole/src/audioManager.js
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:35 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:57:52 ::1 GET /other/animal/
+ HTTP  2026/1/13 00:57:52 ::1 Returned 304 in 2 ms
+ HTTP  2026/1/13 00:57:52 ::1 GET /other/animal/data.js
+ HTTP  2026/1/13 00:57:52 ::1 Returned 304 in 14 ms
+ HTTP  2026/1/13 00:57:52 ::1 GET /other/animal/styles.css
+ HTTP  2026/1/13 00:57:52 ::1 GET /other/animal/script.js
+ HTTP  2026/1/13 00:57:52 ::1 Returned 304 in 6 ms
+ HTTP  2026/1/13 00:57:52 ::1 Returned 304 in 9 ms
+ HTTP  2026/1/13 00:57:57 ::1 GET /other/china_map/china-map%20(4)
+ HTTP  2026/1/13 00:57:57 ::1 Returned 304 in 3 ms
+ HTTP  2026/1/13 00:58:13 ::1 GET /other/docs
+ HTTP  2026/1/13 00:58:13 ::1 Returned 304 in 1 ms
+ HTTP  2026/1/13 00:58:16 ::1 GET /other/doc-detail
+ HTTP  2026/1/13 00:58:16 ::1 Returned 304 in 1 ms
