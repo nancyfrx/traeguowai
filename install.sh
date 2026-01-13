@@ -135,6 +135,16 @@ else
     fi
 fi
 
+# 2.1 同步最新的 install.sh 到 /root 目录
+echo -e "\n${YELLOW}Step 2.1: 正在同步 install.sh 到 /root 目录...${NC}"
+if [ -f "install.sh" ]; then
+    cp install.sh /root/install.sh
+    chmod +x /root/install.sh
+    echo -e "${GREEN}✅ /root/install.sh 已更新${NC}"
+else
+    echo -e "${RED}❌ 未能在当前目录找到 install.sh${NC}"
+fi
+
 # 3. 执行前端部署脚本
 echo -e "\n${YELLOW}Step 3: 启动自动化构建与前端部署...${NC}"
 chmod +x prepare_deploy.sh

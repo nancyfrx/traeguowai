@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>中国旅游地图 - 探索华夏美景</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="//unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="//fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -555,7 +555,7 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="//unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // 省会城市数据 - 包含所有34个省级行政区
         const capitalCities = {
@@ -852,28 +852,45 @@
 
         // 初始化地图
         function initMap() {
-            // 默认直接进入高德地图免登录模式
-            switchToAmapMode();
-        }
+            // 恢复 Leaflet 初始化逻辑
+            map = L.map('map', {
+                center: [35.8617, 104.1954],
+                zoom: 4,
+                zoomControl: false,
+                attributionControl: false
+            });
 
-        // 切换到高德官方地区展示接口 (类似高德扫街风格)
-        function switchToAmapMode() {
-            const mapContainer = document.getElementById('map');
-            // 使用高德地图官方区域展示接口
-            const amapIframe = document.createElement('iframe');
-            // 使用免登录且与高德扫街一致的接口
-            amapIframe.src = 'https://m.amap.com/region/?adcode=100000&key=7302f35443317765951d451405e3a516';
-            amapIframe.style.width = '100%';
-            amapIframe.style.height = '100%';
-            amapIframe.style.border = 'none';
-            
-            // 加载完成后隐藏 loading
-            amapIframe.onload = function() {
-                document.getElementById('loadingOverlay').style.display = 'none';
-            };
-            
-            mapContainer.innerHTML = '';
-            mapContainer.appendChild(amapIframe);
+            // 添加底图（使用简洁的深色底图或不加底图只显示省份）
+            L.tileLayer('//{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 18,
+                opacity: 0.3
+            }).addTo(map);
+
+            // 加载免费的 GeoJSON 数据 (阿里云 DataV 提供)
+            fetch('//geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
+                .then(response => response.json())
+                .then(data => {
+                    geoJsonLayer = L.geoJSON(data, {
+                        style: defaultStyle,
+                        onEachFeature: onEachFeature
+                    }).addTo(map);
+                    
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    
+                    // 自动缩放到中国全境
+                    map.fitBounds(geoJsonLayer.getBounds(), {
+                        padding: [20, 20]
+                    });
+                })
+                .catch(error => {
+                    console.error('加载地图数据失败:', error);
+                    document.getElementById('loadingOverlay').innerHTML = `
+                        <div style="color: #ff4d4f; text-align: center; padding: 20px;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">❌</div>
+                            <div>数据加载失败，请刷新重试</div>
+                        </div>
+                    `;
+                });
         }
 
         // 默认样式
