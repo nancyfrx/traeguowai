@@ -53,7 +53,8 @@
     启动后访问 [http://localhost:5173](http://localhost:5173) 即可进入项目管理入口。
 
 ## 部署说明
-- **生产环境**：支持通过 `prepare_deploy.sh` 进行一键打包，并部署至阿里云服务器（详情见 [ALIYUN_DEPLOY_GUIDE.md](./ALIYUN_DEPLOY_GUIDE.md)）。
+- **自动化部署 (服务器)**：推荐在服务器端运行 `./update_and_deploy.sh`，它会自动拉取最新代码并执行安装。
+- **生产环境打包**：支持通过 `prepare_deploy.sh` 进行一键打包，并部署至阿里云服务器（详情见 [ALIYUN_DEPLOY_GUIDE.md](./ALIYUN_DEPLOY_GUIDE.md)）。
 - **动态环境**：平台入口 `index.html` 已实现环境自适应，本地运行自动连接开发服务器，生产部署自动使用相对路径。
 
 ---

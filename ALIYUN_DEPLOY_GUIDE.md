@@ -39,7 +39,17 @@ newgrp docker
 ```
 
 ## 4. 上传并部署项目
-1. 将本地生成的 `deploy` 文件夹上传到服务器：
+1. **(推荐) 自动化部署**：
+   在服务器上，进入项目目录并执行自动化脚本：
+   ```bash
+   cd /root/traeguowai
+   chmod +x update_and_deploy.sh
+   ./update_and_deploy.sh
+   ```
+   *该脚本会自动拉取最新代码、同步 `install.sh` 并执行全自动部署。*
+
+2. **手动上传部署**：
+   将本地生成的 `deploy` 文件夹上传到服务器：
    ```bash
    scp -r ./deploy root@<您的服务器IP>:/root/traeguowai-deploy
    ```
