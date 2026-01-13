@@ -112,7 +112,10 @@ fi
 # 2. 获取代码
 # 增加自动识别：如果已经在项目目录内执行，则跳过 clone
 if [ -f "prepare_deploy.sh" ] && [ -d "APP" ]; then
-    echo -e "\n${GREEN}✅ 检测到当前已在项目目录中，直接执行更新...${NC}"
+    echo -e "\n${YELLOW}Step 2: 检测到当前已在项目目录中，正在强制拉取最新代码...${NC}"
+    # 强制重置并拉取，确保本地修改不冲突
+    git fetch --all
+    git reset --hard origin/master
     git pull origin master
 else
     if [ ! -d "$INSTALL_DIR" ]; then
@@ -124,35 +127,70 @@ else
         fi
         cd $INSTALL_DIR
     else
-        echo -e "\n${YELLOW}Step 2: 项目已存在，正在更新代码...${NC}"
+        echo -e "\n${YELLOW}Step 2: 项目已存在，正在强制更新代码...${NC}"
         cd $INSTALL_DIR
+        git fetch --all
+        git reset --hard origin/master
         git pull origin master
     fi
 fi
 
-# 3. 执行部署脚本
-echo -e "\n${YELLOW}Step 3: 启动自动化构建与服务部署...${NC}"
+# 3. 执行前端部署脚本
+echo -e "\n${YELLOW}Step 3: 启动自动化构建与前端部署...${NC}"
 chmod +x prepare_deploy.sh
 ./prepare_deploy.sh
 if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ 部署脚本执行失败，请查看上方错误信息${NC}"
+    echo -e "${RED}❌ 前端部署脚本执行失败，请查看上方错误信息${NC}"
     exit 1
 fi
+
+# 3.1 构建并启动后端服务
+echo -e "\n${YELLOW}Step 3.1: 正在构建并启动后端服务...${NC}"
+cd APP/blog/backend
+chmod +x mvnw
+./mvnw clean package -DskipTests
+if [ $? -eq 0 ]; then
+    # 停止旧进程
+    PID=$(pgrep -f "backend-0.0.1-SNAPSHOT.jar")
+    if [ ! -z "$PID" ]; then
+        echo "正在停止旧的后端进程 (PID: $PID)..."
+        kill -9 $PID
+    fi
+    
+    mkdir -p ../../../logs
+    nohup java -jar target/backend-0.0.1-SNAPSHOT.jar > ../../../logs/blog-backend.log 2>&1 &
+    echo -e "${GREEN}✅ 后端服务已启动，日志: logs/blog-backend.log${NC}"
+else
+    echo -e "${RED}❌ 后端构建失败${NC}"
+fi
+cd ../../../
 
 # 4. 自动配置 Nginx 模板
 echo -e "\n${YELLOW}Step 4: 正在根据当前环境优化 Nginx 配置...${NC}"
 PROJECT_PATH=$(pwd)
 # 使用 | 作为分隔符，避免路径中的 / 冲突
-sed -i "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
+# 兼容不同版本的 sed
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
+else
+    sed -i "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
+    sed -i "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
+    sed -i "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
+fi
 echo -e "${GREEN}✅ Nginx 配置文件已指向: $PROJECT_PATH/web_dist${NC}"
 
 # 4.1 自动修复权限 (解决 500/403 错误)
 echo -e "${YELLOW}正在修复目录权限...${NC}"
-chmod +x /root
+# 尝试修复 /root 权限，如果是 root 用户则可能需要
+if [ "$USER" == "root" ]; then
+    chmod +x /root
+fi
 chmod -R 755 "$PROJECT_PATH/web_dist"
 echo -e "${GREEN}✅ 权限已修复${NC}"
 
-# 4.2 智能检测 Nginx 配置目录
+# 4.2 智能检测 Nginx 配置目录并自动部署
 if [ -d "/usr/local/nginx/conf/vhost" ]; then
     NGINX_CONF_DEST="/usr/local/nginx/conf/vhost/traeguowai.conf"
 elif [ -d "/etc/nginx/conf.d" ]; then
@@ -162,15 +200,16 @@ else
     sudo mkdir -p /etc/nginx/conf.d
 fi
 
+echo -e "${YELLOW}正在部署 Nginx 配置到: $NGINX_CONF_DEST ...${NC}"
+sudo cp nginx_cloud.conf "$NGINX_CONF_DEST"
+sudo nginx -t && sudo nginx -s reload
+echo -e "${GREEN}✅ Nginx 配置已更新并重新加载${NC}"
+
 # 5. 完成提示
 echo -e "\n${BLUE}===================================================${NC}"
 echo -e "${GREEN}🚀 全部部署流程已完成！${NC}"
 echo -e "${BLUE}===================================================${NC}"
-echo -e "\n${YELLOW}接下来请完成最后一步 (Nginx 关联):${NC}"
-echo -e "${CYAN}sudo cp nginx_cloud.conf $NGINX_CONF_DEST${NC}"
-echo -e "${CYAN}sudo nginx -t && sudo systemctl reload nginx${NC}"
-
-echo -e "\n${BLUE}项目信息:${NC}"
+echo -e "\n${YELLOW}项目信息:${NC}"
 echo -e "- 站点入口: ${YELLOW}http://fengruxue.com${NC}"
 echo -e "- 后端接口: ${YELLOW}http://127.0.0.1:8080${NC}"
 echo -e "- 后端日志: ${YELLOW}tail -f logs/blog-backend.log${NC}"

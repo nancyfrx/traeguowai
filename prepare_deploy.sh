@@ -10,7 +10,7 @@ echo "🚀 开始准备部署文件..."
 rm -rf "$DEPLOY_DIR"
 mkdir -p "$DEPLOY_DIR"
 
-# 1. 复制静态项目文件夹
+# 1. 复制静态资源
 echo "📂 复制静态资源..."
 mkdir -p "$DEPLOY_DIR/AI_TOOL"
 cp -r "AI_TOOL/"* "$DEPLOY_DIR/AI_TOOL/"
@@ -20,6 +20,11 @@ mkdir -p "$DEPLOY_DIR/other"
 cp -r "other/"* "$DEPLOY_DIR/other/"
 mkdir -p "$DEPLOY_DIR/app/wechat-clone"
 cp -r "APP/wechat-clone/"* "$DEPLOY_DIR/app/wechat-clone/"
+
+# 额外处理：如果 index.html 中的路径是 /other/docs.html，确保文件存在
+if [ -f "other/docs.html" ]; then
+    cp "other/docs.html" "$DEPLOY_DIR/other/"
+fi
 
 # 2. 复制主平台入口
 echo "🏠 复制主平台..."
@@ -63,7 +68,12 @@ echo "跳过 index.html 链接替换 (已实现动态检测)"
 
 # 6. 修正所有项目的 API 调用地址 (如果是静态打包后的 JS)
 echo "🔗 修正 API 调用地址..."
-find "$DEPLOY_DIR" -name "*.js" -exec sed -i '' "s|baseURL: 'http://localhost:8080/api'|baseURL: '/api'|g" {} + 2>/dev/null
+# 适配 macOS 和 Linux 的 sed
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    find "$DEPLOY_DIR" -name "*.js" -exec sed -i '' "s|baseURL: 'http://localhost:8080/api'|baseURL: '/api'|g" {} + 2>/dev/null
+else
+    find "$DEPLOY_DIR" -name "*.js" -exec sed -i "s|baseURL: 'http://localhost:8080/api'|baseURL: '/api'|g" {} + 2>/dev/null
+fi
 
 echo "✅ 所有项目构建完成！产物目录: $DEPLOY_DIR"
 

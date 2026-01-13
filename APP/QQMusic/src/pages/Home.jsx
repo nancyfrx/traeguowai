@@ -193,7 +193,7 @@ const Home = ({ onNavigate, onPlaySong }) => {
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex-shrink-0 w-[110px]" onClick={() => onNavigate('album')}>
               <div className="relative w-[110px] h-[110px] rounded-xl overflow-hidden shadow-sm cursor-pointer">
-                <img src={`/covers/${localCovers[i % localCovers.length]}`} className="w-full h-full object-cover" />
+                <img src={`covers/${localCovers[i % localCovers.length]}`} className="w-full h-full object-cover" />
                 <div className="absolute bottom-2 right-2 w-6 h-6 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
                   <Play size={12} fill="white" />
                 </div>
