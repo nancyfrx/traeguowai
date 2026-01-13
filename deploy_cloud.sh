@@ -22,8 +22,26 @@ WEB_DIST="$ROOT_DIR/web_dist"
 mkdir -p logs
 mkdir -p "$WEB_DIST"
 
-# 2. 构建后端服务 (艺术市场)
-echo -e "\n${YELLOW}Step 2: 构建 Java 后端 (艺术市场)...${NC}"
+# 2. 构建并配置后端服务 (艺术市场)
+echo -e "\n${YELLOW}Step 2: 构建并配置 Java 后端 (艺术市场)...${NC}"
+
+# 2.1 自动修复 MySQL 权限 (解决 502 的根源: 数据库连接失败)
+echo -e "🔧 正在尝试自动修复 MySQL 权限 (针对 127.0.0.1)..."
+MYSQL_BIN="/usr/local/mysql/bin/mysql"
+$MYSQL_BIN -u root -p123456 -e "
+CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY '123456';
+ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY '123456';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION;
+CREATE DATABASE IF NOT EXISTS blog_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+FLUSH PRIVILEGES;" > /dev/null 2>&1
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✅ MySQL 权限修复脚本已执行${NC}"
+else
+    echo -e "${YELLOW}⚠️ MySQL 权限修复执行异常，请确保 MySQL 运行中且密码为 123456${NC}"
+fi
+
+# 2.2 编译后端
 cd APP/blog/backend
 chmod +x mvnw
 ./mvnw clean package -DskipTests
@@ -32,13 +50,31 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 停止旧进程并启动新进程
+# 2.3 停止旧进程并启动新进程
 echo -e "🔄 正在重启后端服务..."
 fuser -k 8080/tcp > /dev/null 2>&1
 mkdir -p "$ROOT_DIR/logs"
 # 使用绝对路径或确保在 backend 目录下执行 java -jar
 nohup java -jar target/*.jar > "$ROOT_DIR/logs/blog-backend.log" 2>&1 &
-echo -e "${GREEN}✅ 后端服务已在后台启动 (Port: 8080)${NC}"
+
+# 等待后端启动并检查健康状况
+echo -n "⏳ 等待后端服务就绪..."
+MAX_RETRIES=30
+COUNT=0
+while [ $COUNT -lt $MAX_RETRIES ]; do
+    if curl -s http://127.0.0.1:8080/api/articles?page=0\&size=1 > /dev/null; then
+        echo -e "\n${GREEN}✅ 后端服务已成功启动并可访问！${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 2
+    COUNT=$((COUNT + 1))
+done
+
+if [ $COUNT -eq $MAX_RETRIES ]; then
+    echo -e "\n${RED}❌ 后端服务启动后响应超时 (502 风险)，请检查 logs/blog-backend.log${NC}"
+fi
+
 cd "$ROOT_DIR"
 
 # 3. 构建前端 Vite 项目
@@ -100,8 +136,14 @@ mkdir -p "$WEB_DIST"
 cp index.html "$WEB_DIST/"
 cp -r AI_TOOL "$WEB_DIST/"
 cp -r game "$WEB_DIST/"
-mkdir -p "$WEB_DIST/APP"
-cp -r APP/wechat-clone "$WEB_DIST/APP/" 2>/dev/null || true
+cp -r other "$WEB_DIST/"
+
+# 统一创建 app 目录（小写）用于存放 Vite 构建的项目
+mkdir -p "$WEB_DIST/app"
+
+# 复制其他静态 APP 项目
+mkdir -p "$WEB_DIST/app/wechat-clone"
+cp -r APP/wechat-clone/* "$WEB_DIST/app/wechat-clone/" 2>/dev/null || true
 
 # 6. 部署总结与 Nginx 提示
 echo -e "\n${BLUE}===================================================${NC}"

@@ -22,6 +22,9 @@ echo -e "${BLUE}===================================================${NC}"
 # 1. 环境检查
 echo -e "\n${YELLOW}Step 1: 正在检查系统环境...${NC}"
 
+# 1.0 强制修复 MySQL 路径环境
+export PATH=$PATH:/usr/local/mysql/bin
+
 # 检查 Java 版本是否为 17+
 check_java_version() {
     if command -v java &> /dev/null; then
@@ -89,6 +92,22 @@ if ! systemctl is-active --quiet mysql && ! systemctl is-active --quiet mysqld &
     fi
 fi
 echo -e "${GREEN}✅ MySQL 服务运行中${NC}"
+
+# 1.2 检查数据库表数据
+echo -e "${YELLOW}正在检查数据库内容...${NC}"
+ARTICLES_COUNT=$($MYSQL_BIN -u root -p123456 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'blog_db' AND table_name = 'articles';" 2>/dev/null)
+if [ "$ARTICLES_COUNT" == "0" ] || [ -z "$ARTICLES_COUNT" ]; then
+    echo -e "${YELLOW}⚠️ 检测到 blog_db.articles 表不存在或数据为空${NC}"
+    if [ -f "blog_db_backup.sql" ]; then
+        echo -e "📦 正在自动导入备份数据..."
+        $MYSQL_BIN -u root -p123456 blog_db < blog_db_backup.sql
+        echo -e "${GREEN}✅ 数据导入完成${NC}"
+    else
+        echo -e "${RED}❌ 未找到 blog_db_backup.sql 备份文件，后端启动后可能无数据${NC}"
+    fi
+else
+    echo -e "${GREEN}✅ 数据库已有数据${NC}"
+fi
 
 # 2. 获取代码
 # 增加自动识别：如果已经在项目目录内执行，则跳过 clone
