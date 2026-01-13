@@ -870,9 +870,11 @@
         // 加载真实的中国省份GeoJSON数据
         function loadGeoJSON() {
             // 备用数据源列表，增加可靠性
+            // 优先使用 ECharts 维护的稳定数据源，避免 Aliyun DataV 的 403 错误
             const sources = [
+                'https://cdn.jsdelivr.net/gh/apache/echarts@master/map/json/china.json',
                 'https://registry.npmmirror.com/china-adcode/latest/files/china.json',
-                'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json'
+                'https://a.amap.com/jsapi_demos/static/geojson/china.json'
             ];
 
             const tryFetch = (index) => {
@@ -882,7 +884,10 @@
 
                 return fetch(sources[index])
                     .then(response => {
-                        if (!response.ok) throw new Error('网络响应不正常');
+                        const contentType = response.headers.get('content-type');
+                        if (!response.ok || (contentType && contentType.includes('text/html'))) {
+                            throw new Error('返回内容不是有效的 JSON');
+                        }
                         return response.json();
                     })
                     .catch(err => {
@@ -895,6 +900,7 @@
                 .then(data => {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     
+                    // 统一处理不同来源的数据格式差异 (有些在 properties.name, 有些在 properties.CP)
                     geoJsonLayer = L.geoJSON(data, {
                         style: defaultStyle,
                         onEachFeature: onEachFeature
@@ -906,10 +912,45 @@
                         <div style="color: #ff6b6b; text-align: center;">
                             <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
                             <div>地图数据加载失败</div>
-                            <div style="font-size: 0.8rem; margin-top: 10px; color: rgba(255,255,255,0.5);">请确保您的域名 fengruxue.com 已通过 HTTPS 访问<br>或者检查网络防火墙设置</div>
+                            <div style="font-size: 0.8rem; margin-top: 10px; color: rgba(255,255,255,0.5);">数据源访问受限或网络防火墙拦截</div>
+                            <div style="margin-top:15px; display: flex; gap: 10px; justify-content: center;">
+                                <button onclick="location.reload()" style="padding: 8px 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 5px; cursor: pointer;">重试</button>
+                                <button onclick="switchToAmapMode()" style="padding: 8px 20px; background: #2563eb; border: none; color: white; border-radius: 5px; cursor: pointer;">使用高德官方地图接口</button>
+                            </div>
                         </div>
                     `;
                 });
+        }
+
+        // 切换到高德官方地区展示接口 (类似高德扫街风格)
+        function switchToAmapMode() {
+            const mapContainer = document.getElementById('map');
+            // 使用高德地图官方区域展示接口
+            const amapIframe = document.createElement('iframe');
+            amapIframe.src = 'https://m.amap.com/region/?adcode=100000&key=7302f35443317765951d451405e3a516';
+            amapIframe.style.width = '100%';
+            amapIframe.style.height = '100%';
+            amapIframe.style.border = 'none';
+            
+            document.getElementById('loadingOverlay').style.display = 'none';
+            mapContainer.innerHTML = '';
+            mapContainer.appendChild(amapIframe);
+            
+            // 提示用户
+            const tip = document.createElement('div');
+            tip.style.position = 'absolute';
+            tip.style.bottom = '20px';
+            tip.style.left = '50%';
+            tip.style.transform = 'translateX(-50%)';
+            tip.style.background = 'rgba(0,0,0,0.7)';
+            tip.style.padding = '10px 20px';
+            tip.style.borderRadius = '20px';
+            tip.style.color = 'white';
+            tip.style.zIndex = '1000';
+            tip.style.fontSize = '0.8rem';
+            tip.innerHTML = '已切换至高德地图官方区域接口';
+            document.body.appendChild(tip);
+            setTimeout(() => tip.remove(), 3000);
         }
 
         // 默认样式
