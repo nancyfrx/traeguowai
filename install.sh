@@ -182,10 +182,12 @@ PROJECT_PATH=$(pwd)
 # 兼容不同版本的 sed
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
 else
     sed -i "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
+    sed -i "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
 fi
