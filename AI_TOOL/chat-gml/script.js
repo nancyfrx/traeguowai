@@ -53,7 +53,7 @@ async function generateJWT(apiKey) {
     if (typeof CryptoJS !== 'undefined') {
         try {
             const signature = CryptoJS.HmacSHA256(data, secret);
-            const base64Signature = CryptoJS.enc.Base64.stringify(signature)
+            const base64Signature = signature.toString(CryptoJS.enc.Base64)
                 .replace(/\+/g, '-')
                 .replace(/\//g, '_')
                 .replace(/=+$/, '');
