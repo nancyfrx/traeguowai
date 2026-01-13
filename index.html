@@ -4,17 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TraceGuowai 项目整合平台</title>
+    <script>
+        // 预先抑制 Tailwind Play CDN 的生产环境警告
+        (function() {
+            const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+            if (isProd) {
+                const originalWarn = console.warn;
+                console.warn = function(...args) {
+                    if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) {
+                        return;
+                    }
+                    originalWarn.apply(console, args);
+                };
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // 抑制 Tailwind Play CDN 的生产环境警告
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            console.warn = () => {};
-        }
-        
         tailwind.config = {
             theme: {
                 extend: {
-                    // 抑制生产环境警告的配置（如果支持）
+                    // 自定义主题配置
                 }
             }
         }

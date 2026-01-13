@@ -17,8 +17,10 @@ echo -e "${BLUE}===================================================${NC}"
 
 # 1. 环境准备
 echo -e "\n${YELLOW}Step 1: 准备构建环境...${NC}"
+ROOT_DIR=$(pwd)
+WEB_DIST="$ROOT_DIR/web_dist"
 mkdir -p logs
-mkdir -p web_dist
+mkdir -p "$WEB_DIST"
 
 # 2. 构建后端服务 (艺术市场)
 echo -e "\n${YELLOW}Step 2: 构建 Java 后端 (艺术市场)...${NC}"
@@ -33,10 +35,11 @@ fi
 # 停止旧进程并启动新进程
 echo -e "🔄 正在重启后端服务..."
 fuser -k 8080/tcp > /dev/null 2>&1
-mkdir -p ../../../logs
-nohup java -jar target/*.jar > ../../../logs/blog-backend.log 2>&1 &
+mkdir -p "$ROOT_DIR/logs"
+# 使用绝对路径或确保在 backend 目录下执行 java -jar
+nohup java -jar target/*.jar > "$ROOT_DIR/logs/blog-backend.log" 2>&1 &
 echo -e "${GREEN}✅ 后端服务已在后台启动 (Port: 8080)${NC}"
-cd ../../../
+cd "$ROOT_DIR"
 
 # 3. 构建前端 Vite 项目
 echo -e "\n${YELLOW}Step 3: 构建所有前端 Vite 项目...${NC}"
@@ -46,16 +49,27 @@ build_vite_app() {
     local name=$2
     local dest=$3
     echo -e "📦 正在构建 $name..."
-    cd "$path"
-    npm install > /dev/null 2>&1
+    cd "$ROOT_DIR/$path"
+    
+    # 检查 package.json 是否存在
+    if [ ! -f "package.json" ]; then
+        echo -e "${RED}  - ❌ 错误: $path 下找不到 package.json${NC}"
+        return 1
+    fi
+
+    npm install --silent > /dev/null 2>&1
     npm run build > /dev/null 2>&1
     
-    # 创建目标目录并移动构建文件
-    mkdir -p "../../web_dist/$dest"
-    rm -rf "../../web_dist/$dest/*"
-    cp -r dist/* "../../web_dist/$dest/"
-    cd ../../
-    echo -e "${GREEN}  - $name 构建完成 -> web_dist/$dest${NC}"
+    if [ -d "dist" ]; then
+        # 创建目标目录并移动构建文件
+        mkdir -p "$WEB_DIST/$dest"
+        rm -rf "$WEB_DIST/$dest/*"
+        cp -r dist/* "$WEB_DIST/$dest/"
+        echo -e "${GREEN}  - ✅ $name 构建完成 -> web_dist/$dest${NC}"
+    else
+        echo -e "${RED}  - ❌ $name 构建失败: 未生成 dist 目录${NC}"
+    fi
+    cd "$ROOT_DIR"
 }
 
 
@@ -68,25 +82,26 @@ build_vite_app "APP/blog/frontend" "艺术市场前端" "app/blog"
 
 # 特殊处理 other/rili (因为它在 other 目录下)
 echo -e "📦 正在构建 万年历..."
-cd other/rili
-npm install > /dev/null 2>&1
+cd "$ROOT_DIR/other/rili"
+npm install --silent > /dev/null 2>&1
 npm run build > /dev/null 2>&1
-# index.html 期望路径是 ./other/rili/index.html
-# 我们将 dist 内容复制到一个专门的生产目录，或者直接在原位处理（但保留源码以便下次构建）
-# 推荐做法：在根目录创建一个 web_dist 目录，统一存放所有生产文件
-mkdir -p ../../web_dist/other/rili
-cp -r dist/* ../../web_dist/other/rili/
-cd ../../
-echo -e "${GREEN}  - 万年历 构建完成${NC}"
+if [ -d "dist" ]; then
+    mkdir -p "$WEB_DIST/other/rili"
+    cp -r dist/* "$WEB_DIST/other/rili/"
+    echo -e "${GREEN}  - ✅ 万年历 构建完成${NC}"
+else
+    echo -e "${RED}  - ❌ 万年历 构建失败${NC}"
+fi
+cd "$ROOT_DIR"
 
 # 5. 整理所有静态资源到 web_dist
 echo -e "\n${YELLOW}Step 4: 整理所有资源到 web_dist 目录...${NC}"
-mkdir -p web_dist
-cp index.html web_dist/
-cp -r AI_TOOL web_dist/
-cp -r game web_dist/
-mkdir -p web_dist/APP
-cp -r APP/wechat-clone web_dist/APP/ 2>/dev/null || true
+mkdir -p "$WEB_DIST"
+cp index.html "$WEB_DIST/"
+cp -r AI_TOOL "$WEB_DIST/"
+cp -r game "$WEB_DIST/"
+mkdir -p "$WEB_DIST/APP"
+cp -r APP/wechat-clone "$WEB_DIST/APP/" 2>/dev/null || true
 
 # 6. 部署总结与 Nginx 提示
 echo -e "\n${BLUE}===================================================${NC}"

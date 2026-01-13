@@ -22,6 +22,21 @@ echo -e "${BLUE}===================================================${NC}"
 # 1. 环境检查
 echo -e "\n${YELLOW}Step 1: 正在检查系统环境...${NC}"
 
+# 检查 Java 版本是否为 17+
+check_java_version() {
+    if command -v java &> /dev/null; then
+        version=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
+        if [ "$version" -lt 17 ]; then
+            echo -e "${RED}❌ 当前 Java 版本为 $version，项目需要 Java 17 或更高版本。${NC}"
+            echo -e "${YELLOW}请运行 'sudo alternatives --config java' 并选择 Java 17。${NC}"
+            return 1
+        fi
+        echo -e "${GREEN}✅ Java 版本为 $version${NC}"
+        return 0
+    fi
+    return 1
+}
+
 # 自动将常见的自定义安装路径加入 PATH
 export PATH=$PATH:/usr/local/mysql/bin
 
@@ -45,6 +60,7 @@ FAILED=0
 check_cmd "git" || FAILED=1
 check_cmd "node" || FAILED=1
 check_cmd "java" || FAILED=1
+check_java_version || FAILED=1
 check_cmd "javac" || FAILED=1
 check_cmd "nginx" || FAILED=1
 check_cmd "mysql" || FAILED=1
@@ -75,18 +91,24 @@ fi
 echo -e "${GREEN}✅ MySQL 服务运行中${NC}"
 
 # 2. 获取代码
-if [ ! -d "$INSTALL_DIR" ]; then
-    echo -e "\n${YELLOW}Step 2: 正在克隆项目代码...${NC}"
-    git clone $REPO_URL
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}❌ 克隆失败，请检查网络或 REPO_URL${NC}"
-        exit 1
-    fi
-    cd $INSTALL_DIR
-else
-    echo -e "\n${YELLOW}Step 2: 项目已存在，正在更新代码...${NC}"
-    cd $INSTALL_DIR
+# 增加自动识别：如果已经在项目目录内执行，则跳过 clone
+if [ -f "deploy_cloud.sh" ] && [ -d "APP" ]; then
+    echo -e "\n${GREEN}✅ 检测到当前已在项目目录中，直接执行更新...${NC}"
     git pull origin master
+else
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo -e "\n${YELLOW}Step 2: 正在克隆项目代码...${NC}"
+        git clone $REPO_URL
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}❌ 克隆失败，请检查网络或 REPO_URL${NC}"
+            exit 1
+        fi
+        cd $INSTALL_DIR
+    else
+        echo -e "\n${YELLOW}Step 2: 项目已存在，正在更新代码...${NC}"
+        cd $INSTALL_DIR
+        git pull origin master
+    fi
 fi
 
 # 3. 执行部署脚本
@@ -105,12 +127,27 @@ PROJECT_PATH=$(pwd)
 sed -i "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
 echo -e "${GREEN}✅ Nginx 配置文件已指向: $PROJECT_PATH/web_dist${NC}"
 
+# 4.1 自动修复权限 (解决 500/403 错误)
+echo -e "${YELLOW}正在修复目录权限...${NC}"
+chmod +x /root
+chmod -R 755 "$PROJECT_PATH/web_dist"
+echo -e "${GREEN}✅ 权限已修复${NC}"
+
+# 4.2 智能检测 Nginx 配置目录
+if [ -d "/usr/local/nginx/conf/vhost" ]; then
+    NGINX_CONF_DEST="/usr/local/nginx/conf/vhost/traeguowai.conf"
+elif [ -d "/etc/nginx/conf.d" ]; then
+    NGINX_CONF_DEST="/etc/nginx/conf.d/traeguowai.conf"
+else
+    NGINX_CONF_DEST="/etc/nginx/conf.d/traeguowai.conf"
+    sudo mkdir -p /etc/nginx/conf.d
+fi
+
 # 5. 完成提示
 echo -e "\n${BLUE}===================================================${NC}"
 echo -e "${GREEN}🚀 全部部署流程已完成！${NC}"
 echo -e "${BLUE}===================================================${NC}"
 echo -e "\n${YELLOW}接下来请完成最后一步 (Nginx 关联):${NC}"
-NGINX_CONF_DEST="/etc/nginx/conf.d/traeguowai.conf"
 echo -e "${CYAN}sudo cp nginx_cloud.conf $NGINX_CONF_DEST${NC}"
 echo -e "${CYAN}sudo nginx -t && sudo systemctl reload nginx${NC}"
 
