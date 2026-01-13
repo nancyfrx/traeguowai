@@ -10,11 +10,7 @@ echo "🚀 开始准备部署文件..."
 rm -rf "$DEPLOY_DIR"
 mkdir -p "$DEPLOY_DIR"
 
-# 1. 复制主项目管理页面
-cp index.html "$DEPLOY_DIR/"
-cp README.md "$DEPLOY_DIR/"
-
-# 2. 复制静态项目文件夹
+# 1. 复制静态项目文件夹
 echo "📂 复制静态资源..."
 mkdir -p "$DEPLOY_DIR/AI_TOOL"
 cp -r "AI_TOOL/"* "$DEPLOY_DIR/AI_TOOL/"
@@ -22,6 +18,13 @@ mkdir -p "$DEPLOY_DIR/game"
 cp -r "game/"* "$DEPLOY_DIR/game/"
 mkdir -p "$DEPLOY_DIR/other"
 cp -r "other/"* "$DEPLOY_DIR/other/"
+mkdir -p "$DEPLOY_DIR/app/wechat-clone"
+cp -r "APP/wechat-clone/"* "$DEPLOY_DIR/app/wechat-clone/"
+
+# 2. 复制主平台入口
+echo "🏠 复制主平台..."
+cp index.html "$DEPLOY_DIR/"
+cp -r assets "$DEPLOY_DIR/" 2>/dev/null || true
 
 # 3. 构建 Vite 项目函数
 build_vite_project() {
@@ -62,4 +65,15 @@ echo "跳过 index.html 链接替换 (已实现动态检测)"
 echo "🔗 修正 API 调用地址..."
 find "$DEPLOY_DIR" -name "*.js" -exec sed -i '' "s|baseURL: 'http://localhost:8080/api'|baseURL: '/api'|g" {} + 2>/dev/null
 
-echo "✅ 所有项目构建完成！请将 ./deploy 文件夹上传到阿里云 ECS。"
+echo "✅ 所有项目构建完成！产物目录: $DEPLOY_DIR"
+
+# 7. 同步到 web_dist 目录
+echo "🚚 同步到 web_dist 目录..."
+mkdir -p "$ROOT_DIR/web_dist"
+cp -r "$DEPLOY_DIR/"* "$ROOT_DIR/web_dist/"
+echo "✨ 所有产物已同步到 web_dist，可以访问 fengruxue.com 验证"
+
+echo "-------------------------------------------"
+echo "🚀 部署准备就绪！"
+echo "您可以手动执行: nginx -s reload (如果 Nginx 已经运行)"
+echo "-------------------------------------------"

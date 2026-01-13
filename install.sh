@@ -111,7 +111,7 @@ fi
 
 # 2. 获取代码
 # 增加自动识别：如果已经在项目目录内执行，则跳过 clone
-if [ -f "deploy_cloud.sh" ] && [ -d "APP" ]; then
+if [ -f "prepare_deploy.sh" ] && [ -d "APP" ]; then
     echo -e "\n${GREEN}✅ 检测到当前已在项目目录中，直接执行更新...${NC}"
     git pull origin master
 else
@@ -132,8 +132,8 @@ fi
 
 # 3. 执行部署脚本
 echo -e "\n${YELLOW}Step 3: 启动自动化构建与服务部署...${NC}"
-chmod +x deploy_cloud.sh
-./deploy_cloud.sh
+chmod +x prepare_deploy.sh
+./prepare_deploy.sh
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ 部署脚本执行失败，请查看上方错误信息${NC}"
     exit 1

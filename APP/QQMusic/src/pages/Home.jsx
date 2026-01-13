@@ -125,7 +125,7 @@ const Home = ({ onNavigate, onPlaySong }) => {
             className="w-[140px] h-full relative"
           >
             <img 
-              src="/covers/8e309f7f4b2d1df174353c5c50271173.jpeg" 
+              src="covers/8e309f7f4b2d1df174353c5c50271173.jpeg" 
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
               alt="新歌榜"
             />
@@ -136,7 +136,7 @@ const Home = ({ onNavigate, onPlaySong }) => {
         {/* Banner 2 - 每日30首 */}
         <div className="flex-shrink-0 w-[150px] h-[150px] rounded-2xl relative overflow-hidden shadow-sm group cursor-pointer">
           <img 
-            src="/covers/8f7174c2239a01924a876e764125ab98.jpeg" 
+            src="covers/8f7174c2239a01924a876e764125ab98.jpeg" 
             className="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-105" 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 p-3 flex flex-col justify-between">
