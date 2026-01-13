@@ -868,23 +868,53 @@
             }).addTo(map);
 
             // 加载 GeoJSON 数据
-            // 优先使用阿里云 DataV (最准确)，如果失败则尝试 jsDelivr 镜像
-            const dataVUrl = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
-            const fallbackUrl = 'https://cdn.jsdelivr.net/gh/apache/echarts-examples@gh-pages/public/data/asset/geo/china.json';
+            // 备选数据源列表
+            const mapSources = [
+                'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+                'https://cdn.jsdelivr.net/gh/apache/echarts-examples@gh-pages/public/data/asset/geo/china.json',
+                'https://raw.githubusercontent.com/h662/china-geojson/master/china.json'
+            ];
 
-            const loadData = (url) => {
-                return fetch(url)
-                    .then(response => {
-                        if (!response.ok) throw new Error('HTTP error ' + response.status);
-                        return response.json();
+            const loadSource = async (index) => {
+                if (index >= mapSources.length) {
+                    throw new Error('所有地图数据源均加载失败');
+                }
+
+                const url = mapSources[index];
+                console.log(`正在尝试加载数据源 (${index + 1}/${mapSources.length}): ${url}`);
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit'
                     });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP 错误: ${response.status}`);
+                    }
+
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        // 如果返回的不是 JSON，可能是 403 页面或其他错误页面
+                        throw new Error('返回数据格式错误 (非 JSON)');
+                    }
+
+                    const data = await response.json();
+                    
+                    // 验证数据是否包含特征
+                    if (!data || !data.features) {
+                        throw new Error('JSON 数据结构不完整');
+                    }
+
+                    return data;
+                } catch (error) {
+                    console.warn(`数据源 ${index + 1} 加载失败:`, error.message);
+                    return loadSource(index + 1);
+                }
             };
 
-            loadData(dataVUrl)
-                .catch(() => {
-                    console.log('尝试从备用源加载地图数据...');
-                    return loadData(fallbackUrl);
-                })
+            loadSource(0)
                 .then(data => {
                     geoJsonLayer = L.geoJSON(data, {
                         style: defaultStyle,
@@ -899,11 +929,14 @@
                     });
                 })
                 .catch(error => {
-                    console.error('加载地图数据失败:', error);
+                    console.error('地图最终加载失败:', error);
                     document.getElementById('loadingOverlay').innerHTML = `
                         <div style="color: #ff4d4f; text-align: center; padding: 20px;">
                             <div style="font-size: 2rem; margin-bottom: 10px;">❌</div>
-                            <div>数据加载失败，请刷新重试</div>
+                            <div style="margin-bottom: 15px;">地图数据加载失败 (${error.message})</div>
+                            <button onclick="location.reload()" style="background: #ffd700; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; color: #1a1a2e; font-weight: bold;">
+                                重新加载页面
+                            </button>
                         </div>
                     `;
                 });

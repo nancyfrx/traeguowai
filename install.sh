@@ -215,9 +215,19 @@ sudo cp nginx_cloud.conf "$NGINX_CONF_DEST"
 sudo nginx -t && sudo nginx -s reload
 echo -e "${GREEN}✅ Nginx 配置已更新并重新加载${NC}"
 
-# 5. 完成提示
+# 5. HTTPS 证书配置 (可选)
+echo -e "\n${YELLOW}Step 5: 检查 HTTPS 证书配置...${NC}"
+if [ -f "/etc/letsencrypt/live/fengruxue.com/fullchain.pem" ]; then
+    echo -e "${GREEN}✅ 检测到已安装 HTTPS 证书${NC}"
+else
+    echo -e "${CYAN}💡 是否需要安装免费的 Let's Encrypt SSL 证书? (y/n)${NC}"
+    # 这里设置为自动检查，如果用户需要可以手动运行 certbot
+    echo -e "${YELLOW}提示: 如果需要安装，请确保您的域名已解析到此服务器，并运行: sudo certbot --nginx -d fengruxue.com${NC}"
+fi
+
+# 6. 完成提示
 echo -e "\n${BLUE}===================================================${NC}"
-echo -e "${GREEN}🚀 全部部署流程已完成！${NC}"
+echo -e "\n${GREEN}🎉 所有步骤执行完毕! 部署成功。${NC}"
 echo -e "${BLUE}===================================================${NC}"
 echo -e "\n${YELLOW}项目信息:${NC}"
 echo -e "- 站点入口: ${YELLOW}http://fengruxue.com${NC}"
