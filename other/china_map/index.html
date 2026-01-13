@@ -869,8 +869,29 @@
 
         // 加载真实的中国省份GeoJSON数据
         function loadGeoJSON() {
-            fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
-                .then(response => response.json())
+            // 备用数据源列表，增加可靠性
+            const sources = [
+                'https://registry.npmmirror.com/china-adcode/latest/files/china.json',
+                'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json'
+            ];
+
+            const tryFetch = (index) => {
+                if (index >= sources.length) {
+                    throw new Error('所有地图数据源均不可用');
+                }
+
+                return fetch(sources[index])
+                    .then(response => {
+                        if (!response.ok) throw new Error('网络响应不正常');
+                        return response.json();
+                    })
+                    .catch(err => {
+                        console.warn(`数据源 ${sources[index]} 加载失败，尝试下一个...`, err);
+                        return tryFetch(index + 1);
+                    });
+            };
+
+            tryFetch(0)
                 .then(data => {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     
@@ -880,12 +901,12 @@
                     }).addTo(map);
                 })
                 .catch(error => {
-                    console.error('加载地图数据失败:', error);
+                    console.error('加载地图数据最终失败:', error);
                     document.getElementById('loadingOverlay').innerHTML = `
                         <div style="color: #ff6b6b; text-align: center;">
                             <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
                             <div>地图数据加载失败</div>
-                            <div style="font-size: 0.8rem; margin-top: 10px; color: rgba(255,255,255,0.5);">请检查网络连接后刷新页面</div>
+                            <div style="font-size: 0.8rem; margin-top: 10px; color: rgba(255,255,255,0.5);">请确保您的域名 fengruxue.com 已通过 HTTPS 访问<br>或者检查网络防火墙设置</div>
                         </div>
                     `;
                 });
