@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>中国旅游地图 - 探索华夏美景</title>
-    <link rel="stylesheet" href="//unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="//fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -555,7 +556,7 @@
         </div>
     </div>
 
-    <script src="//unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // 省会城市数据 - 包含所有34个省级行政区
         const capitalCities = {
@@ -861,14 +862,29 @@
             });
 
             // 添加底图（使用简洁的深色底图或不加底图只显示省份）
-            L.tileLayer('//{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 maxZoom: 18,
                 opacity: 0.3
             }).addTo(map);
 
-            // 加载免费的 GeoJSON 数据 (阿里云 DataV 提供)
-            fetch('//geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
-                .then(response => response.json())
+            // 加载 GeoJSON 数据
+            // 优先使用阿里云 DataV (最准确)，如果失败则尝试 jsDelivr 镜像
+            const dataVUrl = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+            const fallbackUrl = 'https://cdn.jsdelivr.net/gh/apache/echarts-examples@gh-pages/public/data/asset/geo/china.json';
+
+            const loadData = (url) => {
+                return fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error('HTTP error ' + response.status);
+                        return response.json();
+                    });
+            };
+
+            loadData(dataVUrl)
+                .catch(() => {
+                    console.log('尝试从备用源加载地图数据...');
+                    return loadData(fallbackUrl);
+                })
                 .then(data => {
                     geoJsonLayer = L.geoJSON(data, {
                         style: defaultStyle,
