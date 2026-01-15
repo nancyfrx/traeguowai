@@ -156,7 +156,7 @@ fi
 
 # 3.1 构建并启动后端服务
 echo -e "\n${YELLOW}Step 3.1: 正在构建并启动后端服务...${NC}"
-cd APP/blog/backend
+cd web/blog/backend
 chmod +x mvnw
 ./mvnw clean package -DskipTests
 if [ $? -eq 0 ]; then
@@ -183,11 +183,13 @@ PROJECT_PATH=$(pwd)
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/test_platform/;|alias $PROJECT_PATH/test_platform/;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
 else
     sed -i "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
+    sed -i "s|alias .*/test_platform/;|alias $PROJECT_PATH/test_platform/;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
 fi
