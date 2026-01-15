@@ -61,9 +61,6 @@ fi
 # 4. 启动后端服务
 echo -e "\n${YELLOW}Step 4: 启动后端服务...${NC}"
 
-# 设置公共环境变量 (OSS 凭据)
-
-
 # 启动博客后端 (Spring Boot)
 echo -e "启动 艺术市场后端 (Port: 8080)..."
 cd web/blog/backend
