@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import logo from '../assets/logo.png';
 import { 
   LayoutDashboard, 
   Sparkles, 
@@ -22,8 +23,11 @@ const Layout = () => {
         {/* Logo */}
         <div className="h-20 flex items-center px-8">
           <div className="flex items-center gap-3 font-bold text-xl tracking-tight text-gray-900">
-            <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center text-white shadow-lg shadow-gray-200">
-              <Layers className="w-5 h-5" />
+            <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+              <img src={logo} className="w-full h-full object-contain" alt="Logo" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+              <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white shadow-lg shadow-gray-200 hidden">
+                <Search className="w-6 h-6" />
+              </div>
             </div>
             Q-Lab
           </div>
