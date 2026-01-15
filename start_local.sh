@@ -62,8 +62,7 @@ fi
 echo -e "\n${YELLOW}Step 4: 启动后端服务...${NC}"
 
 # 设置公共环境变量 (OSS 凭据)
-export OSS_ACCESS_KEY_ID="LTAI5tQZjdprQF2CjC21o6gv"
-export OSS_ACCESS_KEY_SECRET="byyx8yXD12rdnNqjqLxHjTY1yuLhJO"
+
 
 # 启动博客后端 (Spring Boot)
 echo -e "启动 艺术市场后端 (Port: 8080)..."
