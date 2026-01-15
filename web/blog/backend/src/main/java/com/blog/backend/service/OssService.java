@@ -88,7 +88,7 @@ public class OssService {
     }
 
     public void downloadToStream(String objectName, java.io.OutputStream outputStream) throws IOException {
-        // If the objectName is already a full URL, extract the key
+        // If the objectName is already a full URL, extract the key and strip query params
         if (objectName.startsWith("http")) {
             if (objectName.contains(baseUrl)) {
                 objectName = prefix + objectName.substring(baseUrl.length());
@@ -97,6 +97,11 @@ public class OssService {
             }
         } else if (!objectName.startsWith(prefix)) {
             objectName = prefix + objectName;
+        }
+
+        // Strip query parameters (like ?Expires=...) from the object name/key
+        if (objectName.contains("?")) {
+            objectName = objectName.substring(0, objectName.indexOf("?"));
         }
 
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
@@ -117,7 +122,7 @@ public class OssService {
     }
 
     public ObjectMetadata getMetadata(String objectName) {
-        // If the objectName is already a full URL, extract the key
+        // If the objectName is already a full URL, extract the key and strip query params
         if (objectName.startsWith("http")) {
             if (objectName.contains(baseUrl)) {
                 objectName = prefix + objectName.substring(baseUrl.length());
@@ -126,6 +131,11 @@ public class OssService {
             }
         } else if (!objectName.startsWith(prefix)) {
             objectName = prefix + objectName;
+        }
+
+        // Strip query parameters
+        if (objectName.contains("?")) {
+            objectName = objectName.substring(0, objectName.indexOf("?"));
         }
 
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
@@ -156,31 +166,49 @@ public class OssService {
             path = prefix + objectName;
         }
 
+        // Strip query parameters from the proxy path to hide them
+        if (path.contains("?")) {
+            path = path.substring(0, path.indexOf("?"));
+        }
+
         // Return a proxy URL that points back to our server
         return "/api/upload/view?path=" + path;
     }
 
     public String getSignedUrl(String objectName) {
-        // If the objectName is already a full URL, extract the key
-        if (objectName.startsWith("http")) {
-            if (objectName.contains(baseUrl)) {
-                objectName = prefix + objectName.substring(baseUrl.length());
-            } else if (objectName.contains(".aliyuncs.com/")) {
-                objectName = objectName.substring(objectName.indexOf(".aliyuncs.com/") + ".aliyuncs.com/".length());
-            }
+        if (objectName == null || !objectName.startsWith("http")) {
+            return objectName;
         }
 
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        // Check if OSS credentials are provided
+        if (accessKeyId == null || accessKeyId.isEmpty() || accessKeyId.contains("${") ||
+            accessKeySecret == null || accessKeySecret.isEmpty() || accessKeySecret.contains("${")) {
+            System.err.println("OSS Credentials missing or not resolved. Returning raw URL.");
+            return objectName;
+        }
+
+        // Extract the key if it's a full URL
+        String key = objectName;
+        if (objectName.contains(baseUrl)) {
+            key = prefix + objectName.substring(baseUrl.length());
+        } else if (objectName.contains(".aliyuncs.com/")) {
+            key = objectName.substring(objectName.indexOf(".aliyuncs.com/") + ".aliyuncs.com/".length());
+        }
+
+        OSS ossClient = null;
         try {
+            ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
             // Set expiration time to 1 hour
             Date expiration = new Date(new Date().getTime() + 3600 * 1000);
-            URL url = ossClient.generatePresignedUrl(bucketName, objectName, expiration);
+            URL url = ossClient.generatePresignedUrl(bucketName, key, expiration);
             return url.toString();
         } catch (Exception e) {
-            e.printStackTrace();
-            return baseUrl + objectName.replace(prefix, "");
+            System.err.println("Error generating signed URL for " + objectName + ": " + e.getMessage());
+            return objectName; // Fallback to raw URL on error
         } finally {
-            ossClient.shutdown();
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
         }
     }
 }

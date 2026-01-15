@@ -51,6 +51,9 @@ public class ArticleService {
     }
 
     private void proxyArticleUrls(Article article) {
+        // Use proxy URLs instead of signed URLs to hide OSS credentials and signatures
+        // from the browser while maintaining access to private bucket content.
+        
         if (article.getCoverImage() != null && article.getCoverImage().startsWith("http")) {
             article.setCoverImage(ossService.getProxyUrl(article.getCoverImage()));
         }
@@ -104,7 +107,9 @@ public class ArticleService {
         if (Boolean.TRUE.equals(article.getIsFeatured())) {
             articleRepository.clearFeatured();
         }
-        return articleRepository.save(article);
+        Article savedArticle = articleRepository.save(article);
+        proxyArticleUrls(savedArticle);
+        return savedArticle;
     }
 
     public void deleteArticle(Long id) {

@@ -25,6 +25,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/blog_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - OSS_ACCESS_KEY_ID=LTAI5tQZjdprQF2CjC21o6gv
+      - OSS_ACCESS_KEY_SECRET=byyx8yXD12rdnNqjqLxHjTY1yuLhJO
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:

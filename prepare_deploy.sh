@@ -57,6 +57,7 @@ build_vite_project "APP/amap-ranking" "app/amap-ranking" "高德扫街"
 build_vite_project "APP/weixin" "app/weixin" "微信新版"
 build_vite_project "APP/boke/frontend-react" "app/boke" "博客"
 build_vite_project "web/blog/frontend" "app/blog" "艺术市场"
+build_vite_project "web/test_platform/frontend" "app/test_platform" "测试平台"
 build_vite_project "other/rili" "other/rili" "万年历"
 
 cd "$ROOT_DIR"
@@ -71,8 +72,10 @@ echo "🔗 修正 API 调用地址..."
 # 适配 macOS 和 Linux 的 sed
 if [[ "$OSTYPE" == "darwin"* ]]; then
     find "$DEPLOY_DIR" -name "*.js" -exec sed -i '' "s|baseURL: 'http://localhost:8080/api'|baseURL: '/api'|g" {} + 2>/dev/null
+    find "$DEPLOY_DIR" -name "*.js" -exec sed -i '' "s|baseURL: 'http://localhost:8081/api'|baseURL: '/test-api'|g" {} + 2>/dev/null
 else
     find "$DEPLOY_DIR" -name "*.js" -exec sed -i "s|baseURL: 'http://localhost:8080/api'|baseURL: '/api'|g" {} + 2>/dev/null
+    find "$DEPLOY_DIR" -name "*.js" -exec sed -i "s|baseURL: 'http://localhost:8081/api'|baseURL: '/test-api'|g" {} + 2>/dev/null
 fi
 
 echo "✅ 所有项目构建完成！产物目录: $DEPLOY_DIR"

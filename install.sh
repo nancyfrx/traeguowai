@@ -175,6 +175,42 @@ else
 fi
 cd ../../../
 
+# 3.2 构建并启动测试平台后端服务
+echo -e "\n${YELLOW}Step 3.2: 正在构建并启动测试平台后端服务...${NC}"
+cd web/test_platform/backend
+chmod +x mvnw
+./mvnw clean package -DskipTests
+if [ $? -eq 0 ]; then
+    # 停止旧进程
+    PID=$(pgrep -f "test_platform-backend.jar") # Note: need to check jar name
+    # But usually spring boot jar name defaults to artifactId-version.jar
+    # Let's check pom.xml later or assume default
+    # If I don't know jar name, I can pgrep by port or just use pgrep -f "test_platform" if I rename it.
+    # To be safe, let's assume standard name or rename it.
+    # Better: pgrep -f "web/test_platform/backend" is hard.
+    # Let's rely on port check or just kill by jar name if we know it.
+    # The pom.xml usually defines it.
+    # Let's use lsof to kill port 8081.
+    PID=$(lsof -t -i:8081)
+    if [ ! -z "$PID" ]; then
+        echo "正在停止旧的测试平台后端进程 (PID: $PID)..."
+        kill -9 $PID
+    fi
+
+    mkdir -p ../../../logs
+    # Find the jar file
+    JAR_FILE=$(find target -name "*.jar" | head -n 1)
+    if [ ! -z "$JAR_FILE" ]; then
+        nohup java -jar "$JAR_FILE" > ../../../logs/test-platform-backend.log 2>&1 &
+        echo -e "${GREEN}✅ 测试平台后端服务已启动，日志: logs/test-platform-backend.log${NC}"
+    else
+        echo -e "${RED}❌ 未找到构建好的 Jar 包${NC}"
+    fi
+else
+    echo -e "${RED}❌ 测试平台后端构建失败${NC}"
+fi
+cd ../../../
+
 # 4. 自动配置 Nginx 模板
 echo -e "\n${YELLOW}Step 4: 正在根据当前环境优化 Nginx 配置...${NC}"
 PROJECT_PATH=$(pwd)
@@ -183,13 +219,13 @@ PROJECT_PATH=$(pwd)
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
-    sed -i '' "s|alias .*/test_platform/;|alias $PROJECT_PATH/test_platform/;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/test_platform/;|alias $PROJECT_PATH/web_dist/app/test_platform/;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
     sed -i '' "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
 else
     sed -i "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
-    sed -i "s|alias .*/test_platform/;|alias $PROJECT_PATH/test_platform/;|" nginx_cloud.conf
+    sed -i "s|alias .*/test_platform/;|alias $PROJECT_PATH/web_dist/app/test_platform/;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
     sed -i "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
 fi
@@ -235,6 +271,8 @@ echo -e "\n${GREEN}🎉 所有步骤执行完毕! 部署成功。${NC}"
 echo -e "${BLUE}===================================================${NC}"
 echo -e "\n${YELLOW}项目信息:${NC}"
 echo -e "- 站点入口: ${YELLOW}http://fengruxue.com${NC}"
-echo -e "- 后端接口: ${YELLOW}http://127.0.0.1:8080${NC}"
+echo -e "- 后端接口 (Blog): ${YELLOW}http://127.0.0.1:8080${NC}"
+echo -e "- 后端接口 (Test Platform): ${YELLOW}http://127.0.0.1:8081${NC}"
 echo -e "- 后端日志: ${YELLOW}tail -f logs/blog-backend.log${NC}"
+echo -e "- 测试平台日志: ${YELLOW}tail -f logs/test-platform-backend.log${NC}"
 echo -e "${BLUE}===================================================${NC}"

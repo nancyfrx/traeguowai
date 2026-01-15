@@ -180,12 +180,9 @@
     </main>
 
     <script>
-        // 环境检测：判断是否在本地运行 (localhost 或 127.0.0.1 或 局域网 IP 或 file:// 协议)
+        // 环境检测：判断是否在本地运行 (localhost 或 file:// 协议)
         const isLocal = window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' || 
-                       window.location.hostname.startsWith('192.168.') ||
-                       window.location.hostname.startsWith('172.') ||
-                       window.location.hostname.startsWith('10.') ||
                        window.location.protocol === 'file:';
         const isProd = !isLocal;
 
@@ -213,6 +210,7 @@
                 name: 'WEB',
                 icon: '🌐',
                 children: [
+                    { id: 'test_platform', name: '测试平台', icon: '🧪', type: 'vite', localUrl: 'http://localhost:5180', prodUrl: '/app/test_platform/', path: './web/test_platform/frontend' },
                     { id: 'blog', name: '艺术市场', icon: '🎨', type: 'vite', localUrl: 'http://localhost:5175/art/', prodUrl: '/art/', path: './web/blog/frontend' }
                 ]
             },
@@ -241,12 +239,20 @@
         menuData.forEach(cat => {
             cat.children.forEach(project => {
                 if (project.type === 'vite') {
-                    let url = isProd ? project.prodUrl : project.localUrl;
-                    // 如果在本地运行，自动将 localhost 替换为当前访问的域名/IP
-                    if (!isProd && url.includes('localhost')) {
-                        url = url.replace('localhost', window.location.hostname);
+                    project.url = isProd ? project.prodUrl : project.localUrl;
+                } else {
+                    // 对于静态项目
+                    if (isProd) {
+                        // 统一使用绝对路径，确保在生产环境下能正确跳转
+                        let url = project.url;
+                        if (url.startsWith('./')) {
+                            url = url.substring(1);
+                        }
+                        if (!url.startsWith('/')) {
+                            url = '/' + url;
+                        }
+                        project.url = url;
                     }
-                    project.url = url;
                 }
             });
         });
