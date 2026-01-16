@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>技术文档中心 - TraceGuowai</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.loli.net/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .doc-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -38,34 +38,44 @@
         </header>
 
         <!-- Category View -->
-        <div id="category-view" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div id="category-view" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- WEB Category -->
+            <div onclick="showProjects('WEB')" class="category-card bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl mb-4">🌐</div>
+                <h3 class="text-lg font-bold mb-1 text-slate-800">WEB</h3>
+                <p class="text-xs text-slate-500">艺术市场、测试平台等企业级 Web 应用。</p>
+                <div class="mt-4 flex items-center text-blue-600 text-xs font-bold">
+                    浏览项目 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                </div>
+            </div>
+
             <!-- AI_TOOL Category -->
-            <div onclick="showProjects('AI_TOOL')" class="category-card bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md">
-                <div class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center text-3xl mb-6">🛠️</div>
-                <h3 class="text-xl font-bold mb-2 text-slate-800">AI_TOOL</h3>
-                <p class="text-sm text-slate-500">智谱 AI、DeepSeek 等人工智能交互工具合集。</p>
-                <div class="mt-6 flex items-center text-blue-600 text-sm font-bold">
-                    浏览项目 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+            <div onclick="showProjects('AI_TOOL')" class="category-card bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md">
+                <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl mb-4">🛠️</div>
+                <h3 class="text-lg font-bold mb-1 text-slate-800">AI_TOOL</h3>
+                <p class="text-xs text-slate-500">智谱 AI、DeepSeek 等人工智能交互工具。</p>
+                <div class="mt-4 flex items-center text-blue-600 text-xs font-bold">
+                    浏览项目 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
                 </div>
             </div>
 
             <!-- APP Category -->
-            <div onclick="showProjects('APP')" class="category-card bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md">
-                <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl mb-6">📱</div>
-                <h3 class="text-xl font-bold mb-2 text-slate-800">APP</h3>
-                <p class="text-sm text-slate-500">微信、QQ音乐、博客及艺术市场等移动应用与 Web 应用。</p>
-                <div class="mt-6 flex items-center text-blue-600 text-sm font-bold">
-                    浏览项目 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+            <div onclick="showProjects('APP')" class="category-card bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md">
+                <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-2xl mb-4">📱</div>
+                <h3 class="text-lg font-bold mb-1 text-slate-800">APP</h3>
+                <p class="text-xs text-slate-500">微信、QQ音乐、抖音等移动端高度还原应用。</p>
+                <div class="mt-4 flex items-center text-blue-600 text-xs font-bold">
+                    浏览项目 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
                 </div>
             </div>
 
             <!-- GAME Category -->
-            <div onclick="showProjects('GAME')" class="category-card bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md">
-                <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mb-6">🎮</div>
-                <h3 class="text-xl font-bold mb-2 text-slate-800">GAME</h3>
-                <p class="text-sm text-slate-500">俄罗斯方块、坦克大战等经典休闲游戏。 </p>
-                <div class="mt-6 flex items-center text-blue-600 text-sm font-bold">
-                    浏览项目 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+            <div onclick="showProjects('GAME')" class="category-card bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-md">
+                <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl mb-4">🎮</div>
+                <h3 class="text-lg font-bold mb-1 text-slate-800">GAME</h3>
+                <p class="text-xs text-slate-500">俄罗斯方块、坦克大战、消消乐等经典休闲游戏。</p>
+                <div class="mt-4 flex items-center text-blue-600 text-xs font-bold">
+                    浏览项目 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
                 </div>
             </div>
         </div>
@@ -82,6 +92,28 @@
 
     <script>
         const projectData = {
+            'WEB': [
+                {
+                    id: 'blog',
+                    name: '艺术市场 (Blog)',
+                    desc: '基于 React + Spring Boot 的 NFT 艺术品交易平台。包含商品展示、支付模拟及响应式设计。',
+                    tags: ['React', 'Spring Boot', 'Tailwind'],
+                    status: 'Completed',
+                    statusClass: 'bg-green-100 text-green-700',
+                    icon: '🎨',
+                    iconBg: 'bg-blue-50'
+                },
+                {
+                    id: 'test-platform',
+                    name: '测试平台 (Test Platform)',
+                    desc: '一站式测试管理平台，涵盖用例管理、接口测试、UI 自动化及质量看板。',
+                    tags: ['Spring Boot', 'React', 'Automation'],
+                    status: 'Updated',
+                    statusClass: 'bg-blue-100 text-blue-700',
+                    icon: '🧪',
+                    iconBg: 'bg-indigo-50'
+                }
+            ],
             'AI_TOOL': [
                 {
                     id: 'chat-gml',
@@ -105,16 +137,6 @@
                 }
             ],
             'APP': [
-                {
-                    id: 'blog',
-                    name: '艺术市场 (Blog)',
-                    desc: '基于 React + Spring Boot 的 NFT 艺术品博客系统。包含商品展示、支付模拟及响应式设计。',
-                    tags: ['React', 'Spring Boot', 'Tailwind'],
-                    status: 'Completed',
-                    statusClass: 'bg-green-100 text-green-700',
-                    icon: '🎨',
-                    iconBg: 'bg-blue-50'
-                },
                 {
                     id: 'weixin',
                     name: '新版微信 (Weixin)',
@@ -227,7 +249,7 @@
                     <div class="flex flex-wrap gap-2 mb-6">
                         ${p.tags.map(tag => `<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] rounded">${tag}</span>`).join('')}
                     </div>
-                    <button onclick="window.location.href='./doc-detail.html?p=${p.id}'" class="w-full py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
+                    <button onclick="localStorage.setItem('last_project_id', '${p.id}'); window.location.href='./doc-detail.html?p=${p.id}'" class="w-full py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
                         查看文档详情
                     </button>
                 </div>

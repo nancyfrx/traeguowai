@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { 
   LayoutDashboard, 
@@ -12,10 +12,20 @@ import {
   Bell, 
   Moon, 
   ChevronRight,
-  Menu
+  Menu,
+  LogOut
 } from 'lucide-react';
 
 const Layout = () => {
+  const navigate = useNavigate();
+  const username = localStorage.getItem('username') || 'Feng Ruxue';
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    navigate('/login');
+  };
+
   return (
     <div className="bg-[#fcfcfc] text-gray-800 h-screen flex overflow-hidden">
       {/* Sidebar */}
@@ -63,13 +73,19 @@ const Layout = () => {
 
         {/* User Profile Bottom */}
         <div className="p-6 border-t border-gray-50">
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-100">
-            <img src="https://ui-avatars.com/api/?name=Feng+Ruxue&background=000000&color=ffffff" className="w-9 h-9 rounded-full ring-2 ring-gray-100" alt="User" />
+          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-100 group relative">
+            <img src={`https://ui-avatars.com/api/?name=${username}&background=000000&color=ffffff`} className="w-9 h-9 rounded-full ring-2 ring-gray-100" alt="User" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">Feng Ruxue</p>
+              <p className="text-sm font-semibold text-gray-900 truncate">{username}</p>
               <p className="text-[11px] text-gray-400 truncate uppercase tracking-wider font-medium">Admin</p>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-300" />
+            <button 
+              onClick={handleLogout}
+              className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+              title="退出登录"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>

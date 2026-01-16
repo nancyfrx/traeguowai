@@ -6,21 +6,27 @@
     <title>项目设计文档 - TraceGuowai</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <link href="https://fonts.loli.net/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         code, pre { font-family: 'Fira Code', monospace; }
         .sidebar-link { transition: all 0.2s; }
-        .sidebar-link.active { color: #2563eb; background-color: #eff6ff; border-right: 2px solid #2563eb; }
-        .content-section { scroll-margin-top: 80px; }
-        .mermaid { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 20px 0; }
-        .table-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
+        .sidebar-link.active { color: #2563eb; background-color: #eff6ff; border-right: 2px solid #2563eb; font-weight: 600; }
+        .content-section { scroll-margin-top: 100px; }
+        .mermaid { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 20px 0; min-height: 50px; }
+        .table-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; margin: 16px 0; }
         table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #475569; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; color: #64748b; }
+        tr:last-child td { border-bottom: none; }
+        .error-overlay { position: fixed; top: 20px; right: 20px; background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 8px; z-index: 9999; max-width: 400px; display: none; }
     </style>
 </head>
 <body class="bg-white text-slate-900">
+    <div id="error-display" class="error-overlay">
+        <h4 class="font-bold mb-1">页面运行出错</h4>
+        <p id="error-message" class="text-xs"></p>
+    </div>
     <!-- Navbar -->
     <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 z-50 px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -39,24 +45,10 @@
 
     <div class="flex pt-20">
         <!-- Sidebar -->
-        <aside class="w-64 fixed h-screen border-r border-slate-100 hidden lg:block p-6">
-            <div class="space-y-1">
+        <aside class="w-64 fixed h-screen border-r border-slate-100 hidden lg:block p-6 overflow-y-auto">
+            <div class="space-y-1" id="sidebar-nav">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">文档目录</p>
-                <a href="#architecture" class="sidebar-link flex items-center gap-3 px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50">
-                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 架构设计与选型
-                </a>
-                <a href="#database" class="sidebar-link flex items-center gap-3 px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> 数据库设计
-                </a>
-                <a href="#api" class="sidebar-link flex items-center gap-3 px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50">
-                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> 核心 API 定义
-                </a>
-                <a href="#workflow" class="sidebar-link flex items-center gap-3 px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50">
-                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> 业务流程说明
-                </a>
-                <a href="#ops" class="sidebar-link flex items-center gap-3 px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50">
-                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> 部署与运维方案
-                </a>
+                <!-- Nav links will be injected here -->
             </div>
         </aside>
 
@@ -69,949 +61,826 @@
     </div>
 
     <script>
-        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+        // 错误捕获
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            const display = document.getElementById('error-display');
+            const message = document.getElementById('error-message');
+            if (display && message) {
+                display.style.display = 'block';
+                message.innerText = `${msg}\nLine: ${lineNo}\nColumn: ${columnNo}`;
+            }
+            return false;
+        };
+
+        // 捕获未处理的 Promise 错误
+        window.onunhandledrejection = function(event) {
+            const display = document.getElementById('error-display');
+            const message = document.getElementById('error-message');
+            if (display && message) {
+                display.style.display = 'block';
+                message.innerText = `Unhandled Promise Rejection: ${event.reason}`;
+            }
+        };
+
+        function initMermaid() {
+            if (typeof mermaid !== 'undefined') {
+                try {
+                    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                    if (mermaid.run) {
+                        mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
+                    } else if (mermaid.init) {
+                        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+                    }
+                } catch (e) {
+                    console.error('Mermaid init failed:', e);
+                }
+            }
+        }
 
         const docs = {
+            'test-platform': {
+                title: '测试平台 (Test Platform)',
+                subtitle: 'Quality Assurance & Automation Hub',
+                status: 'UPDATED',
+                groups: [
+                    {
+                        id: 'auth',
+                        title: '登录注册',
+                        icon: '🔐',
+                        sections: [
+                            { 
+                                id: 'auth-arch', 
+                                title: '架构设计', 
+                                content: `
+                                    <div class="p-4 bg-slate-50 rounded-xl">
+                                        <p class="text-sm text-slate-600 mb-4">基于 Spring Security + JWT 的鉴权中心，支持多租户隔离与权限动态分配。</p>
+                                        <div class="mermaid">
+                                            graph LR
+                                                U[用户] --> G[Gateway]
+                                                G --> A[Auth Service]
+                                                A --> R[Redis Token]
+                                                A --> DB[(MySQL User)]
+                                        </div>
+                                    </div>
+                                ` 
+                            },
+                            { 
+                                id: 'auth-db', 
+                                title: '数据库设计', 
+                                content: `
+                                    <div class="table-container">
+                                        <table>
+                                            <thead><tr><th>表名</th><th>说明</th><th>核心字段</th></tr></thead>
+                                            <tbody>
+                                                <tr><td>sys_user</td><td>用户信息表</td><td>id, username, password, dept_id</td></tr>
+                                                <tr><td>sys_role</td><td>角色信息表</td><td>id, role_key, role_name</td></tr>
+                                                <tr><td>sys_menu</td><td>权限菜单表</td><td>id, parent_id, perms</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ` 
+                            },
+                            { 
+                                id: 'auth-api', 
+                                title: '核心 API', 
+                                content: `
+                                    <ul class="space-y-2 text-xs font-mono">
+                                        <li class="flex items-center gap-2"><span class="text-blue-600 font-bold">POST</span> /auth/login - 用户登录</li>
+                                        <li class="flex items-center gap-2"><span class="text-blue-600 font-bold">GET</span> /auth/info - 获取用户信息</li>
+                                        <li class="flex items-center gap-2"><span class="text-blue-600 font-bold">POST</span> /auth/logout - 退出登录</li>
+                                    </ul>
+                                ` 
+                            }
+                        ]
+                    },
+                    {
+                        id: 'ai-gen',
+                        title: 'AI 生产用例',
+                        icon: '🤖',
+                        sections: [
+                            { 
+                                id: 'ai-arch', 
+                                title: '架构设计', 
+                                content: `
+                                    <div class="p-4 bg-slate-50 rounded-xl">
+                                        <p class="text-sm text-slate-600 mb-4">利用大模型解析业务需求文档（PRD），自动提取测试点并生成标准化测试用例。</p>
+                                        <div class="mermaid">
+                                            graph TD
+                                                PRD[需求文档] --> LLM[DeepSeek/GPT]
+                                                LLM --> Parser[用例解析器]
+                                                Parser --> CaseDB[(用例库)]
+                                        </div>
+                                    </div>
+                                ` 
+                            },
+                            { 
+                                id: 'ai-flow', 
+                                title: '业务流程', 
+                                content: `
+                                    <div class="mermaid">
+                                        sequenceDiagram
+                                            participant U as 用户
+                                            participant A as AI 引擎
+                                            participant D as 数据库
+                                            U->>A: 上传需求文档
+                                            A->>A: 语义分析与测试点提取
+                                            A-->>U: 返回预览用例
+                                            U->>D: 确认并入库
+                                    </div>
+                                ` 
+                            }
+                        ]
+                    },
+                    {
+                        id: 'case-mgmt',
+                        title: '用例管理',
+                        icon: '📁',
+                        sections: [
+                            { 
+                                id: 'case-arch', 
+                                title: '架构设计', 
+                                content: `
+                                    <p class="text-sm text-slate-600">采用树形递归结构管理数万级用例，支持跨项目共享与版本回溯。</p>
+                                ` 
+                            },
+                            { 
+                                id: 'case-db', 
+                                title: '数据库设计', 
+                                content: `
+                                    <div class="mermaid">
+                                        erDiagram
+                                            PROJECT ||--o{ MODULE : contains
+                                            MODULE ||--o{ TESTCASE : defines
+                                            TESTCASE ||--o{ STEP : has
+                                    </div>
+                                ` 
+                            }
+                        ]
+                    },
+                    {
+                        id: 'api-test',
+                        title: '接口测试',
+                        icon: '🔌',
+                        sections: [
+                            { 
+                                id: 'api-arch', 
+                                title: '架构设计', 
+                                content: `
+                                    <p class="text-sm text-slate-600">自研执行引擎，支持多协议（HTTP/RPC/Dubbo）与复杂链路编排。</p>
+                                ` 
+                            },
+                            { 
+                                id: 'api-core', 
+                                title: '核心功能', 
+                                content: `
+                                    <ul class="list-disc ml-6 text-sm text-slate-600 space-y-1">
+                                        <li>断言校验：支持 JSONPath、正则表达式</li>
+                                        <li>参数提取：支持多步骤变量传递</li>
+                                        <li>环境管理：一键切换 Dev/Test/Prod</li>
+                                    </ul>
+                                ` 
+                            }
+                        ]
+                    },
+                    {
+                        id: 'ui-auto',
+                        title: 'UI 自动化',
+                        icon: '🖥️',
+                        sections: [
+                            { 
+                                id: 'ui-arch', 
+                                title: '架构设计', 
+                                content: `
+                                    <p class="text-sm text-slate-600">基于 Playwright 容器化集群部署，支持多浏览器并发执行与视频录制。</p>
+                                ` 
+                            },
+                            { 
+                                id: 'ui-flow', 
+                                title: '业务流程', 
+                                content: `
+                                    <div class="mermaid">
+                                        graph LR
+                                            Job[测试任务] --> Grid[Selenium/Playwright Grid]
+                                            Grid --> Node1[Chrome]
+                                            Grid --> Node2[Firefox]
+                                            Node1 --> Report[测试报告]
+                                    </div>
+                                ` 
+                            }
+                        ]
+                    }
+                ]
+            },
             'blog': {
                 title: '艺术市场 (Blog)',
                 subtitle: 'React + Spring Boot NFT Marketplace',
                 status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4">
-                        <p class="text-slate-600 leading-relaxed">本项目是一个基于前后端分离架构的 NFT 艺术品展示与交易平台。采用微服务化思想设计，前端侧重于交互体验，后端侧重于数据持久化与安全。</p>
-                        <h4 class="font-bold text-slate-800">技术选型理由：</h4>
-                        <ul class="list-disc ml-6 space-y-2 text-sm text-slate-600">
-                            <li><strong>Frontend: React 18 + Vite</strong> - 提供极致的开发体验与组件化能力，利用 Framer Motion 实现丝滑的 3D 动效。</li>
-                            <li><strong>Backend: Spring Boot 3 + JPA</strong> - 成熟的企业级框架，JPA 提供强大的 ORM 能力，简化数据库操作。</li>
-                            <li><strong>UI: Tailwind CSS</strong> - 原子化 CSS 极大提升 UI 开发效率，支持快速实现响应式与暗黑模式。</li>
-                            <li><strong>Database: MySQL 8.0</strong> - 关系型数据库保证交易数据的一致性。</li>
-                        </ul>
-                        <div class="mermaid">
-                            graph TD
-                                User[用户/浏览器] --> Frontend[React Frontend]
-                                Frontend --> API[Spring Boot REST API]
-                                API --> Security[Spring Security/JWT]
-                                API --> DB[(MySQL Database)]
-                                API --> Storage[Cloud Storage]
-                        </div>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-6">
-                        <div class="mermaid">
-                            erDiagram
-                                USER ||--o{ ARTICLE : publishes
-                                ARTICLE ||--o{ TAG : contains
-                                CATEGORY ||--o{ ARTICLE : classifies
-                                ARTICLE {
-                                    Long id PK
-                                    String title
-                                    Double price
-                                    String content
-                                    LocalDateTime publishedAt
-                                }
-                                USER {
-                                    Long id PK
-                                    String username
-                                    String role
-                                }
-                        </div>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr><th>字段名</th><th>类型</th><th>约束</th><th>说明</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>id</td><td>BIGINT</td><td>PRIMARY KEY</td><td>主键ID</td></tr>
-                                    <tr><td>title</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>文章/艺术品标题</td></tr>
-                                    <tr><td>price</td><td>DOUBLE</td><td>-</td><td>成交价格(ETH)</td></tr>
-                                    <tr><td>user_id</td><td>BIGINT</td><td>FOREIGN KEY</td><td>关联作者ID</td></tr>
-                                    <tr><td>is_featured</td><td>BOOLEAN</td><td>DEFAULT FALSE</td><td>是否为精选推荐</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="p-4 bg-slate-50 rounded-xl space-y-3">
-                            <div class="flex items-center gap-3">
-                                <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded">GET</span>
-                                <code class="text-xs font-bold">/api/articles</code>
-                            </div>
-                            <p class="text-xs text-slate-500">获取文章列表，支持分页与精选过滤。</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl space-y-3">
-                            <div class="flex items-center gap-3">
-                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded">POST</span>
-                                <code class="text-xs font-bold">/api/articles/{id}/like</code>
-                            </div>
-                            <p class="text-xs text-slate-500">点赞操作，原子性增加 likeCount。</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl space-y-3">
-                            <div class="flex items-center gap-3">
-                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded">PUT</span>
-                                <code class="text-xs font-bold">/api/articles/{id}</code>
-                            </div>
-                            <p class="text-xs text-slate-500">更新文章内容，需 Admin 权限。</p>
-                        </div>
-                        <h4 class="text-sm font-semibold mt-4 mb-2">数据交互流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant C as Client (React)
-                                participant S as Spring Boot
-                                participant J as Spring Security
-                                participant D as MySQL
-                                C->>S: 发送带有 JWT 的请求
-                                S->>J: 拦截并校验令牌
-                                J-->>S: 校验通过 (User context)
-                                S->>D: 执行数据库 CRUD 操作
-                                D-->>S: 返回结果
-                                S-->>C: 返回 JSON 响应
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        sequenceDiagram
-                            participant U as 用户
-                            participant F as 前端
-                            participant B as 后端
-                            participant P as 支付服务
-                            U->>F: 点击 BUY 按钮
-                            F->>F: 弹出支付选项 (微信/支付宝)
-                            U->>F: 选择支付方式
-                            F->>B: 发起支付预校验
-                            B-->>F: 返回支付参数
-                            F->>U: 显示支付成功提示
-                            F->>B: 更新交易状态
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="p-4 border border-slate-100 rounded-xl">
-                                <h5 class="font-bold text-slate-800 mb-2">Docker 部署</h5>
-                                <p>使用 Docker Compose 编排前后端镜像，实现一键环境迁移。</p>
-                            </div>
-                            <div class="p-4 border border-slate-100 rounded-xl">
-                                <h5 class="font-bold text-slate-800 mb-2">监控方案</h5>
-                                <p>集成 Spring Boot Actuator + Prometheus 实现系统指标监控。</p>
-                            </div>
-                        </div>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'overview',
+                        title: '项目概览',
+                        icon: '📋',
+                        sections: [
+                            { 
+                                id: 'architecture', 
+                                title: '架构设计与选型', 
+                                content: `
+                                    <div class="space-y-4">
+                                        <p class="text-slate-600 leading-relaxed">本项目是一个基于前后端分离架构的 NFT 艺术品展示与交易平台。采用微服务化思想设计，前端侧重于交互体验，后端侧重于数据持久化与安全。</p>
+                                        <h4 class="font-bold text-slate-800">技术选型理由：</h4>
+                                        <ul class="list-disc ml-6 space-y-2 text-sm text-slate-600">
+                                            <li><strong>Frontend: React 18 + Vite</strong> - 提供极致的开发体验与组件化能力，利用 Framer Motion 实现丝滑的 3D 动效。</li>
+                                            <li><strong>Backend: Spring Boot 3 + JPA</strong> - 成熟的企业级框架，JPA 提供强大的 ORM 能力，简化数据库操作。</li>
+                                            <li><strong>UI: Tailwind CSS</strong> - 原子化 CSS 极大提升 UI 开发效率，支持快速实现响应式与暗黑模式。</li>
+                                            <li><strong>Database: MySQL 8.0</strong> - 关系型数据库保证交易数据的一致性。</li>
+                                        </ul>
+                                        <div class="mermaid">
+                                            graph TD
+                                                User[用户/浏览器] --> Frontend[React Frontend]
+                                                Frontend --> API[Spring Boot REST API]
+                                                API --> Security[Spring Security/JWT]
+                                                API --> DB[(MySQL Database)]
+                                                API --> Storage[Cloud Storage]
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        ]
+                    },
+                    {
+                        id: 'technical',
+                        title: '技术细节',
+                        icon: '⚙️',
+                        sections: [
+                            { 
+                                id: 'database', 
+                                title: '数据库设计', 
+                                content: `
+                                    <div class="space-y-6">
+                                        <div class="mermaid">
+                                            erDiagram
+                                                USER ||--o{ ARTICLE : publishes
+                                                ARTICLE ||--o{ TAG : contains
+                                                CATEGORY ||--o{ ARTICLE : classifies
+                                                ARTICLE {
+                                                    Long id PK
+                                                    String title
+                                                    Double price
+                                                    String content
+                                                    LocalDateTime publishedAt
+                                                }
+                                                USER {
+                                                    Long id PK
+                                                    String username
+                                                    String role
+                                                }
+                                        </div>
+                                        <div class="table-container">
+                                            <table>
+                                                <thead>
+                                                    <tr><th>字段名</th><th>类型</th><th>约束</th><th>说明</th></tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr><td>id</td><td>BIGINT</td><td>PRIMARY KEY</td><td>主键ID</td></tr>
+                                                    <tr><td>title</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>文章/艺术品标题</td></tr>
+                                                    <tr><td>price</td><td>DOUBLE</td><td>-</td><td>成交价格(ETH)</td></tr>
+                                                    <tr><td>user_id</td><td>BIGINT</td><td>FOREIGN KEY</td><td>关联作者ID</td></tr>
+                                                    <tr><td>is_featured</td><td>BOOLEAN</td><td>DEFAULT FALSE</td><td>是否为精选推荐</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                `
+                            },
+                            { 
+                                id: 'api', 
+                                title: '核心 API 定义', 
+                                content: `
+                                    <div class="space-y-4">
+                                        <div class="p-4 bg-slate-50 rounded-xl space-y-3">
+                                            <div class="flex items-center gap-3">
+                                                <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded">GET</span>
+                                                <code class="text-xs font-bold">/api/articles</code>
+                                            </div>
+                                            <p class="text-xs text-slate-500">获取文章列表，支持分页与精选过滤。</p>
+                                        </div>
+                                        <div class="p-4 bg-slate-50 rounded-xl space-y-3">
+                                            <div class="flex items-center gap-3">
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded">POST</span>
+                                                <code class="text-xs font-bold">/api/articles/{id}/like</code>
+                                            </div>
+                                            <p class="text-xs text-slate-500">点赞操作，原子性增加 likeCount。</p>
+                                        </div>
+                                        <div class="p-4 bg-slate-50 rounded-xl space-y-3">
+                                            <div class="flex items-center gap-3">
+                                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded">PUT</span>
+                                                <code class="text-xs font-bold">/api/articles/{id}</code>
+                                            </div>
+                                            <p class="text-xs text-slate-500">更新文章内容，需 Admin 权限。</p>
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        ]
+                    },
+                    {
+                        id: 'workflow-ops',
+                        title: '流程与运维',
+                        icon: '🚀',
+                        sections: [
+                            { 
+                                id: 'workflow', 
+                                title: '业务流程说明', 
+                                content: `
+                                    <div class="mermaid">
+                                        sequenceDiagram
+                                            participant U as 用户
+                                            participant F as 前端
+                                            participant B as 后端
+                                            participant P as 支付服务
+                                            U->>F: 点击 BUY 按钮
+                                            F->>F: 弹出支付选项 (微信/支付宝)
+                                            U->>F: 选择支付方式
+                                            F->>B: 发起支付预校验
+                                            B-->>F: 返回支付参数
+                                            F->>U: 显示支付成功提示
+                                            F->>B: 更新交易状态
+                                    </div>
+                                `
+                            },
+                            { 
+                                id: 'ops', 
+                                title: '部署与运维方案', 
+                                content: `
+                                    <div class="space-y-4 text-sm text-slate-600">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="p-4 border border-slate-100 rounded-xl">
+                                                <h5 class="font-bold text-slate-800 mb-2">Docker 部署</h5>
+                                                <p>使用 Docker Compose 编排前后端镜像，实现一键环境迁移。</p>
+                                            </div>
+                                            <div class="p-4 border border-slate-100 rounded-xl">
+                                                <h5 class="font-bold text-slate-800 mb-2">监控方案</h5>
+                                                <p>集成 Spring Boot Actuator + Prometheus 实现系统指标监控。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        ]
+                    }
+                ]
             },
             'weixin': {
                 title: '新版微信 (Weixin)',
                 subtitle: 'Vite + Framer Motion WeChat Clone',
                 status: 'UPDATED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>本项目旨在高度还原微信 8.0 版本的核心交互体验，采用 Vite 作为构建工具，利用其热更新特性进行 UI 的精细化打磨。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>前端引擎:</strong> Vue 3 + Vite 5</li>
-                            <li><strong>动画库:</strong> Framer Motion / CSS Keyframes</li>
-                            <li><strong>通信方案:</strong> WebSocket (模拟实时聊天)</li>
-                        </ul>
-                        <div class="mermaid">
-                            graph LR
-                                Client[微信客户端] --> Layout[主体布局]
-                                Layout --> Moments[朋友圈模块]
-                                Layout --> Chat[聊天模块]
-                                Layout --> Discover[发现/视频号]
-                        </div>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">前端驱动型项目，数据持久化主要依赖浏览器存储。</p>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50">
-                                        <th class="p-2 border">存储项</th>
-                                        <th class="p-2 border">类型</th>
-                                        <th class="p-2 border">说明</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="p-2 border">chat_history</td>
-                                        <td class="p-2 border">JSON Array</td>
-                                        <td class="p-2 border">消息列表（包含文本、时间戳、发送者）</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="p-2 border">moments_cache</td>
-                                        <td class="p-2 border">JSON Object</td>
-                                        <td class="p-2 border">朋友圈缓存数据</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-blue-600">GET /api/moments</code>
-                            <p class="text-xs text-slate-500 mt-1">获取朋友圈列表数据</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-green-600">POST /api/chat/send</code>
-                            <p class="text-xs text-slate-500 mt-1">发送即时通讯消息</p>
-                        </div>
-                        
-                        <h4 class="text-sm font-semibold mt-4 mb-2">接口调用流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant U as 用户
-                                participant C as 客户端 (Vue 3)
-                                participant S as WebSocket 服务
-                                U->>C: 输入消息并发送
-                                C->>C: 渲染本地气泡 (乐观更新)
-                                C->>S: 发送消息包 (JSON)
-                                S-->>C: 确认送达回执
-                                S->>C: 推送对方回复
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph TD
-                            Start[打开微信] --> Tab[导航栏切换]
-                            Tab --> Chat[消息列表]
-                            Tab --> Discover[发现页]
-                            Discover --> Moments[朋友圈]
-                            Moments --> Upload[发布动态]
-                            Upload --> Success[显示在时间轴]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>构建:</strong> <code>npm run build</code> 生成静态产物。</p>
-                        <p>2. <strong>托管:</strong> 部署至 Nginx 或 Vercel 静态托管服务。</p>
-                        <p>3. <strong>优化:</strong> 开启 Gzip 压缩及图片懒加载。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'weixin-overview',
+                        title: '项目概览',
+                        icon: '💬',
+                        sections: [
+                            { 
+                                id: 'weixin-arch', 
+                                title: '架构设计', 
+                                content: `
+                                    <div class="space-y-4 text-sm text-slate-600">
+                                        <p>本项目旨在高度还原微信 8.0 版本的核心交互体验，采用 Vite 作为构建工具，利用其热更新特性进行 UI 的精细化打磨。</p>
+                                        <ul class="list-disc ml-6 space-y-2">
+                                            <li><strong>前端引擎:</strong> Vue 3 + Vite 5</li>
+                                            <li><strong>动画库:</strong> Framer Motion / CSS Keyframes</li>
+                                            <li><strong>通信方案:</strong> WebSocket (模拟实时聊天)</li>
+                                        </ul>
+                                        <div class="mermaid">
+                                            graph LR
+                                                Client[微信客户端] --> Layout[主体布局]
+                                                Layout --> Moments[朋友圈模块]
+                                                Layout --> Chat[聊天模块]
+                                                Layout --> Discover[发现/视频号]
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        ]
+                    },
+                    {
+                        id: 'weixin-details',
+                        title: '技术细节',
+                        icon: '⚙️',
+                        sections: [
+                            { 
+                                id: 'weixin-db', 
+                                title: '数据持久化', 
+                                content: `
+                                    <div class="space-y-4">
+                                        <p class="text-sm text-slate-600">前端驱动型项目，数据持久化主要依赖浏览器存储。</p>
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full text-sm text-left border-collapse">
+                                                <thead>
+                                                    <tr class="bg-slate-50">
+                                                        <th class="p-2 border">存储项</th>
+                                                        <th class="p-2 border">类型</th>
+                                                        <th class="p-2 border">说明</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="p-2 border">chat_history</td>
+                                                        <td class="p-2 border">JSON Array</td>
+                                                        <td class="p-2 border">消息列表（包含文本、时间戳、发送者）</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="p-2 border">moments_cache</td>
+                                                        <td class="p-2 border">JSON Object</td>
+                                                        <td class="p-2 border">朋友圈缓存数据</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                `
+                            },
+                            { 
+                                id: 'weixin-api', 
+                                title: '接口调用流程', 
+                                content: `
+                                    <div class="mermaid">
+                                        sequenceDiagram
+                                            participant U as 用户
+                                            participant C as 客户端 (Vue 3)
+                                            participant S as WebSocket 服务
+                                            U->>C: 输入消息并发送
+                                            C->>C: 渲染本地气泡 (乐观更新)
+                                            C->>S: 发送消息包 (JSON)
+                                            S-->>C: 确认送达回执
+                                            S->>C: 推送对方回复
+                                    </div>
+                                `
+                            }
+                        ]
+                    }
+                ]
             },
             'QQMusic': {
                 title: 'QQ音乐 (QQMusic)',
                 subtitle: 'React + Tailwind Music Player',
                 status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>高度还原 QQ 音乐移动端交互体验的 Web 播放器。采用响应式设计，完美适配不同屏幕尺寸。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>前端框架:</strong> React 18</li>
-                            <li><strong>状态管理:</strong> Context API / Redux</li>
-                            <li><strong>音频处理:</strong> HTML5 Audio API</li>
-                        </ul>
-                        <div class="mermaid">
-                            graph TD
-                                UI[React UI] --> Audio[Audio Controller]
-                                UI --> Player[Player State]
-                                Player --> Audio
-                                Audio --> Native[HTML5 Audio]
-                        </div>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">使用 LocalStorage 存储用户播放列表与偏好设置。</p>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr><th>存储项</th><th>说明</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>recent_played</td><td>最近播放列表 (Array)</td></tr>
-                                    <tr><td>favorites</td><td>收藏歌曲列表 (Set)</td></tr>
-                                    <tr><td>settings</td><td>音效、音量等偏好设置</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-blue-600">GET /api/search?keyword=...</code>
-                            <p class="text-xs text-slate-500 mt-1">搜索歌曲、歌手或专辑</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-green-600">GET /api/song/url?id=...</code>
-                            <p class="text-xs text-slate-500 mt-1">获取歌曲音频流地址</p>
-                        </div>
-                        <h4 class="text-sm font-semibold mt-4 mb-2">搜索播放流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant U as 用户
-                                participant F as 前端界面
-                                participant A as 搜索接口
-                                participant M as 播放引擎
-                                U->>F: 输入搜索词
-                                F->>A: 调用搜索 API
-                                A-->>F: 返回搜索结果列表
-                                U->>F: 点击歌曲播放
-                                F->>M: 传递音频 URL 并初始化
-                                M->>M: 缓冲并开始播放
-                                M-->>F: 更新播放状态 (进度条/歌词)
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph LR
-                            Home[首页推荐] --> Search[搜索页]
-                            Search --> Detail[播放页]
-                            Detail --> Lyrics[歌词展示]
-                            Detail --> Playlist[播放列表管理]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>CDN 部署:</strong> 静态资源通过 CDN 加速。</p>
-                        <p>2. <strong>音频优化:</strong> 采用 HLS 协议或分段加载优化播放体验。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'qq-overview',
+                        title: '项目概览',
+                        icon: '🎵',
+                        sections: [
+                            { 
+                                id: 'qq-arch', 
+                                title: '架构设计', 
+                                content: `
+                                    <div class="space-y-4 text-sm text-slate-600">
+                                        <p>高度还原 QQ 音乐移动端交互体验的 Web 播放器。采用响应式设计，完美适配不同屏幕尺寸。</p>
+                                        <ul class="list-disc ml-6 space-y-2">
+                                            <li><strong>前端框架:</strong> React 18</li>
+                                            <li><strong>状态管理:</strong> Context API / Redux</li>
+                                            <li><strong>音频处理:</strong> HTML5 Audio API</li>
+                                        </ul>
+                                        <div class="mermaid">
+                                            graph TD
+                                                UI[React UI] --> Audio[Audio Controller]
+                                                UI --> Player[Player State]
+                                                Player --> Audio
+                                                Audio --> Native[HTML5 Audio]
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        ]
+                    }
+                ]
             },
             'douyin': {
                 title: '抖音 (Douyin)',
-                subtitle: 'React + Swiper Short Video App',
-                status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>基于 React 开发的短视频沉浸式体验平台，核心在于视频滚动切换与预加载逻辑。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>滚动引擎:</strong> Swiper.js / React-Slick</li>
-                            <li><strong>视频组件:</strong> HTML5 Video + Custom Controls</li>
-                            <li><strong>响应式:</strong> Mobile-first Design</li>
-                        </ul>
-                        <div class="mermaid">
-                            graph TD
-                                Feed[视频流容器] --> VideoItem[单个视频组件]
-                                VideoItem --> Player[播放控制]
-                                VideoItem --> Interaction[互动层:点赞/评论]
-                        </div>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">静态 JSON 数据驱动，模拟后端 API 返回的视频列表。</p>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>id</td><td>String</td><td>视频唯一标识</td></tr>
-                                    <tr><td>video_url</td><td>URL</td><td>视频源地址</td></tr>
-                                    <tr><td>author</td><td>Object</td><td>作者信息 (头像/昵称)</td></tr>
-                                    <tr><td>stats</td><td>Object</td><td>统计信息 (点赞/分享)</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-blue-600">GET /api/feed</code>
-                            <p class="text-xs text-slate-500 mt-1">获取推荐视频流</p>
-                        </div>
-                        <h4 class="text-sm font-semibold mt-4 mb-2">视频预加载流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant S as Swiper (容器)
-                                participant V1 as 当前视频
-                                participant V2 as 下一个视频
-                                S->>V1: 触发 play()
-                                S->>V2: 触发 preload() (静默加载)
-                                S->>S: 监听滑动事件
-                                S->>V1: 滑走时 pause() 并重置
-                                S->>V2: 滑入时 play()
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph TD
-                            Enter[进入应用] --> Load[加载视频流]
-                            Load --> Scroll[上下滑动切换]
-                            Scroll --> Interaction[双击点赞/评论]
-                            Scroll --> Share[分享视频]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>视频压缩:</strong> 使用 FFmpeg 预处理视频文件，确保加载速度。</p>
-                        <p>2. <strong>缓存策略:</strong> 配合 Service Worker 实现离线缓存。</p>
-                    </div>
-                `
+                subtitle: 'Mobile Video Feed Clone',
+                status: 'UPDATED',
+                groups: [
+                    {
+                        id: 'dy-overview',
+                        title: '项目概览',
+                        icon: '🎥',
+                        sections: [
+                            { 
+                                id: 'dy-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">模拟抖音短视频流式播放体验，核心在于高性能的视频预加载与滚动监听算法。</p>`
+                            }
+                        ]
+                    }
+                ]
             },
             'amap-ranking': {
                 title: '高德排行 (AMap Ranking)',
-                subtitle: 'Vue 3 + AMap JS API 2.0',
+                subtitle: 'Location-based Explorer',
                 status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>基于高德地图 API 开发的地标排行与探索工具，集成地理围栏与位置搜索功能。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>地图框架:</strong> @amap/amap-jsapi-loader</li>
-                            <li><strong>UI 框架:</strong> Vue 3 + Element Plus</li>
-                            <li><strong>地理计算:</strong> AMap.GeometryUtil</li>
-                        </ul>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">高德开放平台 POI 数据库 + 自定义排行缓存。</p>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-blue-600">AMap.PlaceSearch</code>
-                            <p class="text-xs text-slate-500 mt-1">周边搜索接口</p>
-                        </div>
-                        <h4 class="text-sm font-semibold mt-4 mb-2">地理数据检索流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant U as 用户
-                                participant M as 地图组件
-                                participant A as 高德 API
-                                participant R as 排行逻辑
-                                U->>M: 移动地图/缩放
-                                M->>A: 获取当前视野中心坐标
-                                A-->>M: 返回经纬度
-                                M->>A: 搜索周边 POI (PlaceSearch)
-                                A-->>R: 返回 POI 原始数据
-                                R->>R: 根据评分/距离排序
-                                R-->>M: 更新侧边栏排行榜
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph LR
-                            Locate[自动定位] --> Search[周边搜索]
-                            Search --> Rank[实时排行]
-                            Rank --> Detail[地点详情]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>安全策略:</strong> 使用 API Key 代理转发，保护密钥安全。</p>
-                        <p>2. <strong>性能优化:</strong> 地图覆盖物采用海量点模式 (MassMarks)。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'amap-overview',
+                        title: '项目概览',
+                        icon: '📍',
+                        sections: [
+                            { 
+                                id: 'amap-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">基于高德地图 API 开发的地标排行与探索工具。</p>`
+                            }
+                        ]
+                    }
+                ]
             },
             'boke': {
                 title: '个人博客 (Boke)',
                 subtitle: 'Vue 3 + Markdown Static Blog',
                 status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>轻量级 Markdown 驱动的个人静态博客系统，支持自动解析与分类导航。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>构建工具:</strong> Vite</li>
-                            <li><strong>解析引擎:</strong> markdown-it / gray-matter</li>
-                            <li><strong>代码高亮:</strong> Prism.js</li>
-                        </ul>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">基于文件系统的扁平化存储结构。</p>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr><th>目录</th><th>内容</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>/posts/*.md</td><td>博客正文与 Frontmatter 元数据</td></tr>
-                                    <tr><td>/assets/img/</td><td>插图与媒体资源</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-blue-600">import.meta.glob</code>
-                            <p class="text-xs text-slate-500 mt-1">Vite 批量文件导入接口</p>
-                        </div>
-                        <h4 class="text-sm font-semibold mt-4 mb-2">Markdown 解析流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant V as Vite Build
-                                participant F as File System
-                                participant P as Parser (markdown-it)
-                                participant U as UI (Vue)
-                                V->>F: 读取所有 .md 文件
-                                F-->>V: 返回文件内容
-                                V->>P: 解析 Frontmatter (标题/日期)
-                                P->>P: 将 MD 转换为 HTML
-                                P-->>U: 注入响应式数据
-                                U->>U: 渲染博客列表/详情
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph TD
-                            Write[撰写 MD] --> Commit[提交至 Git]
-                            Commit --> Build[自动构建]
-                            Build --> Deploy[静态托管]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>SEO 优化:</strong> 开启 SSR (服务端渲染) 或 SSG (静态站点生成)。</p>
-                        <p>2. <strong>自动化:</strong> 配置 GitHub Actions 实现自动部署。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'boke-overview',
+                        title: '项目概览',
+                        icon: '📝',
+                        sections: [
+                            { 
+                                id: 'boke-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">轻量级 Markdown 驱动的个人静态博客系统。</p>`
+                            }
+                        ]
+                    }
+                ]
             },
             'chat-gml': {
                 title: '智谱 AI 聊天 (chat-gml)',
                 subtitle: 'Vanilla JS + Zhipu AI GLM-4 Pro',
                 status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>本项目是一个轻量级的 AI 对话终端，直接在前端实现 JWT 签名与大模型 API 通信。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>核心引擎:</strong> 智谱 AI GLM-4 / GLM-4V</li>
-                            <li><strong>安全方案:</strong> 前端动态生成 HS256 JWT 令牌</li>
-                            <li><strong>功能特性:</strong> 支持文本对话、图片生成、历史记录管理</li>
-                        </ul>
-                        <div class="mermaid">
-                            graph TD
-                                User[用户/浏览器] --> UI[HTML/CSS 界面]
-                                UI --> Auth[JWT 签名模块]
-                                Auth --> API[智谱 AI API 终端]
-                                API --> Model[GLM-4 / CogView-3]
-                        </div>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">采用本地持久化方案，无需后端数据库即可保存对话状态。</p>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50">
-                                        <th class="p-2 border">存储位置</th>
-                                        <th class="p-2 border">键名</th>
-                                        <th class="p-2 border">数据结构</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="p-2 border">LocalStorage</td>
-                                        <td class="p-2 border">chatHistory</td>
-                                        <td class="p-2 border">Array of Chat Objects {id, title, messages}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-purple-600">POST /api/paas/v4/chat/completions</code>
-                            <p class="text-xs text-slate-500 mt-1">GLM 系列模型对话接口</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-orange-600">POST /api/paas/v4/images/generations</code>
-                            <p class="text-xs text-slate-500 mt-1">CogView 图片生成接口</p>
-                        </div>
-
-                        <h4 class="text-sm font-semibold mt-4 mb-2">接口调用流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant U as 用户
-                                participant B as 浏览器 (script.js)
-                                participant Z as 智谱 AI 平台
-                                U->>B: 输入 Prompt
-                                B->>B: 生成 JWT (Header.Payload.Signature)
-                                B->>Z: 发送 POST 请求 (Authorization: Bearer)
-                                Z-->>B: 返回 JSON 结果 (choices/data)
-                                B->>U: 更新 UI 渲染内容
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph LR
-                            Input[用户输入] --> TypeCheck{判断类型}
-                            TypeCheck -->|文本| Chat[调用聊天接口]
-                            TypeCheck -->|绘图| Draw[调用生图接口]
-                            Chat --> Save[更新 LocalStorage]
-                            Draw --> Save
-                            Save --> Display[展示结果]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>配置:</strong> 在 <code>script.js</code> 中配置 <code>API_KEY</code>。</p>
-                        <p>2. <strong>部署:</strong> 直接作为静态文件部署在任意 Web 服务器（如 GitHub Pages）。</p>
-                        <p>3. <strong>注意:</strong> 生产环境建议将 API 调用通过后端中转以保护 API Key 安全。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'gml-overview',
+                        title: '项目概览',
+                        icon: '💬',
+                        sections: [
+                            { 
+                                id: 'gml-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">基于智谱 AI GLM-4 Pro 的对话终端。</p>`
+                            }
+                        ]
+                    }
+                ]
             },
             'deepseek-chat': {
                 title: 'DeepSeek Chat',
                 subtitle: 'AI 对话终端 (Zhipu Backend)',
                 status: 'UPDATED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>模拟 DeepSeek 交互体验的 AI 助手，具备更精美的 UI 设计和多模型切换能力。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>前端框架:</strong> Vanilla JS / Tailwind CSS</li>
-                            <li><strong>后端接口:</strong> 智谱 AI 开放平台接口</li>
-                            <li><strong>交互特性:</strong> 响应式侧边栏、代码高亮、多会话隔离</li>
-                        </ul>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">使用 <code>localStorage</code> 管理多会话历史记录。</p>
-                        <div class="bg-slate-50 p-3 rounded font-mono text-xs">
-                            key: "deepseek_chats"<br>
-                            value: { "id": { "title": "...", "messages": [...] } }
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-blue-600">POST /v4/chat/completions</code>
-                            <p class="text-xs text-slate-500 mt-1">主对话接口，支持 GLM-4-Plus 等模型</p>
-                        </div>
-
-                        <h4 class="text-sm font-semibold mt-4 mb-2">接口调用流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant User as 用户
-                                participant App as 前端应用
-                                participant Auth as JWT 生成器
-                                participant API as 大模型 API 接口
-                                User->>App: 发送聊天指令
-                                App->>Auth: 计算过期时间与签名
-                                Auth-->>App: 返回有效 Token
-                                App->>API: 发送请求 (Bearer Token)
-                                API-->>App: 返回全量结果
-                                App->>User: 渲染 Markdown 内容
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph TD
-                            Init[初始化会话] --> Input[用户输入消息]
-                            Input --> Generate[生成认证令牌]
-                            Generate --> Fetch[请求 AI 接口]
-                            Fetch --> Render[Markdown 解析渲染]
-                            Render --> Scroll[自动滚动到底部]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>开发:</strong> 使用 Live Server 预览 <code>index.html</code>。</p>
-                        <p>2. <strong>安全:</strong> 建议开启内容安全策略 (CSP) 限制 API 域名。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'ds-overview',
+                        title: '项目概览',
+                        icon: '🧠',
+                        sections: [
+                            { 
+                                id: 'ds-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">模拟 DeepSeek 交互体验的 AI 助手。</p>`
+                            }
+                        ]
+                    }
+                ]
             },
             'eluosi': {
                 title: '俄罗斯方块',
                 subtitle: 'Vanilla JS + HTML5 Canvas Tetris',
                 status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>基于原生 JavaScript 编写的经典俄罗斯方块，采用数据驱动的逻辑处理与 Canvas 渲染分离模式。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>渲染引擎:</strong> Canvas 2D API</li>
-                            <li><strong>核心逻辑:</strong> 矩阵运算、碰撞检测算法</li>
-                            <li><strong>输入处理:</strong> 键盘事件监听与 DAS (Delayed Auto Shift) 系统</li>
-                        </ul>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">游戏数据主要存储在运行时的 JavaScript 对象中，通过矩阵表示网格状态。</p>
-                        <div class="bg-slate-50 p-3 rounded font-mono text-xs">
-                            grid: 20x10 二维数组<br>
-                            score: 整数类型<br>
-                            highScore: LocalStorage 持久化存储
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-indigo-600">update()</code>
-                            <p class="text-xs text-slate-500 mt-1">核心游戏循环，处理方块下落、碰撞与消行</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-rose-600">draw()</code>
-                            <p class="text-xs text-slate-500 mt-1">负责清除画布并根据 grid 状态重绘所有方块</p>
-                        </div>
-
-                        <h4 class="text-sm font-semibold mt-4 mb-2">核心逻辑调用流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant T as Timer (requestAnimationFrame)
-                                participant L as Game Logic (update)
-                                participant C as Collision Engine
-                                participant R as Renderer (draw)
-                                T->>L: 触发帧更新
-                                L->>C: 检测是否触碰到底部/方块
-                                C-->>L: 返回碰撞结果
-                                alt 发生碰撞
-                                    L->>L: 固定方块并计算消行
-                                    L->>L: 生成新方块
-                                else 未碰撞
-                                    L->>L: 坐标 y + 1
-                                end
-                                L->>R: 执行绘图指令
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph TD
-                            Start[开始游戏] --> Spawn[生成随机方块]
-                            Spawn --> Falling[方块自动下落]
-                            Falling --> Input{玩家操作}
-                            Input -->|左右| Move[移动方块]
-                            Input -->|上下| Rotate[旋转方块]
-                            Falling --> Landed{是否触底}
-                            Landed -->|是| Lock[固定方块并消行]
-                            Lock --> Full{顶层溢出}
-                            Full -->|是| Over[游戏结束]
-                            Full -->|否| Spawn
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>适配:</strong> 针对不同屏幕分辨率进行了 Canvas 缩放适配。</p>
-                        <p>2. <strong>性能:</strong> 采用 <code>requestAnimationFrame</code> 确保 60FPS 流畅运行。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'tetris-overview',
+                        title: '项目概览',
+                        icon: '🧱',
+                        sections: [
+                            { 
+                                id: 'tetris-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">基于原生 JS 的经典俄罗斯方块。</p>`
+                            }
+                        ]
+                    }
+                ]
             },
             'feij': {
                 title: '坦克大战飞机',
                 subtitle: 'Retro Shooting Game (Canvas)',
                 status: 'COMPLETED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>一款复古风格的 2D 射击游戏，玩家操控坦克在底部左右移动并射击从上方飞过的飞机。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>对象管理:</strong> 采用面向对象 (OOP) 管理玩家、子弹和敌人实体</li>
-                            <li><strong>碰撞系统:</strong> 基于轴对齐包围盒 (AABB) 算法的碰撞检测</li>
-                        </ul>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">运行时状态管理，得分记录。</p>
-                        <ul class="text-xs space-y-1 font-mono text-slate-500">
-                            <li>score: 当前得分</li>
-                            <li>enemies: Enemy 实例数组</li>
-                            <li>bullets: Bullet 实例数组</li>
-                        </ul>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-green-600">checkCollision()</code>
-                            <p class="text-xs text-slate-500 mt-1">循环遍历子弹与敌人，判断是否发生碰撞</p>
-                        </div>
-
-                        <h4 class="text-sm font-semibold mt-4 mb-2">游戏循环逻辑流</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant Main as 游戏主循环
-                                participant Player as 坦克实体
-                                participant Bullet as 子弹管理器
-                                participant Enemy as 飞机管理器
-                                Main->>Player: 更新位置 (Keyboard Input)
-                                Main->>Bullet: 更新所有子弹位置
-                                Main->>Enemy: 随机生成并移动飞机
-                                Main->>Main: 执行 checkCollision()
-                                alt 碰撞成功
-                                    Main->>Enemy: 销毁飞机
-                                    Main->>Bullet: 销毁子弹
-                                    Main->>Main: 增加分数
-                                end
-                                Main->>Main: 执行 draw() 渲染所有实体
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph LR
-                            Move[键盘控制左右] --> Shoot[空格/自动射击]
-                            Shoot --> Collision{碰撞检测}
-                            Collision -->|击中| Score[增加分数]
-                            Collision -->|未击中| Offscreen[移除越界对象]
-                            EnemyLanded[飞机到达底部] --> GameOver[游戏结束]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>部署:</strong> 单 HTML 结构，开箱即玩。</p>
-                        <p>2. <strong>优化:</strong> 自动清理离开屏幕的子弹和敌人对象，防止内存泄漏。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'tank-overview',
+                        title: '项目概览',
+                        icon: '🚀',
+                        sections: [
+                            { 
+                                id: 'tank-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">复古风格的 2D 射击游戏。</p>`
+                            }
+                        ]
+                    }
+                ]
             },
             'xiaoxiaole': {
                 title: '消消乐',
                 subtitle: 'Match-3 Puzzle Game (Canvas + OOP)',
                 status: 'UPDATED',
-                architecture: `
-                    <div class="space-y-4 text-sm text-slate-600">
-                        <p>功能完善的消消乐游戏，支持关卡目标、步数限制及多种特效宝石。</p>
-                        <ul class="list-disc ml-6 space-y-2">
-                            <li><strong>核心引擎:</strong> 递归匹配与下落补位算法</li>
-                            <li><strong>视觉表现:</strong> 粒子系统、宝石缩放及位移动画</li>
-                            <li><strong>音效管理:</strong> 基于 Web Audio API 的多通道音效</li>
-                        </ul>
-                    </div>
-                `,
-                database: `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600">复杂的关卡数据与玩家配置。</p>
-                        <div class="bg-slate-50 p-3 rounded font-mono text-xs">
-                            BOARD_SIZE: 8x8<br>
-                            GEM_TYPES: 6 种颜色 + 特殊道具<br>
-                            GameState: START | PLAYING | PAUSED | OVER
-                        </div>
-                    </div>
-                `,
-                api: `
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-blue-600">findMatches()</code>
-                            <p class="text-xs text-slate-500 mt-1">扫描全盘查找横向或纵向连续 3 个以上的相同宝石</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <code class="text-xs font-mono text-purple-600">fillGaps()</code>
-                            <p class="text-xs text-slate-500 mt-1">处理宝石消除后的空位填充逻辑</p>
-                        </div>
-
-                        <h4 class="text-sm font-semibold mt-4 mb-2">匹配消除流程</h4>
-                        <div class="mermaid">
-                            sequenceDiagram
-                                participant U as 玩家
-                                participant B as Board 逻辑
-                                participant A as Animation 引擎
-                                U->>B: 交换两个相邻宝石
-                                B->>B: 检查是否产生匹配
-                                alt 无匹配
-                                    B->>A: 播放“交换并回弹”动画
-                                else 产生匹配
-                                    B->>B: 标记所有匹配宝石
-                                    B->>A: 播放“消除并得分”特效
-                                    B->>B: 宝石下落补位
-                                    B->>B: 递归检查连消 (Combo)
-                                end
-                                B->>U: 更新分数与剩余步数
-                        </div>
-                    </div>
-                `,
-                workflow: `
-                    <div class="mermaid">
-                        graph TD
-                            Init[初始化棋盘] --> NoMatch{确保初始无匹配}
-                            NoMatch --> Playing[玩家操作]
-                            Playing --> Match[匹配消除]
-                            Match --> Combo{是否存在连消}
-                            Combo -->|是| Match
-                            Combo -->|否| CheckEnd{步数/时间是否结束}
-                            CheckEnd -->|否| Playing
-                            CheckEnd -->|是| GameOver[结算得分]
-                    </div>
-                `,
-                ops: `
-                    <div class="space-y-2 text-sm text-slate-600">
-                        <p>1. <strong>跨平台:</strong> 完美支持移动端触摸操作。</p>
-                        <p>2. <strong>体验:</strong> 内置震动反馈与多种粒子特效。</p>
-                    </div>
-                `
+                groups: [
+                    {
+                        id: 'match-overview',
+                        title: '项目概览',
+                        icon: '💎',
+                        sections: [
+                            { 
+                                id: 'match-arch', 
+                                title: '架构设计', 
+                                content: `<p class="text-sm text-slate-600">基于递归匹配算法的消除类游戏。</p>`
+                            }
+                        ]
+                    }
+                ]
             }
         };
 
-        function renderDoc() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const projectId = urlParams.get('p') || 'blog';
-            let data = docs[projectId];
-
-            // Default content for missing docs
+        function renderDoc(id) {
+            const data = docs[id];
             if (!data) {
-                data = {
-                    title: `项目文档: ${projectId.toUpperCase()}`,
-                    subtitle: '技术文档正在完善中...',
-                    status: 'PENDING',
-                    architecture: '<p class="text-slate-500 italic">该项目的架构说明正在编写中...</p>',
-                    database: '<p class="text-slate-500 italic">该项目的数据库设计说明正在编写中...</p>',
-                    api: '<p class="text-slate-500 italic">该项目的 API 接口定义正在编写中...</p>',
-                    workflow: '<p class="text-slate-500 italic">该项目的业务流程说明正在编写中...</p>',
-                    ops: '<p class="text-slate-500 italic">该项目的部署方案正在编写中...</p>'
-                };
+                // Handle case where project ID is not found
+                document.getElementById('content-container').innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                        <span class="text-6xl mb-4">🔍</span>
+                        <h2 class="text-xl font-bold">未找到该项目的文档</h2>
+                        <p class="text-sm">请返回首页重新选择。</p>
+                        <button onclick="window.location.href='./docs.html'" class="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">返回文档中心</button>
+                    </div>
+                `;
+                return;
             }
 
+            // Update Head
             document.getElementById('doc-title').innerText = data.title;
             document.getElementById('doc-subtitle').innerText = data.subtitle;
             document.getElementById('doc-status').innerText = data.status;
 
-            const container = document.getElementById('content-container');
-            container.innerHTML = `
-                <section id="architecture" class="content-section mb-20">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                        <span class="text-blue-500">01</span> 架构设计与选型
-                    </h2>
-                    ${data.architecture}
-                </section>
+            const sidebarNav = document.getElementById('sidebar-nav');
+            const contentContainer = document.getElementById('content-container');
 
-                <section id="database" class="content-section mb-20">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                        <span class="text-green-500">02</span> 数据库设计
-                    </h2>
-                    ${data.database}
-                </section>
+            if (data.groups) {
+                // Render Hierarchical Sidebar
+                sidebarNav.innerHTML = `
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">文档目录</p>
+                    ${data.groups.map(group => `
+                        <div class="mb-8">
+                            <p class="text-[13px] font-bold text-slate-900 uppercase mb-3 flex items-center gap-2 bg-slate-50 p-2 rounded-lg border-l-4 border-blue-500">
+                                <span class="text-lg">${group.icon || '📁'}</span> 
+                                <span class="tracking-tight">${group.title}</span>
+                            </p>
+                            <div class="space-y-1 ml-1">
+                                ${group.sections.map(s => `
+                                    <a href="#${s.id}" class="sidebar-link flex items-center gap-3 px-3 py-2 text-[12px] text-slate-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> ${s.title}
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
 
-                <section id="api" class="content-section mb-20">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                        <span class="text-purple-500">03</span> 核心 API 定义
-                    </h2>
-                    ${data.api}
-                </section>
+                // Render Hierarchical Content
+                contentContainer.innerHTML = data.groups.map(group => `
+                    <div class="mb-16">
+                        <div class="flex items-center gap-3 mb-8 pb-2 border-b-2 border-slate-100">
+                            <span class="text-3xl">${group.icon || '📁'}</span>
+                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">${group.title}</h2>
+                        </div>
+                        <div class="space-y-12">
+                            ${group.sections.map((s, idx) => `
+                                <section id="${s.id}" class="content-section scroll-mt-24 group">
+                                    <div class="flex items-center gap-4 mb-6">
+                                        <span class="text-4xl font-black text-slate-100 group-hover:text-blue-50 transition-colors">${(idx + 1).toString().padStart(2, '0')}</span>
+                                        <h3 class="text-xl font-bold text-slate-800">${s.title}</h3>
+                                    </div>
+                                    <div class="prose prose-slate max-w-none ml-12">
+                                        ${s.content}
+                                    </div>
+                                </section>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                // Support legacy flat structure if needed
+                sidebarNav.innerHTML = '<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">文档目录</p>';
+                contentContainer.innerHTML = '<p class="text-slate-500">该文档正在迁移至新版架构...</p>';
+            }
 
-                <section id="workflow" class="content-section mb-20">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                        <span class="text-orange-500">04</span> 业务流程说明
-                    </h2>
-                    ${data.workflow}
-                </section>
-
-                <section id="ops" class="content-section mb-20">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                        <span class="text-rose-500">05</span> 部署与运维方案
-                    </h2>
-                    ${data.ops}
-                </section>
-            `;
-
-            // Re-render mermaid
-            mermaid.contentLoaded();
+            // Initialize Mermaid after content is injected
+            initMermaid();
         }
 
-        window.onload = renderDoc;
+        // Initialize based on URL parameter
+        window.addEventListener('load', () => {
+            console.log('Page loaded, initializing...');
+            console.log('Current URL:', window.location.href);
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            let projectId = urlParams.get('p');
+            
+            // Fallback: Check localStorage if URL param is missing
+            if (!projectId) {
+                projectId = localStorage.getItem('last_project_id');
+                if (projectId) console.log('Found fallback project ID in localStorage:', projectId);
+            }
+            
+            console.log('Final Project ID to use:', projectId);
+            
+            if (projectId) {
+                projectId = projectId.trim();
+                if (docs[projectId]) {
+                    localStorage.setItem('last_project_id', projectId);
+                    renderDoc(projectId);
+                } else {
+                    const foundKey = Object.keys(docs).find(k => k.toLowerCase() === projectId.toLowerCase());
+                    if (foundKey) {
+                        localStorage.setItem('last_project_id', foundKey);
+                        renderDoc(foundKey);
+                    } else {
+                        console.warn('Project not found in docs object:', projectId);
+                        showWelcomeScreen();
+                    }
+                }
+            } else {
+                showWelcomeScreen();
+            }
+        });
+
+        function showWelcomeScreen() {
+            console.log('Showing welcome screen');
+            const container = document.getElementById('content-container');
+            if (!container) return;
+
+            const projectList = Object.keys(docs).map(id => {
+                const doc = docs[id];
+                return `
+                    <div onclick="window.location.href='./doc-detail.html?p=${id}'" class="p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${doc.icon || '📄'}</span>
+                            <div class="text-left">
+                                <h3 class="font-bold text-slate-800 group-hover:text-blue-600">${doc.title}</h3>
+                                <p class="text-xs text-slate-500">${doc.subtitle || '点击查看详情'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="max-w-2xl mx-auto py-12">
+                    <div class="text-center mb-12">
+                        <span class="text-6xl mb-4 block">�</span>
+                        <h2 class="text-2xl font-bold text-slate-800">欢迎查阅项目技术文档</h2>
+                        <p class="text-slate-500 mt-2 text-sm">请选择一个项目以查看其详细设计与开发规范</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${projectList}
+                    </div>
+                    <div class="mt-12 text-center">
+                        <button onclick="window.location.href='./docs.html'" class="px-6 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium">
+                            返回文档中心
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Active link highlighting on scroll
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('.sidebar-link');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 120) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
     </script>
 </body>
 </html>

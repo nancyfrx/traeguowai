@@ -1,4 +1,7 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "java.project.sourcePaths": [
+        "web/test_platform/backend/src/main/java/com"
+    ]
 }
