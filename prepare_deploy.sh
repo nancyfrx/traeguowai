@@ -80,6 +80,14 @@ fi
 
 echo "✅ 所有项目构建完成！产物目录: $DEPLOY_DIR"
 
+echo "🔄 重载 Nginx 配置..."
+if command -v nginx > /dev/null; then
+    sudo nginx -s reload
+    echo "✅ Nginx 已重载"
+else
+    echo "⚠️ 未找到 nginx 命令，请手动执行 nginx -s reload"
+fi
+
 echo "-------------------------------------------"
 echo "🚀 部署准备就绪！"
 echo "您可以手动执行: nginx -s reload (如果 Nginx 已经运行)"

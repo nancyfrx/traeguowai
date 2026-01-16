@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  const base = import.meta.env.MODE === 'production' ? '/app/test_platform' : '';
+  const base = import.meta.env.MODE === 'production' ? '/testplatform' : '';
 
   return (
     <Router basename={base}>
