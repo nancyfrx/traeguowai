@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { User, Lock, AlertCircle, Mail, Phone, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { User, Lock, AlertCircle, Mail, Phone, Eye, EyeOff, CheckCircle2, Building2 } from 'lucide-react';
 import CryptoJS from 'crypto-js';
 import bgGradient from '../assets/bg-gradient.png';
 
@@ -11,7 +11,8 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    companyName: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -146,6 +147,23 @@ const Register = () => {
                   autoComplete="new-phone"
                 />
                 <Phone className="w-4 h-4 text-[#1a1f36] absolute left-3 top-3" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-[#1a1f36] mb-1.5 flex items-center gap-1.5">
+                企业名称
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  className="w-full h-10 px-3 pl-9 bg-white border border-[#e3e8ee] rounded-md shadow-sm text-[#1a1f36] font-bold placeholder-[#aab7c4] focus:outline-none focus:ring-2 focus:ring-[#635bff] transition-all text-sm"
+                  placeholder="请输入企业名称（可选）"
+                  autoComplete="organization"
+                />
+                <Building2 className="w-4 h-4 text-[#1a1f36] absolute left-3 top-3" />
               </div>
             </div>
 

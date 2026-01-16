@@ -1,19 +1,7 @@
 package com.testplatform.backend.controller;
 
-import com.testplatform.backend.dto.LoginRequest;
-import com.testplatform.backend.dto.RegisterRequest;
+import com.testplatform.backend.dto.*;
 import com.testplatform.backend.service.AuthService;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import com.testplatform.backend.dto.ForgotPasswordRequest;
-import com.testplatform.backend.dto.LoginRequest;
-import com.testplatform.backend.dto.RegisterRequest;
-import com.testplatform.backend.dto.ResetPasswordRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

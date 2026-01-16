@@ -28,4 +28,6 @@ public class RegisterRequest {
     
     @NotBlank(message = "确认密码不能为空")
     private String confirmPassword;
+
+    private String companyName;
 }

@@ -23,6 +23,8 @@ import java.util.Map;
 
 import com.testplatform.backend.dto.ForgotPasswordRequest;
 import com.testplatform.backend.dto.ResetPasswordRequest;
+import com.testplatform.backend.entity.Company;
+import com.testplatform.backend.repository.CompanyRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -36,6 +38,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final Producer captchaProducer;
     private final JavaMailSender mailSender;
+    private final CompanyRepository companyRepository;
 
     @Value("${spring.mail.username}")
     private String mailFrom;
@@ -74,6 +77,18 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(decodedPassword));
         user.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty() ? request.getEmail().trim() : null);
         user.setPhone(request.getPhone() != null && !request.getPhone().trim().isEmpty() ? request.getPhone().trim() : null);
+        
+        // 处理企业字段
+        if (request.getCompanyName() != null && !request.getCompanyName().trim().isEmpty()) {
+            String companyName = request.getCompanyName().trim();
+            Company company = companyRepository.findByName(companyName)
+                    .orElseGet(() -> {
+                        Company newCompany = new Company();
+                        newCompany.setName(companyName);
+                        return companyRepository.save(newCompany);
+                    });
+            user.setCompany(company);
+        }
         
         userRepository.save(user);
     }
@@ -140,6 +155,7 @@ public class AuthService {
         user.setLockTime(null);
         userRepository.save(user);
         
+        session.setAttribute("username", user.getUsername());
         session.setAttribute("user", user);
     }
 

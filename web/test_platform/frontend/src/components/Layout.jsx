@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import UserProfileModal from './UserProfileModal';
 import { 
   LayoutDashboard, 
   Sparkles, 
@@ -18,12 +19,18 @@ import {
 
 const Layout = () => {
   const navigate = useNavigate();
-  const username = localStorage.getItem('username') || 'Feng Ruxue';
+  const [username, setUsername] = useState(localStorage.getItem('username') || 'Feng Ruxue');
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
     navigate('/login');
+  };
+
+  const handleUpdateSuccess = (newUsername) => {
+    localStorage.setItem('username', newUsername);
+    setUsername(newUsername);
   };
 
   return (
@@ -70,24 +77,6 @@ const Layout = () => {
             UI 自动化
           </NavLink>
         </nav>
-
-        {/* User Profile Bottom */}
-        <div className="p-6 border-t border-gray-50">
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-100 group relative">
-            <img src={`https://ui-avatars.com/api/?name=${username}&background=000000&color=ffffff`} className="w-9 h-9 rounded-full ring-2 ring-gray-100" alt="User" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{username}</p>
-              <p className="text-[11px] text-gray-400 truncate uppercase tracking-wider font-medium">Admin</p>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
-              title="退出登录"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content */}
@@ -109,9 +98,34 @@ const Layout = () => {
               <Bell className="w-5 h-5" />
               <span className="absolute top-2.5 right-3 w-2 h-2 bg-black rounded-full border-2 border-white"></span>
             </button>
-            <button className="glass-btn p-2.5 rounded-full text-gray-500 hover:text-black" title="Switch Theme">
+            <button className="glass-btn p-2.5 rounded-full text-gray-500 hover:text-black mr-2" title="Switch Theme">
               <Moon className="w-5 h-5" />
             </button>
+            
+            {/* Simplified User Profile in header */}
+            <div 
+              className="relative"
+            >
+              <div 
+                onClick={() => setIsProfileModalOpen(!isProfileModalOpen)}
+                className="flex items-center gap-3 p-1 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-100 group"
+              >
+                <img 
+                  src={`https://robohash.org/${username}?set=set3`} 
+                  className="w-10 h-10 rounded-xl bg-gray-50 ring-2 ring-white shadow-sm group-hover:shadow-md transition-all" 
+                  alt="User" 
+                />
+              </div>
+
+              {/* User Profile Modal / Dropdown */}
+              <UserProfileModal 
+                isOpen={isProfileModalOpen} 
+                onClose={() => setIsProfileModalOpen(false)} 
+                username={username}
+                onUpdateSuccess={handleUpdateSuccess}
+                onLogout={handleLogout}
+              />
+            </div>
           </div>
         </header>
 
