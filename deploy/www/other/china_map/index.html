@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>中国旅游地图 - 探索华夏美景</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
@@ -852,40 +853,90 @@
 
         // 初始化地图
         function initMap() {
+            // 恢复 Leaflet 初始化逻辑
             map = L.map('map', {
                 center: [35.8617, 104.1954],
                 zoom: 4,
-                minZoom: 3,
-                maxZoom: 8
+                zoomControl: false,
+                attributionControl: false
             });
 
+            // 添加底图（使用简洁的深色底图或不加底图只显示省份）
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
-                subdomains: 'abcd'
+                maxZoom: 18,
+                opacity: 0.3
             }).addTo(map);
 
-            loadGeoJSON();
-        }
+            // 加载 GeoJSON 数据
+            // 备选数据源列表
+            const mapSources = [
+                'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+                'https://cdn.jsdelivr.net/gh/apache/echarts-examples@gh-pages/public/data/asset/geo/china.json',
+                'https://raw.githubusercontent.com/h662/china-geojson/master/china.json'
+            ];
 
-        // 加载真实的中国省份GeoJSON数据
-        function loadGeoJSON() {
-            fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('loadingOverlay').style.display = 'none';
+            const loadSource = async (index) => {
+                if (index >= mapSources.length) {
+                    throw new Error('所有地图数据源均加载失败');
+                }
+
+                const url = mapSources[index];
+                console.log(`正在尝试加载数据源 (${index + 1}/${mapSources.length}): ${url}`);
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP 错误: ${response.status}`);
+                    }
+
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        // 如果返回的不是 JSON，可能是 403 页面或其他错误页面
+                        throw new Error('返回数据格式错误 (非 JSON)');
+                    }
+
+                    const data = await response.json();
                     
+                    // 验证数据是否包含特征
+                    if (!data || !data.features) {
+                        throw new Error('JSON 数据结构不完整');
+                    }
+
+                    return data;
+                } catch (error) {
+                    console.warn(`数据源 ${index + 1} 加载失败:`, error.message);
+                    return loadSource(index + 1);
+                }
+            };
+
+            loadSource(0)
+                .then(data => {
                     geoJsonLayer = L.geoJSON(data, {
                         style: defaultStyle,
                         onEachFeature: onEachFeature
                     }).addTo(map);
+                    
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    
+                    // 自动缩放到中国全境
+                    map.fitBounds(geoJsonLayer.getBounds(), {
+                        padding: [20, 20]
+                    });
                 })
                 .catch(error => {
-                    console.error('加载地图数据失败:', error);
+                    console.error('地图最终加载失败:', error);
                     document.getElementById('loadingOverlay').innerHTML = `
-                        <div style="color: #ff6b6b; text-align: center;">
-                            <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
-                            <div>地图数据加载失败</div>
-                            <div style="font-size: 0.8rem; margin-top: 10px; color: rgba(255,255,255,0.5);">请检查网络连接后刷新页面</div>
+                        <div style="color: #ff4d4f; text-align: center; padding: 20px;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">❌</div>
+                            <div style="margin-bottom: 15px;">地图数据加载失败 (${error.message})</div>
+                            <button onclick="location.reload()" style="background: #ffd700; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; color: #1a1a2e; font-weight: bold;">
+                                重新加载页面
+                            </button>
                         </div>
                     `;
                 });
@@ -925,7 +976,8 @@
 
         // 为每个省份添加交互
         function onEachFeature(feature, layer) {
-            const provinceName = feature.properties.name;
+            // 兼容不同数据源的省份名称字段
+            const provinceName = feature.properties.name || feature.properties.NAME || feature.properties.CP;
             
             layer.on({
                 mouseover: function(e) {
@@ -974,7 +1026,16 @@
 
         // 显示省份信息
         function showProvinceInfo(provinceName, color) {
-            const cityData = capitalCities[provinceName];
+            // 标准化省份名称以匹配 capitalCities 的键名
+            let normalizedName = provinceName;
+            if (!capitalCities[normalizedName]) {
+                // 尝试模糊匹配，例如 "北京" 匹配 "北京市"
+                const keys = Object.keys(capitalCities);
+                const match = keys.find(k => k.startsWith(provinceName) || provinceName.startsWith(k));
+                if (match) normalizedName = match;
+            }
+
+            const cityData = capitalCities[normalizedName];
             
             if (!cityData) {
                 document.getElementById('welcomeMessage').style.display = 'none';
@@ -996,14 +1057,14 @@
                 <div class="city-header">
                     <div class="color-dot" style="background: ${color};"></div>
                     <h3>${cityData.capital}</h3>
-                    <div class="province">${provinceName} · ${cityData.region}地区</div>
+                    <div class="province">${normalizedName} · ${cityData.region}地区</div>
                 </div>
                 <div class="attractions-list">
             `;
 
             cityData.attractions.forEach(attr => {
                 html += `
-                    <div class="attraction-card" onclick='showAttractionDetail(${JSON.stringify(attr).replace(/'/g, "&#39;")}, "${cityData.capital}", "${provinceName}")'>
+                    <div class="attraction-card" onclick='showAttractionDetail(${JSON.stringify(attr).replace(/'/g, "&#39;")}, "${cityData.capital}", "${normalizedName}")'>
                         <img class="attraction-image" src="${attr.image}" alt="${attr.name}" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'">
                         <div class="attraction-content">
                             <h4>📍 ${attr.name}</h4>
@@ -1041,7 +1102,7 @@
             
             if (geoJsonLayer) {
                 geoJsonLayer.eachLayer(layer => {
-                    const provinceName = layer.feature.properties.name;
+                    const provinceName = layer.feature.properties.name || layer.feature.properties.NAME || layer.feature.properties.CP;
                     const color = shuffled[i % shuffled.length];
                     provinceColors[provinceName] = color;
                     layer.setStyle(highlightStyle(color));

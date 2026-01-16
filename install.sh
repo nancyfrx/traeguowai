@@ -12,6 +12,12 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# 加载环境变量
+if [ -f "set_env.sh" ]; then
+    echo -e "${YELLOW}正在加载环境变量...${NC}"
+    source set_env.sh
+fi
+
 REPO_URL="https://github.com/nancyfrx/traeguowai.git"
 INSTALL_DIR="traeguowai"
 

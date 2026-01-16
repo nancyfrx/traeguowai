@@ -10,6 +10,12 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# 加载环境变量
+if [ -f "set_env.sh" ]; then
+    echo -e "${YELLOW}正在加载环境变量...${NC}"
+    source set_env.sh
+fi
+
 echo -e "${GREEN}🚀 正在启动 fengruxue 项目管理平台所有服务...${NC}"
 
 # 1. 停止已启动的旧服务

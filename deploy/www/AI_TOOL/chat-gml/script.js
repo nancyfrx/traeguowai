@@ -19,7 +19,11 @@ const imageModal = document.getElementById('imageModal');
 const modalImage = document.getElementById('modalImage');
 const modalClose = document.getElementById('modalClose');
 
-function generateJWT(apiKey) {
+/**
+ * 修复 Crypto API 在非安全环境 (非 https/localhost) 下不可用的问题
+ * 如果在 fengruxue.com 的 http 环境下，我们需要 fallback 到一个纯 JS 的实现
+ */
+async function generateJWT(apiKey) {
     const [id, secret] = apiKey.split('.');
     const now = Date.now();
     const payload = {
@@ -34,7 +38,8 @@ function generateJWT(apiKey) {
     };
     
     const base64UrlEncode = (obj) => {
-        return btoa(JSON.stringify(obj))
+        const str = JSON.stringify(obj);
+        return btoa(unescape(encodeURIComponent(str)))
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
             .replace(/=+$/, '');
@@ -44,76 +49,80 @@ function generateJWT(apiKey) {
     const encodedPayload = base64UrlEncode(payload);
     const data = `${encodedHeader}.${encodedPayload}`;
 
-    // 优先使用 CryptoJS (支持 HTTP 环境)
+    // 优先使用 CryptoJS (支持 HTTP 环境)，如果不可用再尝试原生 API
     if (typeof CryptoJS !== 'undefined') {
         try {
             const signature = CryptoJS.HmacSHA256(data, secret);
-            const base64Signature = CryptoJS.enc.Base64.stringify(signature)
+            const base64Signature = signature.toString(CryptoJS.enc.Base64)
                 .replace(/\+/g, '-')
                 .replace(/\//g, '_')
                 .replace(/=+$/, '');
-            return Promise.resolve(`${data}.${base64Signature}`);
+            return `${data}.${base64Signature}`;
         } catch (e) {
             console.error('CryptoJS 签名失败:', e);
         }
     }
 
-    const signData = (data, secret) => {
-        // 如果 crypto.subtle 不可用 (如 http 环境)
-        if (!window.crypto || !window.crypto.subtle) {
-            return Promise.reject(new Error('当前环境安全限制导致签名失败。已尝试加载 CryptoJS 但未成功，请检查网络或使用 HTTPS 访问。'));
-        }
-        
-        const hmac = new TextEncoder().encode(data);
-        const key = new TextEncoder().encode(secret);
-        
-        return crypto.subtle.importKey(
+    // 如果没有引入 CryptoJS 且 crypto.subtle 不可用 (如 http 环境)，则抛出错误
+    if (!window.crypto || !window.crypto.subtle) {
+        throw new Error('当前环境安全限制导致签名失败。已尝试加载 CryptoJS 但未成功，请检查网络或使用 HTTPS 访问。');
+    }
+    
+    const hmac = new TextEncoder().encode(data);
+    const key = new TextEncoder().encode(secret);
+    
+    try {
+        const cryptoKey = await crypto.subtle.importKey(
             'raw',
             key,
             { name: 'HMAC', hash: 'SHA-256' },
             false,
             ['sign']
-        ).then(key => {
-            return crypto.subtle.sign('HMAC', key, hmac);
-        }).then(signature => {
-            return btoa(String.fromCharCode(...new Uint8Array(signature)))
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_')
-                .replace(/=+$/, '');
-        });
-    };
-    
-    return signData(data, secret).then(signature => {
-        return `${data}.${signature}`;
-    });
+        );
+        const signature = await crypto.subtle.sign('HMAC', cryptoKey, hmac);
+        const base64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+        
+        return `${data}.${base64Signature}`;
+    } catch (e) {
+        console.error('签名生成失败:', e);
+        throw e;
+    }
 }
 
 async function callAI(messages) {
-    const token = await generateJWT(API_KEY);
-    const model = modelSelect.value;
-    
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 2000,
-            stream: false
-        })
-    });
-    
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || '请求失败');
+    try {
+        const token = await generateJWT(API_KEY);
+        const model = modelSelect.value;
+        
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: messages,
+                temperature: 0.7,
+                max_tokens: 2000,
+                stream: false
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || '请求失败');
+        }
+        
+        const data = await response.json();
+        return data.choices[0].message.content;
+    } catch (error) {
+        console.error('AI 调用失败:', error);
+        throw error;
     }
-    
-    const data = await response.json();
-    return data.choices[0].message.content;
 }
 
 async function generateImage(prompt) {
