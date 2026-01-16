@@ -21,8 +21,10 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const base = import.meta.env.MODE === 'production' ? '/app/test_platform' : '';
+
   return (
-    <Router>
+    <Router basename={base}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

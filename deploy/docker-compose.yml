@@ -13,12 +13,13 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl
     depends_on:
       - blog-backend
+      - test-platform-backend
     networks:
       - traeguowai-network
 
   blog-backend:
     build:
-      context: ../APP/blog/backend
+      context: ../web/blog/backend
       dockerfile: Dockerfile
     container_name: blog-backend
     environment:
@@ -33,14 +34,28 @@ services:
     networks:
       - traeguowai-network
 
+  test-platform-backend:
+    build:
+      context: ../web/test_platform/backend
+      dockerfile: Dockerfile
+    container_name: test-platform-backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/test_platform_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+    depends_on:
+      - mysql
+    networks:
+      - traeguowai-network
+
   mysql:
     image: mysql:8.0
     container_name: traeguowai-mysql
     environment:
       - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=blog_db
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
     networks:
       - traeguowai-network
 
