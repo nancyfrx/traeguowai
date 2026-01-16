@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.testplatform.backend.dto.ForgotPasswordRequest;
 import com.testplatform.backend.dto.ResetPasswordRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import java.util.Random;
@@ -35,6 +36,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final Producer captchaProducer;
     private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.username}")
+    private String mailFrom;
 
     private static final int MAX_FAILED_ATTEMPTS = 3;
     private static final int LOCK_TIME_MINUTES = 5;
@@ -163,7 +167,7 @@ public class AuthService {
         emailCodes.put(request.getEmail(), code);
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("fengruxue01@163.com"); // 设置发件人
+        message.setFrom(mailFrom); // 设置发件人
         message.setTo(request.getEmail());
         message.setSubject("Q-Lab 测试平台 - 重置密码验证码");
         message.setText("您好，\n\n您的重置密码验证码是：" + code + "。有效期为5分钟。请勿泄露给他人。\n\n如非本人操作，请忽略此邮件。");
