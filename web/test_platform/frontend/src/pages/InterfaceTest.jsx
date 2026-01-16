@@ -1,7 +1,43 @@
-import React from 'react';
-import { Zap, Play, Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Zap, Play, Plus, Clock, CheckCircle, XCircle, Trash2, Eye, EyeOff } from 'lucide-react';
 
 const InterfaceTest = () => {
+  const [params, setParams] = useState([
+    { key: '', value: '', description: '', isPassword: false, showValue: false }
+  ]);
+
+  const addParam = () => {
+    setParams([...params, { key: '', value: '', description: '', isPassword: false, showValue: false }]);
+  };
+
+  const removeParam = (index) => {
+    const newParams = params.filter((_, i) => i !== index);
+    setParams(newParams.length ? newParams : [{ key: '', value: '', description: '', isPassword: false, showValue: false }]);
+  };
+
+  const updateParam = (index, field, value) => {
+    const newParams = [...params];
+    newParams[index][field] = value;
+    
+    // Auto detect password field by key name
+    if (field === 'key') {
+      const lowerKey = value.toLowerCase();
+      if (lowerKey.includes('password') || lowerKey.includes('secret') || lowerKey.includes('token')) {
+        newParams[index].isPassword = true;
+      } else {
+        newParams[index].isPassword = false;
+      }
+    }
+    
+    setParams(newParams);
+  };
+
+  const toggleShowValue = (index) => {
+    const newParams = [...params];
+    newParams[index].showValue = !newParams[index].showValue;
+    setParams(newParams);
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pt-4">
       <div className="flex justify-between items-center">
@@ -68,8 +104,59 @@ const InterfaceTest = () => {
               ))}
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 h-48 border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-              No parameters configured
+            <div className="bg-gray-50 rounded-lg p-4 min-h-48 border border-dashed border-gray-200">
+              <div className="flex justify-between items-center mb-4 px-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Query Parameters</span>
+                <button 
+                  onClick={addParam}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Add Param
+                </button>
+              </div>
+              <div className="space-y-2">
+                {params.map((param, index) => (
+                  <div key={index} className="flex gap-2 items-start group">
+                    <input 
+                      type="text" 
+                      placeholder="Key" 
+                      value={param.key}
+                      onChange={(e) => updateParam(index, 'key', e.target.value)}
+                      className="flex-1 bg-white border border-gray-200 rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-black/5 outline-none" 
+                    />
+                    <div className="flex-[2] relative">
+                      <input 
+                        type={param.isPassword && !param.showValue ? "password" : "text"}
+                        placeholder="Value" 
+                        value={param.value}
+                        onChange={(e) => updateParam(index, 'value', e.target.value)}
+                        className={`w-full bg-white border border-gray-200 rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-black/5 outline-none ${param.isPassword ? 'pr-9' : ''}`}
+                      />
+                      {param.isPassword && (
+                        <button 
+                          onClick={() => toggleShowValue(index)}
+                          className="absolute right-2 top-1.5 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {param.showValue ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Description" 
+                      value={param.description}
+                      onChange={(e) => updateParam(index, 'description', e.target.value)}
+                      className="flex-1 bg-white border border-gray-200 rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-black/5 outline-none" 
+                    />
+                    <button 
+                      onClick={() => removeParam(index)}
+                      className="p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

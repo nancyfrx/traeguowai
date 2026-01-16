@@ -6,7 +6,7 @@ import App from './App.jsx'
 
 // Global axios config
 // Use relative path to let Vite proxy handle development requests
-axios.defaults.baseURL = '';
+axios.defaults.baseURL = import.meta.env.MODE === 'production' ? '/test-api' : '';
 axios.defaults.withCredentials = true;
 
 createRoot(document.getElementById('root')).render(

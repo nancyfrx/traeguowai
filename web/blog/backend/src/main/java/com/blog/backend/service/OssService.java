@@ -36,15 +36,27 @@ public class OssService {
     @Value("${aliyun.oss.prefix}")
     private String prefix;
 
+    private OSS ossClient;
+
+    private OSS getOssClient() {
+        if (ossClient == null) {
+            if (hasValidCredentials()) {
+                ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+            }
+        }
+        return ossClient;
+    }
+
     public String uploadFile(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename();
         System.out.println("Starting uploadFile for: " + originalFilename);
         
-        OSS ossClient = null;
+        OSS client = getOssClient();
+        if (client == null) {
+            throw new IOException("OSS credentials are not configured or invalid");
+        }
+        
         try {
-            // 直接使用配置的 endpoint，不再进行手动 clean
-            ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-            
             String extension = "";
             if (originalFilename != null && originalFilename.contains(".")) {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -54,8 +66,6 @@ public class OssService {
             
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(file.getContentType());
-            // 注意：当使用 InputStream 上传时，如果不设置 ContentLength，SDK 可能会将流缓冲到内存中
-            // 但由于我们已经手动转成了 ByteArrayInputStream，所以这里设置与否都可以
             metadata.setContentLength(file.getSize());
             
             byte[] bytes = file.getBytes();
@@ -63,10 +73,8 @@ public class OssService {
                 throw new IOException("文件内容为空");
             }
 
-            // 使用 ByteArrayInputStream 确保流可重置 (支持 reset/mark)
-            // 解决 "Failed to reset the request input stream" 报错
             try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
-                ossClient.putObject(bucketName, objectName, inputStream, metadata);
+                client.putObject(bucketName, objectName, inputStream, metadata);
             }
             
             String ossUrl = baseUrl + filename;
@@ -77,18 +85,17 @@ public class OssService {
             throw new IOException("OSS Server Error: [" + oe.getErrorCode() + "] " + oe.getErrorMessage(), oe);
         } catch (com.aliyun.oss.ClientException ce) {
             System.err.println("OSS Client Error: " + ce.getMessage());
-            // 如果还是报错 Failed to reset，打印出详细堆栈到控制台以便调试
             ce.printStackTrace();
             throw new IOException("OSS Client Error: " + ce.getMessage(), ce);
-        } finally {
-            if (ossClient != null) {
-                ossClient.shutdown();
-            }
         }
     }
 
+    public boolean hasValidCredentials() {
+        return accessKeyId != null && !accessKeyId.isEmpty() && !accessKeyId.contains("${") &&
+               accessKeySecret != null && !accessKeySecret.isEmpty() && !accessKeySecret.contains("${");
+    }
+
     public void downloadToStream(String objectName, java.io.OutputStream outputStream) throws IOException {
-        // If the objectName is already a full URL, extract the key and strip query params
         if (objectName.startsWith("http")) {
             if (objectName.contains(baseUrl)) {
                 objectName = prefix + objectName.substring(baseUrl.length());
@@ -99,30 +106,32 @@ public class OssService {
             objectName = prefix + objectName;
         }
 
-        // Strip query parameters (like ?Expires=...) from the object name/key
         if (objectName.contains("?")) {
             objectName = objectName.substring(0, objectName.indexOf("?"));
         }
 
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        OSS client = getOssClient();
+        if (client == null) {
+            throw new IOException("OSS credentials are not configured or invalid");
+        }
+
         try {
-            OSSObject ossObject = ossClient.getObject(bucketName, objectName);
+            OSSObject ossObject = client.getObject(bucketName, objectName);
             if (ossObject != null) {
-                InputStream inputStream = ossObject.getObjectContent();
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
+                try (InputStream inputStream = ossObject.getObjectContent()) {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
                 }
-                inputStream.close();
             }
-        } finally {
-            ossClient.shutdown();
+        } catch (Exception e) {
+            throw new IOException("Error downloading from OSS: " + e.getMessage(), e);
         }
     }
 
     public ObjectMetadata getMetadata(String objectName) {
-        // If the objectName is already a full URL, extract the key and strip query params
         if (objectName.startsWith("http")) {
             if (objectName.contains(baseUrl)) {
                 objectName = prefix + objectName.substring(baseUrl.length());
@@ -133,28 +142,27 @@ public class OssService {
             objectName = prefix + objectName;
         }
 
-        // Strip query parameters
         if (objectName.contains("?")) {
             objectName = objectName.substring(0, objectName.indexOf("?"));
         }
 
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        OSS client = getOssClient();
+        if (client == null) {
+            return null;
+        }
+
         try {
-            return ossClient.getObjectMetadata(bucketName, objectName);
-        } finally {
-            ossClient.shutdown();
+            return client.getObjectMetadata(bucketName, objectName);
+        } catch (Exception e) {
+            return null;
         }
     }
 
     public String getProxyUrl(String objectName) {
         if (objectName == null) return null;
-        
-        // If it's already a proxy URL, return it as is
         if (objectName.startsWith("/api/upload/view") || objectName.contains("/api/upload/view")) {
             return objectName;
         }
-        
-        // If the objectName is already a full URL, extract the key
         String path = objectName;
         if (objectName.startsWith("http")) {
             if (objectName.contains(baseUrl)) {
@@ -165,13 +173,9 @@ public class OssService {
         } else if (!objectName.startsWith(prefix)) {
             path = prefix + objectName;
         }
-
-        // Strip query parameters from the proxy path to hide them
         if (path.contains("?")) {
             path = path.substring(0, path.indexOf("?"));
         }
-
-        // Return a proxy URL that points back to our server
         return "/api/upload/view?path=" + path;
     }
 
@@ -180,14 +184,11 @@ public class OssService {
             return objectName;
         }
 
-        // Check if OSS credentials are provided
-        if (accessKeyId == null || accessKeyId.isEmpty() || accessKeyId.contains("${") ||
-            accessKeySecret == null || accessKeySecret.isEmpty() || accessKeySecret.contains("${")) {
-            System.err.println("OSS Credentials missing or not resolved. Returning raw URL.");
+        OSS client = getOssClient();
+        if (client == null) {
             return objectName;
         }
 
-        // Extract the key if it's a full URL
         String key = objectName;
         if (objectName.contains(baseUrl)) {
             key = prefix + objectName.substring(baseUrl.length());
@@ -195,20 +196,13 @@ public class OssService {
             key = objectName.substring(objectName.indexOf(".aliyuncs.com/") + ".aliyuncs.com/".length());
         }
 
-        OSS ossClient = null;
         try {
-            ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-            // Set expiration time to 1 hour
             Date expiration = new Date(new Date().getTime() + 3600 * 1000);
-            URL url = ossClient.generatePresignedUrl(bucketName, key, expiration);
+            URL url = client.generatePresignedUrl(bucketName, key, expiration);
             return url.toString();
         } catch (Exception e) {
             System.err.println("Error generating signed URL for " + objectName + ": " + e.getMessage());
-            return objectName; // Fallback to raw URL on error
-        } finally {
-            if (ossClient != null) {
-                ossClient.shutdown();
-            }
+            return objectName;
         }
     }
 }

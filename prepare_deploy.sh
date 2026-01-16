@@ -56,8 +56,8 @@ build_vite_project "APP/douyin" "app/douyin" "抖音"
 build_vite_project "APP/amap-ranking" "app/amap-ranking" "高德扫街"
 build_vite_project "APP/weixin" "app/weixin" "微信新版"
 build_vite_project "APP/boke/frontend-react" "app/boke" "博客"
-build_vite_project "web/blog/frontend" "app/blog" "艺术市场"
-build_vite_project "web/test_platform/frontend" "app/test_platform" "测试平台"
+build_vite_project "web/blog/frontend" "art" "艺术市场"
+build_vite_project "web/test_platform/frontend" "test_platform" "测试平台"
 build_vite_project "other/rili" "other/rili" "万年历"
 
 cd "$ROOT_DIR"
@@ -79,12 +79,6 @@ else
 fi
 
 echo "✅ 所有项目构建完成！产物目录: $DEPLOY_DIR"
-
-# 7. 同步到 web_dist 目录
-echo "🚚 同步到 web_dist 目录..."
-mkdir -p "$ROOT_DIR/web_dist"
-cp -r "$DEPLOY_DIR/"* "$ROOT_DIR/web_dist/"
-echo "✨ 所有产物已同步到 web_dist，可以访问 fengruxue.com 验证"
 
 echo "-------------------------------------------"
 echo "🚀 部署准备就绪！"

@@ -51,15 +51,15 @@ public class ArticleService {
     }
 
     private void proxyArticleUrls(Article article) {
-        // Use proxy URLs instead of signed URLs to hide OSS credentials and signatures
-        // from the browser while maintaining access to private bucket content.
+        // Use direct signed URLs instead of proxy URLs to improve loading speed.
+        // This allows the browser to fetch images directly from OSS while maintaining access to private content.
         
         if (article.getCoverImage() != null && article.getCoverImage().startsWith("http")) {
-            article.setCoverImage(ossService.getProxyUrl(article.getCoverImage()));
+            article.setCoverImage(ossService.getSignedUrl(article.getCoverImage()));
         }
 
         if (article.getAuthor() != null && article.getAuthor().getAvatar() != null && article.getAuthor().getAvatar().startsWith("http")) {
-            article.getAuthor().setAvatar(ossService.getProxyUrl(article.getAuthor().getAvatar()));
+            article.getAuthor().setAvatar(ossService.getSignedUrl(article.getAuthor().getAvatar()));
         }
 
         if (article.getContentBlocks() != null) {
@@ -73,7 +73,7 @@ public class ArticleService {
                 for (Map<String, Object> block : blocks) {
                     Object image = block.get("image");
                     if (image instanceof String && ((String) image).startsWith("http")) {
-                        block.put("image", ossService.getProxyUrl((String) image));
+                        block.put("image", ossService.getSignedUrl((String) image));
                         modified = true;
                     }
                 }
@@ -82,7 +82,7 @@ public class ArticleService {
                     article.setContentBlocks(objectMapper.writeValueAsString(blocks));
                 }
             } catch (Exception e) {
-                // Ignore parsing errors for proxying
+                // Ignore parsing errors
             }
         }
     }

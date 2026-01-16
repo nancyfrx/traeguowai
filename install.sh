@@ -93,21 +93,6 @@ if ! systemctl is-active --quiet mysql && ! systemctl is-active --quiet mysqld &
 fi
 echo -e "${GREEN}✅ MySQL 服务运行中${NC}"
 
-# 1.2 检查数据库表数据
-echo -e "${YELLOW}正在检查数据库内容...${NC}"
-ARTICLES_COUNT=$($MYSQL_BIN -u root -p123456 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'blog_db' AND table_name = 'articles';" 2>/dev/null)
-if [ "$ARTICLES_COUNT" == "0" ] || [ -z "$ARTICLES_COUNT" ]; then
-    echo -e "${YELLOW}⚠️ 检测到 blog_db.articles 表不存在或数据为空${NC}"
-    if [ -f "blog_db_backup.sql" ]; then
-        echo -e "📦 正在自动导入备份数据..."
-        $MYSQL_BIN -u root -p123456 blog_db < blog_db_backup.sql
-        echo -e "${GREEN}✅ 数据导入完成${NC}"
-    else
-        echo -e "${RED}❌ 未找到 blog_db_backup.sql 备份文件，后端启动后可能无数据${NC}"
-    fi
-else
-    echo -e "${GREEN}✅ 数据库已有数据${NC}"
-fi
 
 # 2. 获取代码
 # 增加自动识别：如果已经在项目目录内执行，则跳过 clone
@@ -217,19 +202,19 @@ PROJECT_PATH=$(pwd)
 # 使用 | 作为分隔符，避免路径中的 / 冲突
 # 兼容不同版本的 sed
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
-    sed -i '' "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
-    sed -i '' "s|alias .*/test_platform/;|alias $PROJECT_PATH/web_dist/app/test_platform/;|" nginx_cloud.conf
-    sed -i '' "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
-    sed -i '' "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
+    sed -i '' "s|root .*;|root $PROJECT_PATH/deploy/www;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/deploy/www/art/;|alias $PROJECT_PATH/deploy/www/art/;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/deploy/www/app/test_platform/;|alias $PROJECT_PATH/deploy/www/app/test_platform/;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/deploy/www/app/qqmusic/covers/;|alias $PROJECT_PATH/deploy/www/app/qqmusic/covers/;|" nginx_cloud.conf
+    sed -i '' "s|alias .*/deploy/www/app/qqmusic/songs/;|alias $PROJECT_PATH/deploy/www/app/qqmusic/songs/;|" nginx_cloud.conf
 else
-    sed -i "s|root .*;|root $PROJECT_PATH/web_dist;|" nginx_cloud.conf
-    sed -i "s|alias .*/web_dist/app/blog/;|alias $PROJECT_PATH/web_dist/app/blog/;|" nginx_cloud.conf
-    sed -i "s|alias .*/test_platform/;|alias $PROJECT_PATH/web_dist/app/test_platform/;|" nginx_cloud.conf
-    sed -i "s|alias .*/web_dist/app/qqmusic/covers/;|alias $PROJECT_PATH/web_dist/app/qqmusic/covers/;|" nginx_cloud.conf
-    sed -i "s|alias .*/web_dist/app/qqmusic/songs/;|alias $PROJECT_PATH/web_dist/app/qqmusic/songs/;|" nginx_cloud.conf
+    sed -i "s|root .*;|root $PROJECT_PATH/deploy/www;|" nginx_cloud.conf
+    sed -i "s|alias .*/deploy/www/art/;|alias $PROJECT_PATH/deploy/www/art/;|" nginx_cloud.conf
+    sed -i "s|alias .*/deploy/www/app/test_platform/;|alias $PROJECT_PATH/deploy/www/app/test_platform/;|" nginx_cloud.conf
+    sed -i "s|alias .*/deploy/www/app/qqmusic/covers/;|alias $PROJECT_PATH/deploy/www/app/qqmusic/covers/;|" nginx_cloud.conf
+    sed -i "s|alias .*/deploy/www/app/qqmusic/songs/;|alias $PROJECT_PATH/deploy/www/app/qqmusic/songs/;|" nginx_cloud.conf
 fi
-echo -e "${GREEN}✅ Nginx 配置文件已指向: $PROJECT_PATH/web_dist${NC}"
+echo -e "${GREEN}✅ Nginx 配置文件已指向: $PROJECT_PATH/deploy/www${NC}"
 
 # 4.1 自动修复权限 (解决 500/403 错误)
 echo -e "${YELLOW}正在修复目录权限...${NC}"
@@ -237,7 +222,7 @@ echo -e "${YELLOW}正在修复目录权限...${NC}"
 if [ "$USER" == "root" ]; then
     chmod +x /root
 fi
-chmod -R 755 "$PROJECT_PATH/web_dist"
+chmod -R 755 "$PROJECT_PATH/deploy/www"
 echo -e "${GREEN}✅ 权限已修复${NC}"
 
 # 4.2 智能检测 Nginx 配置目录并自动部署

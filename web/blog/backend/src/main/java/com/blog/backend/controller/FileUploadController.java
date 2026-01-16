@@ -24,6 +24,15 @@ public class FileUploadController {
     @GetMapping("/view")
     public void viewFile(@RequestParam("path") String path, HttpServletResponse response) {
         try {
+            // Check if credentials are valid first
+            if (!ossService.hasValidCredentials()) {
+                // In local environment without OSS credentials, if the file is an OSS URL,
+                // we try to redirect to the original URL or a placeholder
+                String originalUrl = "https://fengruxue.oss-cn-shenzhen.aliyuncs.com/" + path;
+                response.sendRedirect(originalUrl);
+                return;
+            }
+
             ObjectMetadata metadata = ossService.getMetadata(path);
             if (metadata == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);

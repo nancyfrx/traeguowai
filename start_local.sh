@@ -78,9 +78,7 @@ echo -e "\n${YELLOW}Step 5: 启动前端服务...${NC}"
 
 # 同步最新的 index.html 到各个分发目录，确保生产和本地预览一致
 echo -e "同步主页 index.html 到各目录..."
-mkdir -p web_dist
 mkdir -p deploy/www
-cp index.html web_dist/index.html
 cp index.html deploy/www/index.html
 
 # 启动项目管理平台主页 (服务根目录，这样 localhost:3000 访问的就是您当前编辑的 index.html)
