@@ -25,7 +25,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      await axios.post('auth/forgot-password', { email });
+      await axios.post('/api/auth/forgot-password', { email });
       setStep(2);
       setSuccess('验证码已发送至您的邮箱');
     } catch (err) {
@@ -54,7 +54,7 @@ const ForgotPassword = () => {
         confirmPassword: btoa(formData.confirmPassword)
       };
 
-      await axios.post('auth/reset-password', encryptedData);
+      await axios.post('/api/auth/reset-password', encryptedData);
       setSuccess('密码重置成功！正在跳转至登录页...');
       setTimeout(() => {
         navigate('/login', { state: { message: '密码已重置，请重新登录。' } });

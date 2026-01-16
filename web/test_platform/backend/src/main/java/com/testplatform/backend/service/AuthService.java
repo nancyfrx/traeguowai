@@ -1,6 +1,5 @@
 package com.testplatform.backend.service;
 
-import com.google.code.kaptcha.Producer;
 import com.testplatform.backend.dto.LoginRequest;
 import com.testplatform.backend.dto.RegisterRequest;
 import com.testplatform.backend.entity.User;
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -36,7 +36,6 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final Producer captchaProducer;
     private final JavaMailSender mailSender;
     private final CompanyRepository companyRepository;
 
@@ -160,19 +159,66 @@ public class AuthService {
     }
 
     public Map<String, String> generateCaptcha(HttpSession session) throws IOException {
-        String capText = captchaProducer.createText();
-        session.setAttribute("captcha", capText);
-        session.setAttribute("captchaTime", LocalDateTime.now());
+        if (session == null) {
+            throw new IOException("Session is null");
+        }
+        try {
+            // Generate random text
+            String capText = generateRandomText(4);
+            session.setAttribute("captcha", capText);
+            session.setAttribute("captchaTime", LocalDateTime.now());
 
-        BufferedImage bi = captchaProducer.createImage(capText);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ImageIO.write(bi, "jpg", out);
-        
-        String base64Image = Base64.getEncoder().encodeToString(out.toByteArray());
-        
-        Map<String, String> result = new HashMap<>();
-        result.put("image", "data:image/jpeg;base64," + base64Image);
-        return result;
+            // Generate image
+            int width = 120;
+            int height = 40;
+            BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = bi.createGraphics();
+            
+            // Set rendering hints for better quality
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            // Background
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, width, height);
+            
+            // Text
+            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
+            Random random = new Random();
+            for (int i = 0; i < capText.length(); i++) {
+                g.setColor(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
+                g.drawString(String.valueOf(capText.charAt(i)), 15 + (i * 25), 30);
+            }
+            
+            // Interference lines
+            for (int i = 0; i < 5; i++) {
+                g.setColor(new Color(random.nextInt(200), random.nextInt(200), random.nextInt(200)));
+                g.drawLine(random.nextInt(width), random.nextInt(height), random.nextInt(width), random.nextInt(height));
+            }
+            
+            g.dispose();
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ImageIO.write(bi, "png", out);
+            
+            String base64Image = Base64.getEncoder().encodeToString(out.toByteArray());
+            
+            Map<String, String> result = new HashMap<>();
+            result.put("image", "data:image/png;base64," + base64Image);
+            return result;
+        } catch (Exception e) {
+            // Fallback: if image generation fails, at least log it and throw a clearer error
+            throw new IOException("Failed to generate captcha image: " + e.getMessage(), e);
+        }
+    }
+
+    private String generateRandomText(int length) {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        java.util.Random random = new java.util.Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     public void sendResetCode(ForgotPasswordRequest request) {

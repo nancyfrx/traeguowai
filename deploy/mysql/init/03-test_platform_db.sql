@@ -1,53 +1,35 @@
--- 创建数据库（如果不存在）
-CREATE DATABASE IF NOT EXISTS test_platform_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE test_platform_db;
-
--- 1. 企业信息表
-CREATE TABLE IF NOT EXISTS companies (
+-- 4. 项目表 (一级)
+CREATE TABLE IF NOT EXISTS projects (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE COMMENT '企业名称',
-    address VARCHAR(255) COMMENT '办公地址',
-    website VARCHAR(100) COMMENT '公司官网',
+    name VARCHAR(100) NOT NULL COMMENT '项目名称',
+    department_id BIGINT NOT NULL COMMENT '所属部门ID',
+    description TEXT COMMENT '项目描述',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 2. 企业部门表
-CREATE TABLE IF NOT EXISTS departments (
+-- 5. 模块表 (二级)
+CREATE TABLE IF NOT EXISTS modules (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id BIGINT NOT NULL COMMENT '所属企业ID',
-    name VARCHAR(50) NOT NULL COMMENT '部门名称',
-    parent_id BIGINT COMMENT '上级部门ID',
+    name VARCHAR(100) NOT NULL COMMENT '模块名称',
+    project_id BIGINT NOT NULL COMMENT '所属项目ID',
+    parent_id BIGINT COMMENT '父模块ID（支持无限层级，目前主要用二级）',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. 用户表更新：增加企业ID字段
--- 如果 users 表不存在则创建，如果存在则添加字段
-CREATE TABLE IF NOT EXISTS users (
+-- 6. 用例表 (三级)
+CREATE TABLE IF NOT EXISTS test_cases (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) UNIQUE,
-    phone VARCHAR(20) UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    company_id BIGINT COMMENT '企业ID',
-    failed_attempts INT DEFAULT 0,
-    lock_time DATETIME,
+    name VARCHAR(255) NOT NULL COMMENT '用例名称',
+    module_id BIGINT NOT NULL COMMENT '所属模块ID',
+    status VARCHAR(20) DEFAULT 'Draft' COMMENT '状态: Draft, Active, Deprecated',
+    priority VARCHAR(10) DEFAULT 'P1' COMMENT '优先级: P0, P1, P2, P3',
+    creator VARCHAR(50) COMMENT '创建人',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 为已存在的 users 表添加字段的脚本（以防万一）
-SET @dbname = DATABASE();
-SET @tablename = 'users';
-SET @columnname = 'company_id';
-SET @preparedStatement = (SELECT IF(
-  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = @tablename AND COLUMN_NAME = @columnname) > 0,
-  'SELECT 1',
-  'ALTER TABLE users ADD COLUMN company_id BIGINT COMMENT "企业ID" AFTER password, ADD FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL'
-));
-PREPARE stmt FROM @preparedStatement;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
 

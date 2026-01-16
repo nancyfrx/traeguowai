@@ -10,11 +10,14 @@ import {
   Camera,
   Check,
   AlertCircle,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const UserProfileModal = ({ isOpen, onClose, username, onUpdateSuccess, onLogout }) => {
+  const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({
     username: username || '',
     companyName: '',
@@ -32,7 +35,7 @@ const UserProfileModal = ({ isOpen, onClose, username, onUpdateSuccess, onLogout
   const fetchUserInfo = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('user/info');
+      const response = await axios.get('/api/user/info');
       setUserInfo(response.data);
     } catch (err) {
       console.error('Failed to fetch user info', err);
@@ -112,6 +115,16 @@ const UserProfileModal = ({ isOpen, onClose, username, onUpdateSuccess, onLogout
 
           {/* Action Menu Items */}
           <div className="mt-8 pt-6 border-t border-gray-50 space-y-1">
+            <button 
+              onClick={() => {
+                navigate('/department-management');
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-gray-600 hover:text-black hover:bg-gray-50 rounded-2xl transition-all group"
+            >
+              <Users className="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" />
+              部门管理
+            </button>
             <button className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-gray-600 hover:text-black hover:bg-gray-50 rounded-2xl transition-all group">
               <Settings className="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" />
               个人设置

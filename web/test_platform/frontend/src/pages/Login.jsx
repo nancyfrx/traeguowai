@@ -28,7 +28,7 @@ const Login = () => {
 
   const fetchCaptcha = async () => {
     try {
-      const response = await axios.get('auth/captcha');
+      const response = await axios.get('/api/auth/captcha');
       setCaptchaImage(response.data.image);
     } catch (err) {
       console.error('获取验证码失败', err);
@@ -57,7 +57,7 @@ const Login = () => {
         password: btoa(formData.password)
       };
 
-      await axios.post('auth/login', encryptedData);
+      await axios.post('/api/auth/login', encryptedData);
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('username', formData.username);
       localStorage.setItem('lastLoginUsername', formData.username);

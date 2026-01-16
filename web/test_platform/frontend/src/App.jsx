@@ -6,6 +6,7 @@ import AIGenerator from './pages/AIGenerator';
 import CaseManagement from './pages/CaseManagement';
 import InterfaceTest from './pages/InterfaceTest';
 import UIAutomation from './pages/UIAutomation';
+import DepartmentManagement from './pages/DepartmentManagement';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -41,6 +42,7 @@ function App() {
           <Route path="case-management" element={<CaseManagement />} />
           <Route path="interface-test" element={<InterfaceTest />} />
           <Route path="ui-automation" element={<UIAutomation />} />
+          <Route path="department-management" element={<DepartmentManagement />} />
         </Route>
       </Routes>
     </Router>

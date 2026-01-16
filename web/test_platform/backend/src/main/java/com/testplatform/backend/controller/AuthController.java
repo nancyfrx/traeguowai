@@ -34,8 +34,12 @@ public class AuthController {
     public ResponseEntity<?> getCaptcha(HttpSession session) {
         try {
             return ResponseEntity.ok(authService.generateCaptcha(session));
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to generate captcha"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of(
+                "error", "Failed to generate captcha",
+                "message", e.getMessage() != null ? e.getMessage() : e.toString()
+            ));
         }
     }
 

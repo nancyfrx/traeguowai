@@ -53,7 +53,7 @@ const Register = () => {
         confirmPassword: btoa(formData.confirmPassword)
       };
 
-      await axios.post('auth/register', encryptedData);
+      await axios.post('/api/auth/register', encryptedData);
       setSuccess('注册成功！正在跳转至登录页...');
       setTimeout(() => {
         navigate('/login', { state: { message: '注册成功！请登录。' } });
