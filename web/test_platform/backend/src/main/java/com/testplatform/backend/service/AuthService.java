@@ -6,6 +6,7 @@ import com.testplatform.backend.entity.User;
 import com.testplatform.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,6 @@ import java.util.Base64;
 import java.util.Optional;
 import java.util.HashMap;
 import java.util.Map;
-
 import com.testplatform.backend.dto.ForgotPasswordRequest;
 import com.testplatform.backend.dto.ResetPasswordRequest;
 import com.testplatform.backend.entity.Company;
@@ -32,6 +32,7 @@ import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -80,13 +81,18 @@ public class AuthService {
         // 处理企业字段
         if (request.getCompanyName() != null && !request.getCompanyName().trim().isEmpty()) {
             String companyName = request.getCompanyName().trim();
-            Company company = companyRepository.findByName(companyName)
-                    .orElseGet(() -> {
-                        Company newCompany = new Company();
-                        newCompany.setName(companyName);
-                        return companyRepository.save(newCompany);
-                    });
-            user.setCompany(company);
+            Optional<Company> existingCompany = companyRepository.findByName(companyName);
+            Company company;
+            if (existingCompany.isPresent()) {
+                company = existingCompany.get();
+            } else {
+                company = new Company();
+                company.setName(companyName);
+                company.setCreatedAt(LocalDateTime.now());
+                company.setUpdatedAt(LocalDateTime.now());
+                companyRepository.save(company);
+            }
+            user.setCompanyId(company.getId());
         }
         
         userRepository.save(user);
@@ -103,6 +109,8 @@ public class AuthService {
         }
 
         if (!sessionCaptcha.equalsIgnoreCase(request.getCaptcha())) {
+            session.removeAttribute("captcha");
+            session.removeAttribute("captchaTime");
             throw new IllegalArgumentException("验证码错误");
         }
 
@@ -133,7 +141,7 @@ public class AuthService {
                 // Unlock
                 user.setLockTime(null);
                 user.setFailedAttempts(0);
-                userRepository.save(user);
+                userRepository.update(user);
             }
         }
 
@@ -142,17 +150,17 @@ public class AuthService {
             user.setFailedAttempts(user.getFailedAttempts() + 1);
             if (user.getFailedAttempts() >= MAX_FAILED_ATTEMPTS) {
                 user.setLockTime(LocalDateTime.now().plusMinutes(LOCK_TIME_MINUTES));
-                userRepository.save(user);
+                userRepository.update(user);
                 throw new IllegalArgumentException("连续失败3次，账号锁定5分钟");
             }
-            userRepository.save(user);
+            userRepository.update(user);
             throw new IllegalArgumentException("用户名或密码错误");
         }
 
         // 5. Success
         user.setFailedAttempts(0);
         user.setLockTime(null);
-        userRepository.save(user);
+        userRepository.update(user);
         
         session.setAttribute("username", user.getUsername());
         session.setAttribute("user", user);
@@ -160,6 +168,7 @@ public class AuthService {
 
     public Map<String, String> generateCaptcha(HttpSession session) throws IOException {
         if (session == null) {
+            log.error("Failed to generate captcha: Session is null");
             throw new IOException("Session is null");
         }
         try {
@@ -174,38 +183,54 @@ public class AuthService {
             BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = bi.createGraphics();
             
-            // Set rendering hints for better quality
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
-            // Background
-            g.setColor(Color.WHITE);
-            g.fillRect(0, 0, width, height);
-            
-            // Text
-            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
-            Random random = new Random();
-            for (int i = 0; i < capText.length(); i++) {
-                g.setColor(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
-                g.drawString(String.valueOf(capText.charAt(i)), 15 + (i * 25), 30);
+            try {
+                // Set rendering hints for better quality
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Background
+                g.setColor(Color.WHITE);
+                g.fillRect(0, 0, width, height);
+                
+                // Text
+                // Try to use a more common font name or logical font
+                Font font = new Font(Font.SANS_SERIF, Font.BOLD, 28);
+                g.setFont(font);
+                
+                Random random = new Random();
+                for (int i = 0; i < capText.length(); i++) {
+                    g.setColor(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
+                    g.drawString(String.valueOf(capText.charAt(i)), 15 + (i * 25), 30);
+                }
+                
+                // Interference lines
+                for (int i = 0; i < 5; i++) {
+                    g.setColor(new Color(random.nextInt(200), random.nextInt(200), random.nextInt(200)));
+                    g.drawLine(random.nextInt(width), random.nextInt(height), random.nextInt(width), random.nextInt(height));
+                }
+            } finally {
+                g.dispose();
             }
-            
-            // Interference lines
-            for (int i = 0; i < 5; i++) {
-                g.setColor(new Color(random.nextInt(200), random.nextInt(200), random.nextInt(200)));
-                g.drawLine(random.nextInt(width), random.nextInt(height), random.nextInt(width), random.nextInt(height));
-            }
-            
-            g.dispose();
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ImageIO.write(bi, "png", out);
+            // 明确指定图片类型，避免 ImageIO 无法识别
+            boolean written = ImageIO.write(bi, "png", out);
+            if (!written) {
+                // 如果 png 失败，尝试 jpg
+                written = ImageIO.write(bi, "jpg", out);
+                if (!written) {
+                    log.error("ImageIO.write returned false - no appropriate writer found for formats 'png' or 'jpg'");
+                    throw new IOException("No appropriate writer found for captcha formats");
+                }
+            }
             
             String base64Image = Base64.getEncoder().encodeToString(out.toByteArray());
             
             Map<String, String> result = new HashMap<>();
             result.put("image", "data:image/png;base64," + base64Image);
+            log.info("Captcha generated successfully for session: {}", session.getId());
             return result;
         } catch (Exception e) {
+            log.error("Error generating captcha for session: {}", session.getId(), e);
             // Fallback: if image generation fails, at least log it and throw a clearer error
             throw new IOException("Failed to generate captcha image: " + e.getMessage(), e);
         }
@@ -263,7 +288,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(decodedPassword));
         user.setFailedAttempts(0);
         user.setLockTime(null);
-        userRepository.save(user);
+        userRepository.update(user);
 
         emailCodes.remove(request.getEmail());
     }

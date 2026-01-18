@@ -10,9 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Collections;
+import java.util.Optional;
 
 import com.testplatform.backend.dto.DepartmentDTO;
 import java.util.stream.Collectors;
@@ -35,15 +37,15 @@ public class DepartmentController {
             
             return userRepository.findByUsername(username)
                     .map(user -> {
-                        if (user.getCompany() != null) {
-                            List<Department> depts = departmentRepository.findByCompanyId(user.getCompany().getId());
+                        if (user.getCompanyId() != null) {
+                            List<Department> depts = departmentRepository.findByCompanyId(user.getCompanyId());
                             List<DepartmentDTO> dtos = depts.stream().map(d -> {
                                 DepartmentDTO dto = new DepartmentDTO();
                                 dto.setId(d.getId());
                                 dto.setName(d.getName());
                                 dto.setParentId(d.getParentId());
                                 dto.setCreatedAt(d.getCreatedAt());
-                                dto.setCompanyId(d.getCompany().getId());
+                                dto.setCompanyId(d.getCompanyId());
                                 return dto;
                             }).collect(Collectors.toList());
                             return ResponseEntity.ok(dtos);
@@ -73,14 +75,16 @@ public class DepartmentController {
         }
 
         User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null || user.getCompany() == null) {
+        if (user == null || user.getCompanyId() == null) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作"));
         }
 
         Department department = new Department();
         department.setName(name);
-        department.setCompany(user.getCompany());
-        return ResponseEntity.ok(departmentRepository.save(department));
+        department.setCompanyId(user.getCompanyId());
+        department.setCreatedAt(LocalDateTime.now());
+        departmentRepository.save(department);
+        return ResponseEntity.ok(department);
     }
 
     @PutMapping("/{id}")
@@ -102,12 +106,13 @@ public class DepartmentController {
 
         // 校验是否属于同一公司
         User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null || user.getCompany() == null || !department.getCompany().getId().equals(user.getCompany().getId())) {
+        if (user == null || user.getCompanyId() == null || !department.getCompanyId().equals(user.getCompanyId())) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作"));
         }
 
         department.setName(name);
-        return ResponseEntity.ok(departmentRepository.save(department));
+        departmentRepository.update(department);
+        return ResponseEntity.ok(department);
     }
 
     @DeleteMapping("/{id}")
@@ -124,11 +129,11 @@ public class DepartmentController {
 
         // 校验是否属于同一公司
         User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null || user.getCompany() == null || !department.getCompany().getId().equals(user.getCompany().getId())) {
+        if (user == null || user.getCompanyId() == null || !department.getCompanyId().equals(user.getCompanyId())) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作"));
         }
 
-        departmentRepository.delete(department);
+        departmentRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "删除成功"));
     }
 }

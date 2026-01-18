@@ -75,7 +75,8 @@ const DepartmentManagement = () => {
       fetchDepartments();
     } catch (error) {
       console.error('Failed to save department:', error);
-      alert(error.response?.data?.error || '保存失败');
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || '保存失败';
+      alert(errorMsg);
     }
   };
 
@@ -89,7 +90,8 @@ const DepartmentManagement = () => {
       fetchDepartments();
     } catch (error) {
       console.error('Failed to delete department:', error);
-      alert(error.response?.data?.error || '删除失败');
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || '删除失败';
+      alert(errorMsg);
     } finally {
       setIsDeleting(false);
     }
@@ -104,11 +106,6 @@ const DepartmentManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 bg-black text-white text-[10px] font-black rounded-md uppercase tracking-widest">
-              {companyName || 'Corporate'}
-            </span>
-          </div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
             <Users className="w-10 h-10" />
             部门管理
@@ -137,6 +134,10 @@ const DepartmentManagement = () => {
           />
         </div>
         <div className="flex gap-4">
+          <div className="px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">所属公司</span>
+            <span className="text-xl font-black text-gray-900">{companyName || 'Corporate'}</span>
+          </div>
           <div className="px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">部门总数</span>
             <span className="text-xl font-black text-gray-900">{departments.length}</span>

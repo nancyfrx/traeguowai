@@ -4,5 +4,6 @@
     "java.project.sourcePaths": [
         "web/test_platform/backend/src/main/java"
     ],
-    "java.import.maven.enabled": true
+    "java.import.maven.enabled": true,
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

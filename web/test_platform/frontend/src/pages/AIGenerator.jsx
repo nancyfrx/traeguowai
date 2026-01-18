@@ -55,7 +55,7 @@ const AIGenerator = () => {
           messages: [
             {
               role: "system",
-              content: "You are a Senior QA Engineer. Generate a comprehensive test case list based on the user's requirements. Format: Test Module, Test Point, Pre-conditions, Steps, Expected Result. Output in clean Markdown."
+              content: "You are a Senior QA 1. Generate a comprehensive test case list based on the user's requirements. Format: Test Module, Test Point, Pre-conditions, Steps, Expected Result. Output in clean Markdown."
             },
             {
               role: "user",
@@ -121,7 +121,9 @@ const AIGenerator = () => {
               onClick={() => {
                 if (result) {
                   navigator.clipboard.writeText(result);
-                  alert('Copied to clipboard');
+                  // Using a more subtle way to show success if possible, but alert is fine for now
+                  // alert('Copied to clipboard'); 
+                  // If we had showToast here, we would use it.
                 }
               }}
               className="glass-btn px-4 py-2 rounded-lg text-xs font-bold text-gray-600 flex items-center gap-2 hover:text-black"

@@ -1,7 +1,9 @@
 package com.testplatform.backend.controller;
 
+import com.testplatform.backend.annotation.Log;
 import com.testplatform.backend.dto.UpdateUserRequest;
 import com.testplatform.backend.dto.UserInfoResponse;
+import com.testplatform.backend.entity.User;
 import com.testplatform.backend.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
+@Log("用户管理")
 public class UserController {
 
     private final UserService userService;

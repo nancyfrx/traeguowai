@@ -83,7 +83,7 @@ const UserProfileModal = ({ isOpen, onClose, username, onUpdateSuccess, onLogout
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{userInfo.username}</h2>
             <div className="flex items-center gap-2">
               <span className="text-gray-500 font-medium">{userInfo.companyName || '未设置公司'}</span>
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100 shadow-sm">
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-black rounded-full border border-gray-200 shadow-sm">
                 <Check className="w-3 h-3 fill-current" />
                 <span className="text-[10px] font-bold">高级认证</span>
               </div>
@@ -93,7 +93,7 @@ const UserProfileModal = ({ isOpen, onClose, username, onUpdateSuccess, onLogout
           {/* Contact Details */}
           <div className="mt-6 space-y-4">
             <div className="flex items-center gap-4 group cursor-pointer p-1 -ml-1 rounded-xl hover:bg-gray-50 transition-colors">
-              <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors">
+              <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
                 <Mail className="w-5 h-5" />
               </div>
               <div className="flex flex-col">

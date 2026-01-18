@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.testplatform.backend.repository.TestCaseRepository">
+
+    <resultMap id="TestCaseResultMap" type="com.testplatform.backend.entity.TestCase">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="projectId" column="project_id"/>
+        <result property="moduleId" column="module_id"/>
+        <result property="preconditions" column="preconditions"/>
+        <result property="steps" column="steps"/>
+        <result property="expectedResult" column="expected_result"/>
+        <result property="actualResult" column="actual_result"/>
+        <result property="status" column="status"/>
+        <result property="priority" column="priority"/>
+        <result property="creator" column="creator"/>
+        <result property="updater" column="updater"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="TestCaseSimpleResultMap" type="com.testplatform.backend.entity.TestCase">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="projectId" column="project_id"/>
+        <result property="moduleId" column="module_id"/>
+        <result property="status" column="status"/>
+        <result property="priority" column="priority"/>
+        <result property="creator" column="creator"/>
+        <result property="updater" column="updater"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="TestCaseResultMap">
+        SELECT * FROM test_cases WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="TestCaseSimpleResultMap">
+        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        FROM test_cases
+    </select>
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO test_cases (name, project_id, module_id, preconditions, steps, expected_result, actual_result, status, priority, creator, updater, created_at, updated_at)
+        VALUES (#{name}, #{projectId}, #{moduleId, jdbcType=BIGINT}, #{preconditions, jdbcType=LONGVARCHAR}, #{steps, jdbcType=LONGVARCHAR}, #{expectedResult, jdbcType=LONGVARCHAR}, #{actualResult, jdbcType=LONGVARCHAR}, #{status}, #{priority}, #{creator}, #{updater}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE test_cases
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="moduleId != null">module_id = #{moduleId, jdbcType=BIGINT},</if>
+            <if test="moduleId == null">module_id = NULL,</if>
+            <if test="preconditions != null">preconditions = #{preconditions, jdbcType=LONGVARCHAR},</if>
+            <if test="steps != null">steps = #{steps, jdbcType=LONGVARCHAR},</if>
+            <if test="expectedResult != null">expected_result = #{expectedResult, jdbcType=LONGVARCHAR},</if>
+            <if test="actualResult != null">actual_result = #{actualResult, jdbcType=LONGVARCHAR},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="updater != null">updater = #{updater},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM test_cases WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteAllById">
+        DELETE FROM test_cases WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <update id="updateStatusBatch">
+        UPDATE test_cases SET status = #{status}, updated_at = NOW()
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteByModuleId">
+        DELETE FROM test_cases WHERE module_id = #{moduleId}
+    </delete>
+
+    <delete id="deleteByProjectIdAndModuleIdIsNull">
+        DELETE FROM test_cases WHERE project_id = #{projectId} AND module_id IS NULL
+    </delete>
+
+    <select id="findByModuleId" resultMap="TestCaseSimpleResultMap">
+        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        FROM test_cases WHERE module_id = #{moduleId}
+    </select>
+
+    <select id="findByModuleIdIn" resultMap="TestCaseSimpleResultMap">
+        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        FROM test_cases WHERE module_id IN
+        <foreach item="id" collection="moduleIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="findByProjectIdAndModuleIdIsNull" resultMap="TestCaseSimpleResultMap">
+        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        FROM test_cases WHERE project_id = #{projectId} AND module_id IS NULL
+    </select>
+
+    <select id="findByProjectId" resultMap="TestCaseSimpleResultMap">
+        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        FROM test_cases WHERE project_id = #{projectId}
+    </select>
+
+    <select id="findWithFilters" resultMap="TestCaseSimpleResultMap">
+        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        FROM test_cases
+        <where>
+            <if test="moduleIds != null and moduleIds.size() > 0">
+                AND (
+                    module_id IN
+                    <foreach item="mid" collection="moduleIds" open="(" separator="," close=")">
+                        #{mid}
+                    </foreach>
+                    <if test="projectId != null and !onlyNoModule">
+                        OR (project_id = #{projectId} AND module_id IS NULL)
+                    </if>
+                )
+            </if>
+            <if test="moduleIds == null or moduleIds.size() == 0">
+                <if test="projectId != null">
+                    AND project_id = #{projectId}
+                </if>
+                <if test="moduleId != null">
+                    AND module_id = #{moduleId}
+                </if>
+                <if test="onlyNoModule">
+                    AND module_id IS NULL
+                </if>
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="priority != null and priority != ''">
+                AND priority = #{priority}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    name LIKE CONCAT('%', #{keyword}, '%')
+                    OR steps LIKE CONCAT('%', #{keyword}, '%')
+                    OR preconditions LIKE CONCAT('%', #{keyword}, '%')
+                    OR CAST(id AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY updated_at DESC, id DESC
+    </select>
+
+</mapper>

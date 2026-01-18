@@ -1,5 +1,6 @@
 package com.testplatform.backend.controller;
 
+import com.testplatform.backend.annotation.Log;
 import com.testplatform.backend.dto.*;
 import com.testplatform.backend.service.AuthService;
 import jakarta.servlet.http.HttpSession;
@@ -14,6 +15,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Log("认证中心")
 public class AuthController {
 
     private final AuthService authService;

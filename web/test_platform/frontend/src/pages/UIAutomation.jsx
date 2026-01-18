@@ -19,7 +19,7 @@ const UIAutomation = () => {
         {/* Status Overview */}
         <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-2xl card-hover flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-black">
               <Monitor className="w-6 h-6" />
             </div>
             <div>

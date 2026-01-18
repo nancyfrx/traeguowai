@@ -18,7 +18,11 @@ axios.interceptors.response.use(
       // Clear login status and redirect to login page
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('username');
-      window.location.href = '/login';
+      
+      // Use replace to prevent back button from returning to the unauthorized page
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
     }
     return Promise.reject(error);
   }

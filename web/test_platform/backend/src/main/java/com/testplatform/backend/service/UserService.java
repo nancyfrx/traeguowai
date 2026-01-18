@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -25,8 +28,10 @@ public class UserService {
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setPhone(user.getPhone());
-        if (user.getCompany() != null) {
-            response.setCompanyName(user.getCompany().getName());
+        if (user.getCompanyId() != null) {
+            companyRepository.findById(user.getCompanyId()).ifPresent(company -> {
+                response.setCompanyName(company.getName());
+            });
         }
         return response;
     }
@@ -51,17 +56,22 @@ public class UserService {
         // 更新公司信息
         if (request.getCompanyName() != null && !request.getCompanyName().trim().isEmpty()) {
             String companyName = request.getCompanyName().trim();
-            Company company = companyRepository.findByName(companyName)
-                    .orElseGet(() -> {
-                        Company newCompany = new Company();
-                        newCompany.setName(companyName);
-                        return companyRepository.save(newCompany);
-                    });
-            user.setCompany(company);
+            Optional<Company> existingCompany = companyRepository.findByName(companyName);
+            Company company;
+            if (existingCompany.isPresent()) {
+                company = existingCompany.get();
+            } else {
+                company = new Company();
+                company.setName(companyName);
+                company.setCreatedAt(LocalDateTime.now());
+                company.setUpdatedAt(LocalDateTime.now());
+                companyRepository.save(company);
+            }
+            user.setCompanyId(company.getId());
         } else {
-            user.setCompany(null);
+            user.setCompanyId(null);
         }
 
-        userRepository.save(user);
+        userRepository.update(user);
     }
 }

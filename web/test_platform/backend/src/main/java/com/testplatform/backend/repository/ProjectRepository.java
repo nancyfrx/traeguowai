@@ -1,9 +1,17 @@
 package com.testplatform.backend.repository;
 
 import com.testplatform.backend.entity.Project;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.apache.ibatis.annotations.Mapper;
+import java.util.Optional;
 import java.util.List;
 
-public interface ProjectRepository extends JpaRepository<Project, Long> {
+@Mapper
+public interface ProjectRepository {
+    Optional<Project> findById(Long id);
+    List<Project> findAll();
+    void save(Project project);
+    void update(Project project);
+    void deleteById(Long id);
+    
     List<Project> findByDepartmentId(Long departmentId);
 }

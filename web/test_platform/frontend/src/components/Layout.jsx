@@ -82,7 +82,7 @@ const Layout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#fcfcfc]">
         {/* Header */}
-        <header className="h-20 flex items-center justify-between px-8 z-10">
+        <header className="h-20 flex items-center justify-between px-8 z-50">
           <div className="flex items-center gap-6">
             <button className="md:hidden text-gray-500 hover:text-gray-900 transition-colors" onClick={() => document.getElementById('sidebar').classList.toggle('hidden')}>
               <Menu className="w-6 h-6" />

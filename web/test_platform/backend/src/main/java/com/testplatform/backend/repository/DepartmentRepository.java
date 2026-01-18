@@ -1,9 +1,17 @@
 package com.testplatform.backend.repository;
 
 import com.testplatform.backend.entity.Department;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.apache.ibatis.annotations.Mapper;
+import java.util.Optional;
 import java.util.List;
 
-public interface DepartmentRepository extends JpaRepository<Department, Long> {
+@Mapper
+public interface DepartmentRepository {
+    Optional<Department> findById(Long id);
+    List<Department> findAll();
+    void save(Department department);
+    void update(Department department);
+    void deleteById(Long id);
+    
     List<Department> findByCompanyId(Long companyId);
 }

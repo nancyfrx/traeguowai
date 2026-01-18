@@ -90,7 +90,7 @@ const InterfaceTest = () => {
                 <option>DELETE</option>
               </select>
               <input type="text" placeholder="Enter request URL" className="flex-1 bg-gray-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-black/5 px-4" defaultValue="https://api.example.com/v1/users" />
-              <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center gap-2">
+              <button className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors flex items-center gap-2">
                 <Play className="w-4 h-4" /> Send
               </button>
             </div>
@@ -109,7 +109,7 @@ const InterfaceTest = () => {
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Query Parameters</span>
                 <button 
                   onClick={addParam}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  className="text-xs font-bold text-black hover:text-gray-700 flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" /> Add Param
                 </button>
