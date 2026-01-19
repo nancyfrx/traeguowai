@@ -40,7 +40,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 使用 allowedOriginPatterns 来支持通配符和 allowCredentials
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*", 
+            "http://127.0.0.1:*",
+            "http://fengruxue.com",
+            "https://fengruxue.com",
+            "http://www.fengruxue.com",
+            "https://www.fengruxue.com"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -19,9 +19,11 @@ axios.interceptors.response.use(
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('username');
       
+      const loginPath = import.meta.env.MODE === 'production' ? '/testplatform/login' : '/login';
+      
       // Use replace to prevent back button from returning to the unauthorized page
-      if (window.location.pathname !== '/login') {
-        window.location.replace('/login');
+      if (window.location.pathname !== loginPath) {
+        window.location.replace(loginPath);
       }
     }
     return Promise.reject(error);
