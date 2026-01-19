@@ -99,6 +99,21 @@ if ! systemctl is-active --quiet mysql && ! systemctl is-active --quiet mysqld &
 fi
 echo -e "${GREEN}✅ MySQL 服务运行中${NC}"
 
+# 1.2 检查并安装字体库 (修复 Captcha 验证码问题)
+echo -e "${YELLOW}正在检查字体库依赖...${NC}"
+if command -v yum &> /dev/null; then
+    if ! rpm -q fontconfig > /dev/null || ! rpm -q dejavu-sans-fonts > /dev/null; then
+        echo -e "${YELLOW}正在安装字体库 (fontconfig, dejavu-sans-fonts)...${NC}"
+        sudo yum install -y fontconfig freetype dejavu-sans-fonts
+    fi
+elif command -v apt &> /dev/null; then
+    if ! dpkg -s fontconfig > /dev/null 2>&1; then
+         echo -e "${YELLOW}正在安装字体库...${NC}"
+         sudo apt-get update && sudo apt-get install -y fontconfig libfreetype6 fonts-dejavu
+    fi
+fi
+echo -e "${GREEN}✅ 字体库依赖检查完成${NC}"
+
 
 # 2. 获取代码
 # 增加自动识别：如果已经在项目目录内执行，则跳过 clone
@@ -188,12 +203,18 @@ if [ $? -eq 0 ]; then
         kill -9 $PID
     fi
 
-    mkdir -p ../../../logs
+    # 创建统一日志目录 /root/logs/testplatform
+    LOG_DIR="/root/logs/testplatform"
+    mkdir -p "$LOG_DIR"
+    
     # Find the jar file
     JAR_FILE=$(find target -name "*.jar" | head -n 1)
     if [ ! -z "$JAR_FILE" ]; then
-        nohup java -jar "$JAR_FILE" > ../../../logs/test-platform-backend.log 2>&1 &
-        echo -e "${GREEN}✅ 测试平台后端服务已启动，日志: logs/test-platform-backend.log${NC}"
+        echo "正在启动服务，日志目录: $LOG_DIR"
+        nohup java -jar "$JAR_FILE" --logging.file.path="$LOG_DIR" > "$LOG_DIR/console.log" 2>&1 &
+        echo -e "${GREEN}✅ 测试平台后端服务已启动${NC}"
+        echo -e "${GREEN}   - 控制台日志: $LOG_DIR/console.log${NC}"
+        echo -e "${GREEN}   - 应用日志: $LOG_DIR (spring.log)${NC}"
     else
         echo -e "${RED}❌ 未找到构建好的 Jar 包${NC}"
     fi
@@ -265,5 +286,5 @@ echo -e "- 站点入口: ${YELLOW}http://fengruxue.com${NC}"
 echo -e "- 后端接口 (Blog): ${YELLOW}http://127.0.0.1:8080${NC}"
 echo -e "- 后端接口 (Test Platform): ${YELLOW}http://127.0.0.1:8081${NC}"
 echo -e "- 后端日志: ${YELLOW}tail -f logs/blog-backend.log${NC}"
-echo -e "- 测试平台日志: ${YELLOW}tail -f logs/test-platform-backend.log${NC}"
+echo -e "- 测试平台日志: ${YELLOW}tail -f /root/logs/testplatform/console.log${NC}"
 echo -e "${BLUE}===================================================${NC}"
