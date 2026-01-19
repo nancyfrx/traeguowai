@@ -41,7 +41,15 @@ build_vite_project() {
     cd "$ROOT_DIR/$project_path" || exit
     if [ -f "package.json" ]; then
         npm install
+        if [ $? -ne 0 ]; then
+            echo "❌ $name 依赖安装失败"
+            exit 1
+        fi
         npm run build
+        if [ $? -ne 0 ]; then
+            echo "❌ $name 构建失败"
+            exit 1
+        fi
         mkdir -p "$ROOT_DIR/$DEPLOY_DIR/$target_dir"
         cp -r dist/* "$ROOT_DIR/$DEPLOY_DIR/$target_dir/"
         echo "✅ $name 构建完成"
