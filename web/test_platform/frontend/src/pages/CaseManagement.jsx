@@ -4,9 +4,10 @@ import {
   Search, Play, Trash2, Edit2, FolderPlus, FilePlus, Layout, FileText,
   X, Home, Mail, PieChart, Flag, MessageSquare, Leaf,
   Save, Eye, Image as ImageIcon, List, AlertCircle, CheckCircle, XCircle, Clock, CheckCircle2,
-  Move, Copy
+  Move, Copy, Upload, RefreshCw
 } from 'lucide-react';
 import axios from 'axios';
+import XMindImportModal from '../components/XMindImportModal';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
 import { i18nChangeLanguage } from '@wangeditor/editor';
 import '@wangeditor/editor/dist/css/style.css';
@@ -215,7 +216,8 @@ const TreeNode = React.memo(({
   handleNodeClick, 
   handleOpenDrawer, 
   handleOpenModal, 
-  handleDeleteNode 
+  handleDeleteNode,
+  onRefreshNode
 }) => {
   if (!node) return null;
   const isExpanded = expandedNodes.has(`${node.type}-${node.id}`);
@@ -252,9 +254,9 @@ const TreeNode = React.memo(({
             </div>
           )}
           {node.type === 'project' ? (
-            <FolderOpen className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-black'}`} />
+            <Layout className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-black'}`} />
           ) : node.type === 'module' ? (
-            <Layout className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-yellow-500'}`} />
+            <FolderOpen className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-yellow-500'}`} />
           ) : (
             <FileText className={`w-3.5 h-3.5 mr-2 ${isSelected ? 'text-white' : 'text-gray-400'}`} />
           )}
@@ -269,7 +271,7 @@ const TreeNode = React.memo(({
             >
               <Plus className="w-3 h-3" />
             </button>
-            {depth < 2 && (
+            {depth < 10 && (
               <button 
                 onClick={(e) => { e.stopPropagation(); handleOpenModal('module', 'add', node); }}
                 className="p-1 hover:bg-black/10 rounded" title="新增子模块"
@@ -305,6 +307,7 @@ const TreeNode = React.memo(({
           handleOpenDrawer={handleOpenDrawer}
           handleOpenModal={handleOpenModal}
           handleDeleteNode={handleDeleteNode}
+          onRefreshNode={onRefreshNode}
         />
       ))}
     </div>
@@ -364,9 +367,9 @@ const MoveTreeNode = React.memo(({
             </div>
           )}
           {node.type === 'project' ? (
-            <FolderOpen className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-black'}`} />
+            <Layout className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-black'}`} />
           ) : (
-            <FolderPlus className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-gray-400 group-hover:text-black'}`} />
+            <FolderOpen className={`w-4 h-4 mr-2 ${isSelected ? 'text-white' : 'text-gray-400 group-hover:text-black'}`} />
           )}
           <span className="text-sm font-bold truncate">{node.name}</span>
         </div>
@@ -562,6 +565,7 @@ const CaseManagement = () => {
   const [isDrawerStatusOpen, setIsDrawerStatusOpen] = useState(false);
   const [showSelectionWarning, setShowSelectionWarning] = useState(false);
   const [isEditorsVisible, setIsEditorsVisible] = useState(false); // New state for lazy loading editors
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const statusFilterRef = useRef(null);
   const priorityFilterRef = useRef(null);
   const statusDropdownRef = useRef(null);
@@ -755,12 +759,14 @@ const CaseManagement = () => {
   const stripImagesForDraft = (data) => {
     if (!data) return data;
     const strip = (html) => {
-      if (!html) return html;
+      if (typeof html !== 'string') return html;
       // 使用正则替换 img 标签中的 src，避免创建 DOM 元素导致浏览器发起请求
-      return html.replace(/<img[^>]+src=['"]([^'"]+)['"][^>]*>/gi, (match, src) => {
+      // 优化：使用捕获组重构字符串，避免在长字符串上调用 replace 导致栈溢出
+      return html.replace(/(<img[^>]+src=['"])([^'"]+)(['"][^>]*>)/gi, (match, prefix, src, suffix) => {
         if (src && src.startsWith('data:')) {
            // 将 Base64 替换为空，并添加 alt 提示
-           return match.replace(src, '').replace(/>$/, ' alt="[图片暂存，保存后同步]">');
+           const newSuffix = suffix.replace(/>$/, ' alt="[图片暂存，保存后同步]">');
+           return `${prefix}${newSuffix}`;
         }
         return match;
       });
@@ -864,17 +870,50 @@ const CaseManagement = () => {
           hasChildren: p.hasChildren
         }));
         setTreeData(projects);
+        setLoading(false);
+        return projects;
       } else {
         console.error('Expected projects array but got:', response.data);
         setTreeData([]);
+        setLoading(false);
+        return [];
       }
-      setLoading(false);
     } catch (error) {
       console.error('Failed to fetch projects:', error);
       const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message;
       showToast('获取项目列表失败: ' + errorMsg, 'error');
       setTreeData([]);
       setLoading(false);
+      return [];
+    }
+  };
+
+  const handleImportSuccess = async (newProjectId) => {
+    showToast('导入成功', 'success');
+    setIsImportModalOpen(false);
+    
+    // Refresh tree data
+    const projects = await fetchProjects(selectedDeptId);
+    
+    // If we have a new project ID, find and select it
+    if (newProjectId && projects && projects.length > 0) {
+        // Ensure newProjectId is a number if needed
+        const targetId = Number(newProjectId);
+        const newProject = projects.find(p => p.id === targetId);
+        
+        if (newProject) {
+            handleNodeClick(newProject);
+            
+            // Auto expand the new project
+            setExpandedNodes(prev => {
+                const newKeys = new Set(prev);
+                newKeys.add(`project-${newProject.id}`);
+                return newKeys;
+            });
+            
+            // Manually refresh the node to load its children (since fetchProjects resets loaded state)
+            await refreshTreeNode(newProject.id, 'project');
+        }
     }
   };
 
@@ -1127,6 +1166,16 @@ const CaseManagement = () => {
     setCurrentPage(0); // 切换节点时重置分页
     // 加载该节点及其所有子节点的用例
     fetchTestCases(node.id, node.type, true, 0, pageSize, searchTerm, statusFilter, priorityFilter);
+  };
+
+  // 刷新左侧树数据（从顶级开始）
+  const refreshTree = async () => {
+    if (selectedDeptId) {
+      await fetchProjects(selectedDeptId);
+      showToast('刷新成功', 'success');
+    } else {
+      showToast('请先选择部门', 'warning');
+    }
   };
 
   // 刷新指定树节点的子节点（包含模块和用例）
@@ -2289,6 +2338,18 @@ const CaseManagement = () => {
             </div>
           )}
           <button 
+            onClick={() => {
+                if (!selectedDeptId) {
+                    showToast('请先选择部门', 'error');
+                    return;
+                }
+                setIsImportModalOpen(true);
+            }}
+            className="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border border-gray-200 hover:border-black hover:bg-gray-50 transition-all hover:shadow-lg active:scale-95 mr-3"
+          >
+            <Upload className="w-4 h-4" /> 导入XMind
+          </button>
+          <button 
             onClick={handleAddCaseClick}
             className="bg-black text-white px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-800 transition-all hover:shadow-xl active:scale-95"
           >
@@ -2321,6 +2382,14 @@ const CaseManagement = () => {
                 title="收起全部"
               >
                 <ChevronsUp className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={() => fetchProjects(selectedDeptId)}
+                disabled={!selectedDeptId}
+                className={`p-1.5 rounded-lg transition-all ${!selectedDeptId ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-black hover:bg-white border border-transparent hover:border-gray-100 shadow-sm'}`}
+                title="刷新目录"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
               </button>
               <div className="w-[1px] h-3 bg-gray-200 mx-0.5" />
               <button 
@@ -2932,6 +3001,15 @@ const CaseManagement = () => {
           </div>
         </div>
       )}
+
+      {/* XMind Import Modal */}
+      <XMindImportModal 
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={handleImportSuccess}
+        departmentId={selectedDeptId}
+        projectId={selectedNode ? (selectedNode.type === 'project' ? selectedNode.id : selectedNode.projectId) : null}
+      />
 
       {/* Toast Notification */}
       {toast.show && (

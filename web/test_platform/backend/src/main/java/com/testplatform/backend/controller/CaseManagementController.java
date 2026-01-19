@@ -454,6 +454,7 @@ public class CaseManagementController {
             
             Long projectId = parseLong(payload.get("projectId"));
             String priority = (String) payload.get("priority");
+            String status = (String) payload.get("status");
             String preconditions = (String) payload.get("preconditions");
             String steps = (String) payload.get("steps");
             String expectedResult = (String) payload.get("expectedResult");
@@ -476,7 +477,7 @@ public class CaseManagementController {
                 testCase.setModuleId(null);
             }
             testCase.setPriority(priority != null ? priority : "P1");
-            testCase.setStatus("PENDING");
+            testCase.setStatus(status != null ? status : "PENDING");
             
             // 始终提取图片并准备上传，内部已优化（如果不含 Base64 会快速返回）
             Map<String, byte[]> imagesToUpload = new HashMap<>();
