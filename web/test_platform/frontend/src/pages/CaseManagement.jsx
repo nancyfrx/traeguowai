@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   FolderOpen, Plus, Filter, ChevronRight, ChevronDown, ChevronsDown, ChevronsUp,
   Search, Play, Trash2, Edit2, FolderPlus, FilePlus, Layout, FileText,
@@ -232,7 +232,7 @@ const TreeNode = React.memo(({
         style={{ paddingLeft: `${depth * 16 + 12}px` }}
         onClick={() => {
           if (isCase) {
-            handleOpenDrawer('view', null, node);
+            handleOpenDrawer('edit', null, node);
           } else {
             handleNodeClick(node);
           }
@@ -519,6 +519,16 @@ const TestCaseRow = React.memo(({
   );
 });
 
+// Memoized Preview Content Component to prevent double rendering
+const PreviewContent = React.memo(({ html, emptyText }) => {
+  return (
+    <div 
+      className="preview-content prose prose-sm max-w-none"
+      dangerouslySetInnerHTML={{ __html: html || `<p class="text-gray-400 italic">${emptyText}</p>` }}
+    />
+  );
+});
+
 const CaseManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [selectedDeptId, setSelectedDeptId] = useState('');
@@ -573,14 +583,21 @@ const CaseManagement = () => {
   };
 
   // Helper for processing HTML to use CachedImage
-  const processHtmlWithCache = (html) => {
+  const processHtmlWithCache = useCallback((html) => {
     if (!html) return html;
     
-    // We can't easily swap <img> with <CachedImage> inside dangerouslySetInnerHTML
-    // But we can add a simple script to handle image errors or loading states globally
-    // For now, let's keep it simple and ensure images have proper attributes
-    return html;
-  };
+    // 过滤无效的图片 src，防止列表数据中的 raw filename 触发无效请求
+    // 仅允许 http/https (OSS签名URL)、data: (Base64) 或 / (静态资源)
+    return html.replace(/src=['"]([^'"]+)['"]/gi, (match, src) => {
+      // 检查是否为有效 URL
+      if (!src.startsWith('http') && !src.startsWith('https') && !src.startsWith('data:') && !src.startsWith('/')) {
+        // 如果是相对路径或文件名（通常是未签名的 OSS key），替换为空 src
+        // 这样浏览器就不会发起无效请求（404）
+        return 'src="" data-pending-src="' + src + '"';
+      }
+      return match;
+    });
+  }, []);
 
   useEffect(() => {
     // Add a global listener for image errors to handle fallbacks if needed
@@ -739,17 +756,14 @@ const CaseManagement = () => {
     if (!data) return data;
     const strip = (html) => {
       if (!html) return html;
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      const imgs = div.querySelectorAll('img');
-      imgs.forEach(img => {
-        const src = img.getAttribute('src');
+      // 使用正则替换 img 标签中的 src，避免创建 DOM 元素导致浏览器发起请求
+      return html.replace(/<img[^>]+src=['"]([^'"]+)['"][^>]*>/gi, (match, src) => {
         if (src && src.startsWith('data:')) {
-          img.setAttribute('src', ''); // 移除 Base64
-          img.setAttribute('alt', '[图片暂存，保存后同步]');
+           // 将 Base64 替换为空，并添加 alt 提示
+           return match.replace(src, '').replace(/>$/, ' alt="[图片暂存，保存后同步]">');
         }
+        return match;
       });
-      return div.innerHTML;
     };
     return {
       ...data,
@@ -1167,6 +1181,8 @@ const CaseManagement = () => {
     const willFetch = mode !== 'add' && caseData && caseData.id;
     if (willFetch) {
       setDrawerLoading(true);
+    } else {
+      setDrawerLoading(false);
     }
 
     // 定义完整的基础数据结构，确保所有字段都被初始化/清空
@@ -1185,7 +1201,6 @@ const CaseManagement = () => {
     if (mode === 'add') {
       // 新增模式下，彻底清空数据，不再自动加载草稿以避免混淆
       setDrawerData(emptyData);
-      setDrawerLoading(false);
       localStorage.removeItem('case_draft'); // 清除可能的旧草稿
       setIsDrawerOpen(true);
     } else {
@@ -1200,11 +1215,15 @@ const CaseManagement = () => {
         initialData.expectedResult = '';
         initialData.actualResult = '';
 
+        // 先设置数据，再打开抽屉，配合 drawerLoading=true，确保第一次渲染就是 Loading 状态
         setDrawerData({
           ...emptyData,
           ...initialData
         });
         
+        // 确保 drawerLoading 在渲染前生效 (其实上面已经 setDrawerLoading(true) 了)
+        // 使用 setTimeout 打开抽屉可以把状态更新放入下一个 tick，
+        // 但为了防止闪烁，这里直接设为 true，依赖 drawerLoading 屏蔽内容
         setIsDrawerOpen(true);
 
         try {
@@ -1231,6 +1250,7 @@ const CaseManagement = () => {
           ...emptyData,
           ...caseData
         });
+        setIsDrawerOpen(true);
       }
     }
   };
@@ -1984,9 +2004,10 @@ const CaseManagement = () => {
                             )}
                           </div>
                         ) : (
-                          <div 
-                            className="preview-content prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: processHtmlWithCache(drawerData.preconditions) || '<p className="text-gray-400 italic">暂无前置步骤</p>' }}
+                          <PreviewContent 
+                            key={`preview-pre-${drawerData.id}`}
+                            html={!drawerLoading ? processHtmlWithCache(drawerData.preconditions) : ''}
+                            emptyText="暂无前置步骤"
                           />
                         )}
                       </div>
@@ -2027,9 +2048,10 @@ const CaseManagement = () => {
                             )}
                           </div>
                         ) : (
-                          <div 
-                            className="preview-content prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: processHtmlWithCache(drawerData.steps) || '<p className="text-gray-400 italic">暂无正文步骤</p>' }}
+                          <PreviewContent 
+                            key={`preview-steps-${drawerData.id}`}
+                            html={!drawerLoading ? processHtmlWithCache(drawerData.steps) : ''}
+                            emptyText="暂无正文步骤"
                           />
                         )}
                       </div>
@@ -2070,9 +2092,10 @@ const CaseManagement = () => {
                             )}
                           </div>
                         ) : (
-                          <div 
-                            className="preview-content prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: processHtmlWithCache(drawerData.expectedResult) || '<p className="text-gray-400 italic">暂无预期效果</p>' }}
+                          <PreviewContent 
+                            key={`preview-exp-${drawerData.id}`}
+                            html={!drawerLoading ? processHtmlWithCache(drawerData.expectedResult) : ''}
+                            emptyText="暂无预期效果"
                           />
                         )}
                       </div>
@@ -2113,9 +2136,10 @@ const CaseManagement = () => {
                             )}
                           </div>
                         ) : (
-                          <div 
-                            className="preview-content prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: processHtmlWithCache(drawerData.actualResult) || '<p className="text-gray-400 italic">暂无实际结果</p>' }}
+                          <PreviewContent 
+                            key={`preview-act-${drawerData.id}`}
+                            html={!drawerLoading ? processHtmlWithCache(drawerData.actualResult) : ''}
+                            emptyText="暂无实际结果"
                           />
                         )}
                       </div>
