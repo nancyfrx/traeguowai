@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Sparkles, Zap, Copy, Trash2, FileText, Loader2, History, Upload, 
-  Send, ChevronRight, ChevronLeft, X, Calendar, User, File, Eye, ChevronDown, CheckCircle2, Check, Tag, Flag, Play, List, Image as ImageIcon, Save, FileImage, FileSpreadsheet, FileCode, FileType
+  Send, ChevronRight, ChevronLeft, X, Calendar, User, File, Eye, ChevronDown, CheckCircle2, Check, Tag, Flag, Play, List, Image as ImageIcon, Save, FileImage, FileSpreadsheet, FileCode, FileType, AlertCircle
 } from 'lucide-react';
 import axios from 'axios';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
@@ -106,6 +106,9 @@ const AIGenerator = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
   const [uploadFiles, setUploadFiles] = useState([]);
+  const [parsingFiles, setParsingFiles] = useState({}); // { fileName: true/false }
+  const [parsingErrors, setParsingErrors] = useState({}); // { fileName: errorMsg }
+  const [parsedContentMap, setParsedContentMap] = useState({}); // { fileName: content }
   const [drawerData, setDrawerData] = useState({});
   const [editorPre, setEditorPre] = useState(null);
   const fileInputRef = useRef(null);
@@ -351,13 +354,26 @@ const AIGenerator = () => {
   }, [isHistoryOpen, historyPage]); // Refetch when page changes
 
   const handleGenerate = async () => {
+    // Check if any file is parsing
+    if (Object.values(parsingFiles).some(isParsing => isParsing)) {
+        return;
+    }
     if (!prompt.trim()) return;
     
     setLoading(true);
     const formData = new FormData();
-    formData.append('prompt', prompt);
+    
+    // Append parsed content to prompt
+    let finalPrompt = prompt;
+    Object.entries(parsedContentMap).forEach(([fileName, content]) => {
+        finalPrompt += `\n\nFile Content (${fileName}):\n${content}`;
+    });
+
+    formData.append('prompt', finalPrompt);
     formData.append('model', model);
     formData.append('operator', localStorage.getItem('username') || 'Admin');
+    formData.append('skipParsing', 'true'); // Tell backend we already parsed the files
+
     // Handle file upload
     if (uploadFiles.length > 0) {
       uploadFiles.forEach(file => {
@@ -367,51 +383,40 @@ const AIGenerator = () => {
 
     try {
       const res = await axios.post('/api/ai/generate', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 300000 // 5 minutes
       });
       
-      const content = res.data.generatedContent;
-      // Try to parse JSON
-      try {
-        let jsonStr = content;
-        // Clean markdown
-        if (jsonStr.includes('```json')) {
-            jsonStr = jsonStr.split('```json')[1].split('```')[0];
-        } else if (jsonStr.includes('```')) {
-            jsonStr = jsonStr.split('```')[1].split('```')[0];
-        }
-        const parsed = JSON.parse(jsonStr.trim());
-        if (Array.isArray(parsed)) {
-            setGeneratedCases(parsed.map((item, index) => ({
-                ...item,
-                id: index + 1, // Temp ID
-                type: item.type || generationType,
-                module: item.module || generationModule,
-                status: 'PENDING',
-                creator: 'AI',
-                updatedAt: new Date().toISOString()
-            })));
-        } else {
-            // If object, maybe wrap in array
-            setGeneratedCases([{ 
-                ...parsed, 
-                id: 1, 
-                type: parsed.type || generationType,
-                module: parsed.module || generationModule,
-                status: 'PENDING', 
-                creator: 'AI', 
-                updatedAt: new Date().toISOString() 
-            }]);
-        }
-      } catch (e) {
-        console.error('Failed to parse AI response as JSON', e);
+      let content = res.data.generatedContent;
+      // Handle potential double-encoded JSON string
+      if (typeof content === 'string') {
+          try {
+              const potentialObj = JSON.parse(content);
+              if (typeof potentialObj === 'object' || Array.isArray(potentialObj)) {
+                  content = JSON.stringify(potentialObj);
+              }
+          } catch (e) {}
+      }
+
+      const parsed = parseContent(content);
+      if (parsed) {
+        setGeneratedCases(parsed.map((item, index) => ({
+            ...item,
+            id: index + 1, // Temp ID
+            type: item.type || '功能用例',
+            module: item.module || '默认模块',
+            status: 'PENDING',
+            creator: 'AI',
+            updatedAt: new Date().toISOString()
+        })));
+      } else {
         // Fallback: create one case with full content
         setGeneratedCases([{
             id: 1,
             name: 'AI Generated Content',
             steps: content,
-            type: generationType,
-            module: generationModule,
+            type: '功能用例',
+            module: '默认模块',
             status: 'PENDING',
             priority: 'P1',
             creator: 'AI',
@@ -423,6 +428,7 @@ const AIGenerator = () => {
       setActiveResultTab('table');
       setPrompt('');
       setUploadFiles([]);
+      setParsedContentMap({});
       fetchHistory(); // Refresh history
     } catch (err) {
       console.error('Generation failed', err);
@@ -432,14 +438,44 @@ const AIGenerator = () => {
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setUploadFiles(prev => {
-        // Filter duplicates if needed, or just append
-        const newFiles = [...prev, ...files];
-        return newFiles;
+      setUploadFiles(prev => [...prev, ...files]);
+      
+      // Mark as parsing
+      const newParsingFiles = {};
+      const newParsingErrors = {};
+      files.forEach(file => {
+          newParsingFiles[file.name] = true;
+          newParsingErrors[file.name] = null; // Reset error
       });
+      setParsingFiles(prev => ({ ...prev, ...newParsingFiles }));
+      setParsingErrors(prev => ({ ...prev, ...newParsingErrors }));
+
+      // Parse each file
+      for (const file of files) {
+          const formData = new FormData();
+          formData.append('file', file);
+          try {
+              const res = await axios.post('/api/ai/parse-file', formData, {
+                  headers: { 'Content-Type': 'multipart/form-data' }
+              });
+              
+              if (res.data.success === false) {
+                  setParsingErrors(prev => ({ ...prev, [file.name]: res.data.error || '解析失败' }));
+                  setParsedContentMap(prev => ({ ...prev, [file.name]: '' }));
+              } else {
+                  setParsedContentMap(prev => ({ ...prev, [file.name]: res.data.content }));
+                  setParsingErrors(prev => ({ ...prev, [file.name]: null }));
+              }
+          } catch (err) {
+              console.error(`Failed to parse file ${file.name}`, err);
+              setParsingErrors(prev => ({ ...prev, [file.name]: '解析请求失败' }));
+          } finally {
+              setParsingFiles(prev => ({ ...prev, [file.name]: false }));
+          }
+      }
     }
     // Reset input value to allow selecting the same file again
     e.target.value = '';
@@ -621,10 +657,26 @@ const AIGenerator = () => {
                 <div className="flex flex-wrap gap-3 p-3 pb-0">
                     {uploadFiles.map((file, index) => (
                         <div key={index} className="flex items-center gap-3 bg-gray-50 p-2 rounded-xl pr-8 relative group border border-gray-100 h-[52px] hover:bg-gray-100 transition-colors">
-                            {getFileIcon(file.name)}
+                            <div className="relative">
+                                {getFileIcon(file.name)}
+                                {parsingFiles[file.name] && (
+                                    <div className="absolute inset-0 bg-white/80 rounded-lg flex items-center justify-center">
+                                        <Loader2 className="w-3 h-3 text-black animate-spin" />
+                                    </div>
+                                )}
+                                {!parsingFiles[file.name] && parsingErrors[file.name] && (
+                                    <div className="absolute -top-1 -right-1 bg-red-100 rounded-full p-0.5 border border-white shadow-sm" title={parsingErrors[file.name]}>
+                                        <AlertCircle className="w-3 h-3 text-red-500" />
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex flex-col justify-center min-w-[80px]">
-                                <span className="text-xs font-bold text-gray-900 truncate max-w-[100px]" title={file.name}>{file.name}</span>
-                                <span className="text-[10px] font-medium text-gray-400 uppercase">{file.name.split('.').pop()} | {formatFileSize(file.size)}</span>
+                                <span className={`text-xs font-bold truncate max-w-[100px] ${parsingErrors[file.name] ? 'text-red-500' : 'text-gray-900'}`} title={parsingErrors[file.name] || file.name}>
+                                    {file.name}
+                                </span>
+                                <span className={`text-[10px] font-medium uppercase ${parsingErrors[file.name] ? 'text-red-400' : 'text-gray-400'}`}>
+                                    {parsingFiles[file.name] ? '解析中...' : (parsingErrors[file.name] ? '解析失败' : (file.name.split('.').pop() + ' | ' + formatFileSize(file.size)))}
+                                </span>
                             </div>
                             <button 
                                 onClick={() => removeFile(index)}
@@ -723,7 +775,8 @@ const AIGenerator = () => {
                 {/* Send Button */}
                 <button
                     onClick={handleGenerate}
-                    disabled={loading || !prompt.trim()}
+                    disabled={loading || !prompt.trim() || Object.values(parsingFiles).some(s => s)}
+                    title={Object.values(parsingFiles).some(s => s) ? "文件解析中，请稍候..." : ""}
                     className="flex items-center gap-2 h-9 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-gray-200"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}

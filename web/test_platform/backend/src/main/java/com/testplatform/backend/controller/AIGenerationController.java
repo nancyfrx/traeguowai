@@ -29,6 +29,9 @@ public class AIGenerationController {
     private com.testplatform.backend.service.DeepSeekAIService deepSeekAIService;
 
     @Autowired
+    private com.testplatform.backend.service.FileParserService fileParserService;
+
+    @Autowired
     private AIGenerationRecordService recordService;
 
     private static final String UPLOAD_DIR = "uploads/";
@@ -37,7 +40,8 @@ public class AIGenerationController {
     public AIGenerationRecord generate(@RequestParam("prompt") String prompt,
                                        @RequestParam(value = "model", defaultValue = "glm-4.6") String model,
                                        @RequestParam("operator") String operator,
-                                       @RequestParam(value = "files", required = false) MultipartFile[] files) {
+                                       @RequestParam(value = "files", required = false) MultipartFile[] files,
+                                       @RequestParam(value = "skipParsing", defaultValue = "false") boolean skipParsing) {
         try {
             StringBuilder uploadFileNames = new StringBuilder();
             String finalPrompt = prompt;
@@ -53,14 +57,13 @@ public class AIGenerationController {
                         }
                         uploadFileNames.append(originalFilename);
 
-                        // If text file, we could read it
-                        if (originalFilename != null && (originalFilename.endsWith(".txt") || originalFilename.endsWith(".md") || originalFilename.endsWith(".json") || originalFilename.endsWith(".csv"))) {
-                             try {
-                                 String fileContent = new String(file.getBytes());
-                                 finalPrompt += "\n\nFile Content (" + originalFilename + "):\n" + fileContent;
-                             } catch (Exception e) {
-                                 // Ignore read error
-                             }
+                        // Parse file content (PDF, Word, Text, Image OCR)
+                        // Only parse if skipParsing is false
+                        if (!skipParsing) {
+                            String parsedContent = fileParserService.parseFile(file);
+                            if (parsedContent != null && !parsedContent.trim().isEmpty()) {
+                                 finalPrompt += "\n\nFile Content (" + originalFilename + "):\n" + parsedContent;
+                            }
                         }
                     }
                 }
@@ -98,6 +101,14 @@ public class AIGenerationController {
                 generatedContent = generatedContent.substring(0, generatedContent.length() - 3);
             }
 
+            // Force Chinese types if AI returns English (common issue with DeepSeek/GLM)
+            generatedContent = generatedContent
+                .replace("\"type\": \"Functional\"", "\"type\": \"功能用例\"")
+                .replace("\"type\": \"Functional Testing\"", "\"type\": \"功能用例\"")
+                .replace("\"type\": \"Performance\"", "\"type\": \"性能用例\"")
+                .replace("\"type\": \"Compatibility\"", "\"type\": \"兼容性用例\"")
+                .replace("\"type\": \"Security\"", "\"type\": \"安全用例\"");
+
             AIGenerationRecord record = new AIGenerationRecord();
             record.setInputContent(prompt); // Record original prompt
             record.setGeneratedContent(generatedContent);
@@ -111,6 +122,36 @@ public class AIGenerationController {
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("AI Generation failed: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/parse-file")
+    public java.util.Map<String, Object> parseFile(@RequestParam("file") MultipartFile file) {
+        try {
+            String content = fileParserService.parseFile(file);
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            
+            // Check for known error markers from FileParserService
+            if (content != null && content.contains("[图片识别失败:")) {
+                result.put("success", false);
+                result.put("error", content); // Return the error message
+                result.put("content", "");
+            } else if (content != null && content.startsWith("Error parsing file")) {
+                result.put("success", false);
+                result.put("error", content);
+                result.put("content", "");
+            } else {
+                result.put("success", true);
+                result.put("content", content != null ? content : "");
+            }
+            
+            return result;
+        } catch (Throwable e) {
+            e.printStackTrace();
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("success", false);
+            result.put("error", "文件解析异常: " + e.getMessage());
+            return result;
         }
     }
 
