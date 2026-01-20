@@ -91,7 +91,8 @@ const editorStyles = `
 const MODELS = [
     { id: 'glm-4.6', name: 'GLM-4.6', icon: Sparkles, desc: '最新旗舰，超强推理' },
     { id: 'glm-4.6v', name: 'GLM-4.6v', icon: ImageIcon, desc: '视觉增强，多模态支持' },
-    { id: 'deepseek', name: 'DeepSeek', icon: Zap, desc: '深度思考，逻辑严密' },
+    { id: 'deepseek-chat', name: 'DeepSeek-V3', icon: Zap, desc: '智能对话，快速响应' },
+    { id: 'deepseek-reasoner', name: 'DeepSeek-R1', icon: Zap, desc: '深度思考，逻辑严密' },
 ];
 
 const AIGenerator = () => {
@@ -144,11 +145,122 @@ const AIGenerator = () => {
   const [newTypeName, setNewTypeName] = useState('');
   const [generationType, setGenerationType] = useState('功能用例');
   const [generationModule, setGenerationModule] = useState('默认模块');
+  const [activeResultTab, setActiveResultTab] = useState('table');
+  const [rawResult, setRawResult] = useState({ input: '', output: '' });
 
   const formatContent = (content) => {
     if (!content) return '';
     return content.replace(/\n/g, '<br/>');
   };
+
+  const formatField = (val) => {
+    if (!val) return '无';
+    if (Array.isArray(val)) return val.join('\n');
+    return val;
+  };
+
+  const parseContent = (content) => {
+    if (!content) return null;
+    try {
+        let jsonStr = content;
+        if (typeof jsonStr === 'string') {
+            // Clean markdown
+            if (jsonStr.includes('```json')) {
+                jsonStr = jsonStr.split('```json')[1].split('```')[0];
+            } else if (jsonStr.includes('```')) {
+                jsonStr = jsonStr.split('```')[1].split('```')[0];
+            }
+            // Try to parse
+            try {
+                const parsed = JSON.parse(jsonStr.trim());
+                return Array.isArray(parsed) ? parsed : [parsed];
+            } catch (e) {
+                // If parse fails, return raw content
+                return null;
+            }
+        } else if (typeof jsonStr === 'object') {
+             return Array.isArray(jsonStr) ? jsonStr : [jsonStr];
+        } else {
+            return null;
+        }
+    } catch (e) {
+        return null;
+    }
+  };
+
+  const generateFormattedText = (content) => {
+    const parsedCases = parseContent(content);
+    if (!parsedCases) return content || '暂无内容';
+
+    return parsedCases.map((tc, index) => {
+        return `${index + 1}.用例标题：${tc.name || ''}\n\n` +
+               `模块：${tc.module || '默认模块'}\n\n` +
+               `前置条件：\n${formatField(tc.preconditions)}\n\n` +
+               `测试步骤：\n${formatField(tc.steps)}\n\n` +
+               `预期结果：\n${formatField(tc.expectedResult)}\n\n` +
+               `优先级：${tc.priority || 'P2'}\n\n` +
+               `用例类型：${tc.type || '功能用例'}`;
+    }).join('\n\n\n');
+  };
+
+  const renderFormattedText = (content) => {
+    const parsedCases = parseContent(content);
+    if (!parsedCases) return <div className="whitespace-pre-wrap">{content || '暂无内容'}</div>;
+
+    return (
+        <div className="text-gray-700 font-mono text-sm">
+            {parsedCases.map((tc, index) => (
+                <div key={index} className="mb-10 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                    <div className="mb-4">
+                         <span className="font-bold text-gray-900 text-base">{index + 1}. 用例标题：{tc.name || ''}</span>
+                    </div>
+                    
+                    <div className="mb-4">
+                        <span className="font-bold text-gray-900">模块：</span>{tc.module || '默认模块'}
+                    </div>
+
+                    <div className="mb-4">
+                        <div className="font-bold text-gray-900 mb-1">前置条件：</div>
+                        <div className="whitespace-pre-wrap">{formatField(tc.preconditions)}</div>
+                    </div>
+
+                    <div className="mb-4">
+                        <div className="font-bold text-gray-900 mb-1">测试步骤：</div>
+                        <div className="whitespace-pre-wrap">{formatField(tc.steps)}</div>
+                    </div>
+
+                    <div className="mb-4">
+                        <div className="font-bold text-gray-900 mb-1">预期结果：</div>
+                        <div className="whitespace-pre-wrap">{formatField(tc.expectedResult)}</div>
+                    </div>
+                    
+                    <div className="mb-4">
+                         <span className="font-bold text-gray-900">优先级：</span>{tc.priority || 'P2'}
+                    </div>
+
+                    <div>
+                         <span className="font-bold text-gray-900">用例类型：</span>{tc.type || '功能用例'}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+  };
+
+  const handleCopyText = () => {
+    const text = generateFormattedText(rawResult.output);
+    navigator.clipboard.writeText(text).then(() => {
+        // You could add a toast here, for now maybe just change button text temporarily if I had state
+        // or just rely on user knowing it worked.
+        // Let's add a simple alert or console log, or just nothing.
+        // The user asked for a button, usually implies feedback. 
+        // I'll add a temporary "Copied" state.
+    });
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     fetchCaseTypes();
@@ -204,6 +316,8 @@ const AIGenerator = () => {
 
   const restoreHistory = (record) => {
     setPrompt(record.inputContent || '');
+    setRawResult({ input: record.inputContent || '', output: record.generatedContent || '' });
+    setActiveResultTab('table');
     if (record.generatedContent) {
         try {
             let jsonStr = record.generatedContent;
@@ -244,8 +358,6 @@ const AIGenerator = () => {
     formData.append('prompt', prompt);
     formData.append('model', model);
     formData.append('operator', localStorage.getItem('username') || 'Admin');
-    formData.append('type', generationType);
-    formData.append('module', generationModule);
     // Handle file upload
     if (uploadFiles.length > 0) {
       uploadFiles.forEach(file => {
@@ -307,6 +419,8 @@ const AIGenerator = () => {
         }]);
       }
       
+      setRawResult({ input: prompt, output: content });
+      setActiveResultTab('table');
       setPrompt('');
       setUploadFiles([]);
       fetchHistory(); // Refresh history
@@ -501,7 +615,7 @@ const AIGenerator = () => {
       )}
     </div>
 
-        <div className="flex-1 relative border border-gray-200 rounded-xl bg-white flex flex-col focus-within:ring-1 focus-within:ring-black focus-within:border-black transition-all overflow-hidden">
+        <div className="flex-1 relative border border-gray-200 rounded-xl bg-white flex flex-col transition-all">
             {/* File List Area */}
             {uploadFiles.length > 0 && (
                 <div className="flex flex-wrap gap-3 p-3 pb-0">
@@ -535,11 +649,11 @@ const AIGenerator = () => {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="请输入需求描述，AI 将自动生成测试用例..."
-                className="w-full flex-1 p-3 pb-20 resize-none outline-none bg-transparent text-sm"
+                className="w-full flex-1 p-3 resize-none outline-none bg-transparent text-sm focus:ring-0"
             />
             
             {/* Bottom Toolbar */}
-            <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center px-2">
+            <div className="flex justify-between items-center p-2 px-3">
                 <div className="flex items-center gap-3">
                     {/* Model Custom Dropdown */}
                     <div className="relative">
@@ -560,7 +674,7 @@ const AIGenerator = () => {
                         {isModelDropdownOpen && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setIsModelDropdownOpen(false)} />
-                                <div className="absolute bottom-full left-0 mb-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 py-1">
+                                <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 py-1">
                                     {MODELS.map((m) => (
                                         <button
                                             key={m.id}
@@ -622,71 +736,124 @@ const AIGenerator = () => {
       {/* Bottom Section: Table */}
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                生成结果预览
-            </h3>
+            <div className="flex items-center gap-4">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    生成结果预览
+                </h3>
+                <div className="flex bg-gray-200/50 p-1 rounded-lg">
+                    <button
+                        onClick={() => setActiveResultTab('table')}
+                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                            activeResultTab === 'table' 
+                                ? 'bg-white text-black shadow-sm' 
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        表格视图
+                    </button>
+                    <button
+                        onClick={() => setActiveResultTab('text')}
+                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                            activeResultTab === 'text' 
+                                ? 'bg-white text-black shadow-sm' 
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        文本视图
+                    </button>
+                </div>
+            </div>
             <span className="text-xs text-gray-500">共 {generatedCases.length} 条用例</span>
         </div>
         
         <div className="flex-1 overflow-auto">
-            <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
-                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">用例标题</th>
-                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">模块</th>
-                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">优先级</th>
-                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">操作</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {paginatedCases.length > 0 ? (
-                        paginatedCases.map((tc, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="px-6 py-4 text-xs text-gray-400 font-mono">TC-{String(tc.id).padStart(3, '0')}</td>
-                                <td className="px-6 py-4 text-sm font-medium text-gray-900">{tc.name}</td>
-                                <td className="px-6 py-4 text-xs text-gray-500">
-                                    <span className="bg-gray-100 px-2 py-1 rounded text-gray-600 font-medium">
-                                        {tc.module || 'Default'}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${
-                                        tc.priority === 'P0' ? 'bg-red-50 text-red-600' :
-                                        tc.priority === 'P1' ? 'bg-orange-50 text-orange-600' :
-                                        'bg-gray-100 text-gray-600'
-                                    }`}>
-                                        {tc.priority || 'P2'}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <button 
-                                        onClick={() => openDetail(tc)}
-                                        className="text-gray-400 hover:text-black transition-colors"
-                                        title="查看详情"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                    </button>
+            {activeResultTab === 'table' ? (
+                <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
+                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">用例标题</th>
+                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">模块</th>
+                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">优先级</th>
+                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {paginatedCases.length > 0 ? (
+                            paginatedCases.map((tc, idx) => (
+                                <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-6 py-4 text-xs text-gray-400 font-mono">TC-{String(tc.id).padStart(3, '0')}</td>
+                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{tc.name}</td>
+                                    <td className="px-6 py-4 text-xs text-gray-500">
+                                        <span className="bg-gray-100 px-2 py-1 rounded text-gray-600 font-medium">
+                                            {tc.module || 'Default'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`text-xs font-bold px-2 py-1 rounded ${
+                                            tc.priority === 'P0' ? 'bg-red-50 text-red-600' :
+                                            tc.priority === 'P1' ? 'bg-orange-50 text-orange-600' :
+                                            'bg-gray-100 text-gray-600'
+                                        }`}>
+                                            {tc.priority || 'P2'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button 
+                                            onClick={() => openDetail(tc)}
+                                            className="text-gray-400 hover:text-black transition-colors"
+                                            title="查看详情"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Sparkles className="w-8 h-8 opacity-20" />
+                                        <p>暂无生成结果，请在上方输入需求后点击生成</p>
+                                    </div>
                                 </td>
                             </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
-                                <div className="flex flex-col items-center gap-2">
-                                    <Sparkles className="w-8 h-8 opacity-20" />
-                                    <p>暂无生成结果，请在上方输入需求后点击生成</p>
-                                </div>
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+                        )}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="p-6 h-full relative">
+                    <button
+                        onClick={handleCopyText}
+                        className="absolute top-8 right-8 p-2 bg-white/80 hover:bg-white border border-gray-200 rounded-lg shadow-sm text-gray-500 hover:text-black transition-all z-10 flex items-center gap-2 text-xs font-bold"
+                        title="复制内容"
+                    >
+                        {copySuccess ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                        {copySuccess ? '已复制' : '复制结果'}
+                    </button>
+                    <div className="w-full h-full bg-gray-50 rounded-xl p-4 border border-gray-100 overflow-auto font-mono text-sm whitespace-pre-wrap text-gray-700">
+{renderFormattedText(rawResult.output)}
+
+{rawResult.input && (
+<>
+<br/>
+<br/>
+----------------------------------------
+<br/>
+<span className="font-bold text-gray-400">输入提示词：</span>
+<br/>
+<br/>
+{rawResult.input}
+</>
+)}
+                    </div>
+                </div>
+            )}
         </div>
         
         {/* Pagination Controls */}
-        {generatedCases.length > 0 && (
+        {activeResultTab === 'table' && generatedCases.length > 0 && (
             <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
                 <div className="text-xs text-gray-500">
                     显示 {(currentPage - 1) * pageSize + 1} 到 {Math.min(currentPage * pageSize, generatedCases.length)} 条，共 {generatedCases.length} 条

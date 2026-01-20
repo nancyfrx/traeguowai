@@ -26,6 +26,9 @@ public class AIGenerationController {
     private ZhipuAIService zhipuAIService;
 
     @Autowired
+    private com.testplatform.backend.service.DeepSeekAIService deepSeekAIService;
+
+    @Autowired
     private AIGenerationRecordService recordService;
 
     private static final String UPLOAD_DIR = "uploads/";
@@ -34,8 +37,6 @@ public class AIGenerationController {
     public AIGenerationRecord generate(@RequestParam("prompt") String prompt,
                                        @RequestParam(value = "model", defaultValue = "glm-4.6") String model,
                                        @RequestParam("operator") String operator,
-                                       @RequestParam(value = "type", required = false, defaultValue = "功能用例") String type,
-                                       @RequestParam(value = "module", required = false, defaultValue = "Default") String module,
                                        @RequestParam(value = "files", required = false) MultipartFile[] files) {
         try {
             StringBuilder uploadFileNames = new StringBuilder();
@@ -65,17 +66,10 @@ public class AIGenerationController {
                 }
             }
 
-            // Append instruction to format as JSON for the table
-            String typeInstruction;
-            if ("功能用例".equals(type)) {
-                typeInstruction = "Generate a comprehensive set of test cases including Functional (功能用例), Performance (性能用例), Compatibility (兼容性用例), and Security (安全用例) types.";
-            } else {
-                typeInstruction = "The test cases should be of type '" + type + "'.";
-            }
-
             String systemInstruction = "\n\nPlease generate the test cases in valid JSON array format. " +
-                    typeInstruction +
-                    " For the 'module' field, please infer the specific functional module name from the input (e.g., '登录', '订单'). Do NOT include suffixes like '模块' (Module) or '功能' (Function). If unable to infer, use '" + module + "'. " +
+                    "Generate a comprehensive set of test cases including Functional (功能用例), Performance (性能用例), Compatibility (兼容性用例), and Security (安全用例) types. " +
+                    "For the 'module' field, please infer the specific functional module name from the input (e.g., '登录', '订单'). Do NOT include suffixes like '模块' (Module) or '功能' (Function). If unable to infer, use '默认模块'. " +
+                    "For the 'type' field, you MUST use one of the following exact Chinese strings: '功能用例', '性能用例', '兼容性用例', '安全用例'. Do NOT use English (e.g., 'Functional'). " +
                     "Each object should have keys: name, module, preconditions, steps, expectedResult, priority (P0-P3), type. " +
                     "Ensure 'preconditions', 'steps', and 'expectedResult' are detailed. If there are numbered lists, use '\\n' to separate lines. " +
                     "Do not include markdown formatting (like ```json). Just the raw JSON.";
@@ -86,7 +80,12 @@ public class AIGenerationController {
             // So we'll try to guide the AI.
             String promptToSend = finalPrompt + systemInstruction;
 
-            String generatedContent = zhipuAIService.generate(promptToSend, model);
+            String generatedContent;
+            if (model.toLowerCase().startsWith("deepseek")) {
+                generatedContent = deepSeekAIService.generate(promptToSend, model);
+            } else {
+                generatedContent = zhipuAIService.generate(promptToSend, model);
+            }
             
             // Clean up markdown code blocks if present
             if (generatedContent.startsWith("```json")) {

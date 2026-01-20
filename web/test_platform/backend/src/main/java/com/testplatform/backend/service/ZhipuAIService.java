@@ -31,7 +31,7 @@ public class ZhipuAIService {
 
     private final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(120, TimeUnit.SECONDS) // Longer timeout for AI generation
+            .readTimeout(300, TimeUnit.SECONDS) // Increased to 5 minutes for complex generations
             .writeTimeout(60, TimeUnit.SECONDS)
             .build();
 
