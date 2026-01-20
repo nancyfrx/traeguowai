@@ -454,6 +454,7 @@ public class CaseManagementController {
             
             Long projectId = parseLong(payload.get("projectId"));
             String priority = (String) payload.get("priority");
+            String type = (String) payload.get("type");
             String status = (String) payload.get("status");
             String preconditions = (String) payload.get("preconditions");
             String steps = (String) payload.get("steps");
@@ -477,6 +478,7 @@ public class CaseManagementController {
                 testCase.setModuleId(null);
             }
             testCase.setPriority(priority != null ? priority : "P1");
+            testCase.setType(type != null ? type : "功能用例");
             testCase.setStatus(status != null ? status : "PENDING");
             
             // 始终提取图片并准备上传，内部已优化（如果不含 Base64 会快速返回）
@@ -578,6 +580,10 @@ public class CaseManagementController {
             if (payload.containsKey("status")) {
                 Object statusObj = payload.get("status");
                 testCase.setStatus(statusObj != null ? String.valueOf(statusObj) : "PENDING");
+            }
+            if (payload.containsKey("type")) {
+                Object typeObj = payload.get("type");
+                testCase.setType(typeObj != null ? String.valueOf(typeObj) : "功能用例");
             }
             
             Map<String, byte[]> imagesToUpload = new HashMap<>();
@@ -732,6 +738,7 @@ public class CaseManagementController {
         
         dto.setStatus(tc.getStatus());
         dto.setPriority(tc.getPriority());
+        dto.setType(tc.getType());
         dto.setCreator(tc.getCreator());
         dto.setUpdater(tc.getUpdater());
         dto.setCreatedAt(tc.getCreatedAt());

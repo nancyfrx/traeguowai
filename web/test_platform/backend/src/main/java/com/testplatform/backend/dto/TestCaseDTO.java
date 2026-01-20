@@ -16,6 +16,7 @@ public class TestCaseDTO {
     private String actualResult;
     private String status;
     private String priority;
+    private String type;
     private String creator;
     private String updater;
     

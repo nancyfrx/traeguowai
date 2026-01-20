@@ -13,6 +13,7 @@
         <result property="actualResult" column="actual_result"/>
         <result property="status" column="status"/>
         <result property="priority" column="priority"/>
+        <result property="type" column="type"/>
         <result property="creator" column="creator"/>
         <result property="updater" column="updater"/>
         <result property="createdAt" column="created_at"/>
@@ -26,6 +27,7 @@
         <result property="moduleId" column="module_id"/>
         <result property="status" column="status"/>
         <result property="priority" column="priority"/>
+        <result property="type" column="type"/>
         <result property="creator" column="creator"/>
         <result property="updater" column="updater"/>
         <result property="createdAt" column="created_at"/>
@@ -37,13 +39,13 @@
     </select>
 
     <select id="findAll" resultMap="TestCaseSimpleResultMap">
-        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        SELECT id, name, project_id, module_id, status, priority, type, creator, updater, created_at, updated_at 
         FROM test_cases
     </select>
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO test_cases (name, project_id, module_id, preconditions, steps, expected_result, actual_result, status, priority, creator, updater, created_at, updated_at)
-        VALUES (#{name}, #{projectId}, #{moduleId, jdbcType=BIGINT}, #{preconditions, jdbcType=LONGVARCHAR}, #{steps, jdbcType=LONGVARCHAR}, #{expectedResult, jdbcType=LONGVARCHAR}, #{actualResult, jdbcType=LONGVARCHAR}, #{status}, #{priority}, #{creator}, #{updater}, #{createdAt}, #{updatedAt})
+        INSERT INTO test_cases (name, project_id, module_id, preconditions, steps, expected_result, actual_result, status, priority, type, creator, updater, created_at, updated_at)
+        VALUES (#{name}, #{projectId}, #{moduleId, jdbcType=BIGINT}, #{preconditions, jdbcType=LONGVARCHAR}, #{steps, jdbcType=LONGVARCHAR}, #{expectedResult, jdbcType=LONGVARCHAR}, #{actualResult, jdbcType=LONGVARCHAR}, #{status}, #{priority}, #{type}, #{creator}, #{updater}, #{createdAt}, #{updatedAt})
     </insert>
 
     <update id="update">
@@ -59,6 +61,7 @@
             <if test="actualResult != null">actual_result = #{actualResult, jdbcType=LONGVARCHAR},</if>
             <if test="status != null">status = #{status},</if>
             <if test="priority != null">priority = #{priority},</if>
+            <if test="type != null">type = #{type},</if>
             <if test="updater != null">updater = #{updater},</if>
             <if test="updatedAt != null">updated_at = #{updatedAt}</if>
         </set>
@@ -93,12 +96,12 @@
     </delete>
 
     <select id="findByModuleId" resultMap="TestCaseSimpleResultMap">
-        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        SELECT id, name, project_id, module_id, status, priority, type, creator, updater, created_at, updated_at 
         FROM test_cases WHERE module_id = #{moduleId}
     </select>
 
     <select id="findByModuleIdIn" resultMap="TestCaseSimpleResultMap">
-        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        SELECT id, name, project_id, module_id, status, priority, type, creator, updater, created_at, updated_at 
         FROM test_cases WHERE module_id IN
         <foreach item="id" collection="moduleIds" open="(" separator="," close=")">
             #{id}
@@ -106,17 +109,17 @@
     </select>
 
     <select id="findByProjectIdAndModuleIdIsNull" resultMap="TestCaseSimpleResultMap">
-        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        SELECT id, name, project_id, module_id, status, priority, type, creator, updater, created_at, updated_at 
         FROM test_cases WHERE project_id = #{projectId} AND module_id IS NULL
     </select>
 
     <select id="findByProjectId" resultMap="TestCaseSimpleResultMap">
-        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        SELECT id, name, project_id, module_id, status, priority, type, creator, updater, created_at, updated_at 
         FROM test_cases WHERE project_id = #{projectId}
     </select>
 
     <select id="findWithFilters" resultMap="TestCaseSimpleResultMap">
-        SELECT id, name, project_id, module_id, status, priority, creator, updater, created_at, updated_at 
+        SELECT id, name, project_id, module_id, status, priority, type, creator, updater, created_at, updated_at 
         FROM test_cases
         <where>
             <if test="moduleIds != null and moduleIds.size() > 0">

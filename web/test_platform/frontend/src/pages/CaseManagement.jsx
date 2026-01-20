@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   FolderOpen, Plus, Filter, ChevronRight, ChevronDown, ChevronsDown, ChevronsUp,
   Search, Play, Trash2, Edit2, FolderPlus, FilePlus, Layout, FileText,
   X, Home, Mail, PieChart, Flag, MessageSquare, Leaf,
   Save, Eye, Image as ImageIcon, List, AlertCircle, CheckCircle, XCircle, Clock, CheckCircle2,
-  Move, Copy, Upload, RefreshCw
+  Move, Copy, Upload, RefreshCw, Tag
 } from 'lucide-react';
 import axios from 'axios';
 import XMindImportModal from '../components/XMindImportModal';
@@ -548,6 +549,42 @@ const CaseManagement = () => {
   const [jumpPage, setJumpPage] = useState('');
   const [selectedCaseIds, setSelectedCaseIds] = useState(new Set());
   const [isSelectAllPages, setIsSelectAllPages] = useState(false);
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0, maxHeight: 300 });
+  const typeButtonRef = useRef(null);
+  const [caseTypes, setCaseTypes] = useState([]); // Available case types
+  const [isAddingType, setIsAddingType] = useState(false); // Modal for adding type
+  const [newTypeName, setNewTypeName] = useState('');
+
+  // Fetch case types on mount
+  useEffect(() => {
+    fetchCaseTypes();
+  }, []);
+
+  const fetchCaseTypes = async () => {
+    try {
+        const res = await axios.get('/api/case-types');
+        setCaseTypes(res.data);
+    } catch (err) {
+        console.error('Failed to fetch case types', err);
+    }
+  };
+
+  const handleAddType = async () => {
+    if (!newTypeName.trim()) return;
+    try {
+        const res = await axios.post('/api/case-types', { name: newTypeName });
+        setCaseTypes([...caseTypes, res.data]);
+        // If in create/edit mode, select the new type
+        if (isDrawerOpen) {
+            setDrawerData(prev => ({ ...prev, type: res.data.name }));
+        }
+        setNewTypeName('');
+        setIsAddingType(false);
+    } catch (err) {
+        alert(err.response?.data?.error || '添加失败');
+    }
+  };
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBatchStatusModalOpen, setIsBatchStatusModalOpen] = useState(false);
   const [batchUpdateError, setBatchUpdateError] = useState(null);
@@ -1243,6 +1280,7 @@ const CaseManagement = () => {
       actualResult: '',
       priority: 'P1',
       status: 'PENDING',
+      type: '功能用例',
       projectId: node?.type === 'project' ? node.id : (node?.projectId || node?.project?.id),
       moduleId: node?.type === 'module' ? node.id : null
     };
@@ -1929,7 +1967,114 @@ const CaseManagement = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                          <Tag className="w-3.5 h-3.5" /> <strong>类型 / Type</strong>
+                        </label>
+                        <div className="relative">
+                          <button
+                            ref={typeButtonRef}
+                            disabled={isPreviewMode}
+                            onClick={() => {
+                              if (!isTypeDropdownOpen && typeButtonRef.current) {
+                                  const rect = typeButtonRef.current.getBoundingClientRect();
+                                  const spaceBelow = window.innerHeight - rect.bottom - 20;
+                                  const spaceAbove = rect.top - 20;
+                                  
+                                  // Prefer bottom if space is sufficient (e.g. > 200px) or if bottom has more space than top
+                                  if (spaceBelow >= 200 || spaceBelow > spaceAbove) {
+                                      setDropdownPos({
+                                          top: rect.bottom + 8,
+                                          left: rect.left,
+                                          width: rect.width,
+                                          maxHeight: Math.min(300, spaceBelow),
+                                          placement: 'bottom'
+                                      });
+                                  } else {
+                                      // Otherwise place on top
+                                      setDropdownPos({
+                                          bottom: window.innerHeight - rect.top + 8,
+                                          left: rect.left,
+                                          width: rect.width,
+                                          maxHeight: Math.min(300, spaceAbove),
+                                          placement: 'top'
+                                      });
+                                  }
+                              }
+                              setIsTypeDropdownOpen(!isTypeDropdownOpen);
+                            }}
+                            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border transition-all text-sm font-bold bg-white shadow-sm ${
+                              isPreviewMode 
+                                ? 'cursor-default border-gray-100 bg-gray-50/50 text-gray-400' 
+                                : 'cursor-pointer border-gray-200 hover:border-black focus:border-black'
+                            }`}
+                          >
+                            <span className="text-gray-700">
+                              {drawerData.type || '功能用例'}
+                            </span>
+                            {!isPreviewMode && (
+                              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                            )}
+                          </button>
+                          
+                          {isTypeDropdownOpen && !isPreviewMode && createPortal(
+                            <>
+                              <div className="fixed inset-0 z-[9998]" onClick={() => setIsTypeDropdownOpen(false)} />
+                              <div 
+                                className={`fixed z-[9999] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 animate-in fade-in zoom-in-95 duration-200 flex flex-col overflow-hidden ${
+                                    dropdownPos.placement === 'top' ? 'origin-bottom' : 'origin-top'
+                                }`}
+                                style={{
+                                    top: dropdownPos.placement === 'bottom' ? dropdownPos.top : undefined,
+                                    bottom: dropdownPos.placement === 'top' ? dropdownPos.bottom : undefined,
+                                    left: dropdownPos.left,
+                                    width: dropdownPos.width,
+                                    maxHeight: dropdownPos.maxHeight
+                                }}
+                              >
+                                <div className="overflow-y-auto flex-1 py-2">
+                                    {caseTypes.map(t => (
+                                      <button
+                                        key={t.id}
+                                        onClick={() => {
+                                          setDrawerData({ ...drawerData, type: t.name });
+                                          setIsTypeDropdownOpen(false);
+                                        }}
+                                        className={`w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors text-left group ${
+                                          drawerData.type === t.name ? 'bg-gray-50/50' : ''
+                                        }`}
+                                      >
+                                        <span className={`text-sm font-bold ${
+                                          drawerData.type === t.name ? 'text-black' : 'text-gray-700'
+                                        }`}>
+                                          {t.name}
+                                        </span>
+                                        {drawerData.type === t.name && (
+                                          <CheckCircle2 className="w-4 h-4 text-black" />
+                                        )}
+                                      </button>
+                                    ))}
+                                </div>
+                                <div className="p-2 border-t border-gray-100 bg-gray-50/30 shrink-0">
+                                    <button
+                                      onClick={() => {
+                                        setIsAddingType(true);
+                                        setIsTypeDropdownOpen(false);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-left text-blue-600 font-bold text-sm"
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                      <span>新增类型...</span>
+                                    </button>
+                                </div>
+                              </div>
+                            </>,
+                            document.body
+                          )}
+                        </div>
+                      </div>
+
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
                           <Flag className="w-3.5 h-3.5" /> <strong>优先级 / Priority</strong>
@@ -1954,63 +2099,30 @@ const CaseManagement = () => {
 
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                          <Play className="w-3.5 h-3.5" /> <strong>执行状态 / Execution Status</strong>
+                          <Play className="w-3.5 h-3.5" /> <strong>执行状态 / Status</strong>
                         </label>
-                        <div className="relative">
-                          <button
-                            disabled={isPreviewMode}
-                            onClick={() => setIsDrawerStatusOpen(!isDrawerStatusOpen)}
-                            className={`w-32 flex items-center justify-between px-4 py-2.5 rounded-xl border transition-all text-sm font-bold bg-white shadow-sm ${
-                              isPreviewMode 
-                                ? 'cursor-default border-gray-100 bg-gray-50/50 text-gray-400' 
-                                : 'cursor-pointer border-gray-200 hover:border-black focus:border-black'
-                            }`}
-                          >
-                            <span className={
-                              drawerData.status === 'SUCCESS' ? 'text-green-600' :
-                              drawerData.status === 'FAILED' ? 'text-red-600' :
-                              'text-black'
-                            }>
-                              {drawerData.status === 'SUCCESS' ? '执行成功' :
-                               drawerData.status === 'FAILED' ? '执行失败' : '待执行'}
-                            </span>
-                            {!isPreviewMode && (
-                              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isDrawerStatusOpen ? 'rotate-180' : ''}`} />
-                            )}
-                          </button>
-
-                          {isDrawerStatusOpen && !isPreviewMode && (
-                            <>
-                              <div className="fixed inset-0 z-[100]" onClick={() => setIsDrawerStatusOpen(false)} />
-                              <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 py-2 z-[101] animate-in fade-in zoom-in-95 duration-200">
-                                {[
-                                  { value: 'PENDING', label: '待执行', color: 'text-black', dot: 'bg-black' },
-                                  { value: 'SUCCESS', label: '执行成功', color: 'text-green-600', dot: 'bg-green-600' },
-                                  { value: 'FAILED', label: '执行失败', color: 'text-red-600', dot: 'bg-red-600' }
-                                ].map((opt) => (
-                                  <button
-                                    key={opt.value}
-                                    onClick={() => {
-                                      setDrawerData({ ...drawerData, status: opt.value });
-                                      setIsDrawerStatusOpen(false);
-                                    }}
-                                    className={`w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors text-left group ${
-                                      drawerData.status === opt.value ? 'bg-gray-50/50' : ''
-                                    }`}
-                                  >
-                                    <span className={`text-sm font-bold ${
-                                      drawerData.status === opt.value ? opt.color : 'text-gray-700'
-                                    }`}>
-                                      {opt.label}
-                                    </span>
-                                    {drawerData.status === opt.value && (
-                                      <div className={`w-1.5 h-1.5 rounded-full ${opt.dot}`} />
-                                    )}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
+                        <div className="flex gap-2 p-1.5 bg-gray-50 rounded-2xl border-2 border-transparent">
+                          {[
+                            { value: 'PENDING', label: '待执行' },
+                            { value: 'SUCCESS', label: '成功' },
+                            { value: 'FAILED', label: '失败' }
+                          ].map(opt => (
+                            <button
+                              key={opt.value}
+                              disabled={isPreviewMode}
+                              onClick={() => setDrawerData({ ...drawerData, status: opt.value })}
+                              className={`flex-1 py-2 rounded-xl text-[10px] font-black transition-all ${
+                                drawerData.status === opt.value 
+                                  ? 'bg-white text-black shadow-[0_4px_12px_rgba(0,0,0,0.1)] scale-105 border border-gray-100' 
+                                  : 'text-gray-400 hover:text-black'
+                              } ${
+                                drawerData.status === opt.value && opt.value === 'SUCCESS' ? 'text-green-600' :
+                                drawerData.status === opt.value && opt.value === 'FAILED' ? 'text-red-600' : ''
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -2699,6 +2811,64 @@ const CaseManagement = () => {
           )}
         </div>
       </div>
+
+      {/* 添加新类型弹框 */}
+      {isAddingType && (
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsAddingType(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white shadow-lg shadow-gray-100">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-gray-900">添加新类型</h3>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Add New Case Type</p>
+                </div>
+              </div>
+              <button onClick={() => setIsAddingType(false)} className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-black">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-8">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500">类型名称</label>
+                  <input
+                    type="text"
+                    value={newTypeName}
+                    onChange={(e) => setNewTypeName(e.target.value)}
+                    placeholder="输入类型名称..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold focus:bg-white focus:border-black focus:ring-0 transition-all"
+                    autoFocus
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddType();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-50 flex gap-3">
+              <button 
+                onClick={() => setIsAddingType(false)}
+                className="flex-1 py-3 border-2 border-gray-100 text-gray-400 rounded-2xl text-sm font-bold hover:bg-white hover:text-gray-600 transition-all"
+              >
+                取消
+              </button>
+              <button 
+                onClick={handleAddType}
+                disabled={!newTypeName.trim()}
+                className="flex-[2] py-3 bg-black text-white rounded-2xl text-sm font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                确认添加
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 批量修改状态弹框 */}
       {isBatchStatusModalOpen && (

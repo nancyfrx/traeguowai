@@ -19,6 +19,7 @@ public class TestCase {
     private String priority; // P0, P1, P2, P3
     private String creator;
     private String updater;
+    private String type;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
