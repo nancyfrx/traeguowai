@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Sparkles, Zap, Copy, Trash2, FileText, Loader2, History, Upload, 
-  Send, ChevronRight, ChevronLeft, X, Calendar, User, File, Eye, ChevronDown, CheckCircle2, Check, Tag, Flag, Play, List, Image as ImageIcon, Save, FileImage, FileSpreadsheet, FileCode, FileType, AlertCircle
+  Send, ChevronRight, ChevronLeft, X, Calendar, User, File, Eye, ChevronDown, CheckCircle2, Check, Tag, Flag, Play, List, Image as ImageIcon, Save, FileImage, FileSpreadsheet, FileCode, FileType, AlertCircle, ScanEye
 } from 'lucide-react';
 import axios from 'axios';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
@@ -90,10 +90,10 @@ const editorStyles = `
 
 const MODELS = [
     { id: 'glm-4.6', name: 'GLM-4.6', icon: Sparkles, desc: '最新旗舰，超强推理' },
-    { id: 'glm-4.6v', name: 'GLM-4.6v', icon: ImageIcon, desc: '视觉增强，多模态支持' },
+    { id: 'glm-4.6v', name: 'GLM-4.6v', icon: ScanEye, desc: '视觉增强，多模态支持' },
     { id: 'deepseek-chat', name: 'DeepSeek-V3', icon: Zap, desc: '智能对话，快速响应' },
     { id: 'deepseek-reasoner', name: 'DeepSeek-R1', icon: Zap, desc: '深度思考，逻辑严密' },
-];
+  ];
 
 const AIGenerator = () => {
   const [loading, setLoading] = useState(false);
@@ -115,6 +115,10 @@ const AIGenerator = () => {
   const [editorSteps, setEditorSteps] = useState(null);
   const [editorExp, setEditorExp] = useState(null);
   const [isEditorsVisible, setIsEditorsVisible] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [tooltip, setTooltip] = useState(null); // { content, x, y }
+  const tooltipTimeoutRef = useRef(null);
+  const [generateError, setGenerateError] = useState(null);
   const drawerKey = drawerData.id || 'new';
 
   const toolbarConfig = useMemo(() => ({
@@ -361,13 +365,31 @@ const AIGenerator = () => {
     if (!prompt.trim()) return;
     
     setLoading(true);
+    setGenerateError(null);
     const formData = new FormData();
     
     // Append parsed content to prompt
     let finalPrompt = prompt;
-    Object.entries(parsedContentMap).forEach(([fileName, content]) => {
-        finalPrompt += `\n\nFile Content (${fileName}):\n${content}`;
-    });
+    
+    // Filter and append content only for current uploadFiles
+    if (uploadFiles.length > 0) {
+        let fileIndex = 0;
+        uploadFiles.forEach((file) => {
+            const content = parsedContentMap[file.name];
+            const isImage = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.name);
+            
+            // Skip if image has no recognized text (empty content)
+            if (isImage && (!content || !content.trim())) {
+                return;
+            }
+            
+            // Skip if no content map entry (shouldn't happen if parsed, but good for safety)
+            if (content === undefined) return;
+
+            fileIndex++;
+            finalPrompt += `\n\n文件内容 ${fileIndex} (${file.name}):\n${content}`;
+        });
+    }
 
     formData.append('prompt', finalPrompt);
     formData.append('model', model);
@@ -424,7 +446,27 @@ const AIGenerator = () => {
         }]);
       }
       
-      setRawResult({ input: prompt, output: content });
+      // Construct display input with file content
+      let displayInput = prompt;
+      if (uploadFiles.length > 0) {
+          let fileIndex = 0;
+          const fileContents = [];
+          uploadFiles.forEach((file) => {
+              const content = parsedContentMap[file.name];
+              const isImage = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.name);
+              
+              if (isImage && (!content || !content.trim())) return;
+              if (content === undefined) return;
+
+              fileIndex++;
+              fileContents.push(`文件内容 ${fileIndex} (${file.name}):\n${content}`);
+          });
+          if (fileContents.length > 0) {
+              displayInput += '\n\n' + fileContents.join('\n\n');
+          }
+      }
+      
+      setRawResult({ input: displayInput, output: content });
       setActiveResultTab('table');
       setPrompt('');
       setUploadFiles([]);
@@ -432,53 +474,74 @@ const AIGenerator = () => {
       fetchHistory(); // Refresh history
     } catch (err) {
       console.error('Generation failed', err);
-      alert('生成失败: ' + (err.response?.data?.message || err.message));
+      setGenerateError('生成失败，请重试');
+      fetchHistory();
     } finally {
       setLoading(false);
     }
   };
 
+  const processFiles = async (files) => {
+    if (files.length === 0) return;
+    setUploadFiles(prev => [...prev, ...files]);
+    
+    // Mark as parsing
+    const newParsingFiles = {};
+    const newParsingErrors = {};
+    files.forEach(file => {
+        newParsingFiles[file.name] = true;
+        newParsingErrors[file.name] = null; // Reset error
+    });
+    setParsingFiles(prev => ({ ...prev, ...newParsingFiles }));
+    setParsingErrors(prev => ({ ...prev, ...newParsingErrors }));
+
+    // Parse each file
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await axios.post('/api/ai/parse-file', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            if (res.data.success === false) {
+                setParsingErrors(prev => ({ ...prev, [file.name]: res.data.error || '解析失败' }));
+                setParsedContentMap(prev => ({ ...prev, [file.name]: '' }));
+            } else {
+                setParsedContentMap(prev => ({ ...prev, [file.name]: res.data.content }));
+                setParsingErrors(prev => ({ ...prev, [file.name]: null }));
+            }
+        } catch (err) {
+            console.error(`Failed to parse file ${file.name}`, err);
+            setParsingErrors(prev => ({ ...prev, [file.name]: '解析请求失败' }));
+        } finally {
+            setParsingFiles(prev => ({ ...prev, [file.name]: false }));
+        }
+    }
+  };
+
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setUploadFiles(prev => [...prev, ...files]);
-      
-      // Mark as parsing
-      const newParsingFiles = {};
-      const newParsingErrors = {};
-      files.forEach(file => {
-          newParsingFiles[file.name] = true;
-          newParsingErrors[file.name] = null; // Reset error
-      });
-      setParsingFiles(prev => ({ ...prev, ...newParsingFiles }));
-      setParsingErrors(prev => ({ ...prev, ...newParsingErrors }));
-
-      // Parse each file
-      for (const file of files) {
-          const formData = new FormData();
-          formData.append('file', file);
-          try {
-              const res = await axios.post('/api/ai/parse-file', formData, {
-                  headers: { 'Content-Type': 'multipart/form-data' }
-              });
-              
-              if (res.data.success === false) {
-                  setParsingErrors(prev => ({ ...prev, [file.name]: res.data.error || '解析失败' }));
-                  setParsedContentMap(prev => ({ ...prev, [file.name]: '' }));
-              } else {
-                  setParsedContentMap(prev => ({ ...prev, [file.name]: res.data.content }));
-                  setParsingErrors(prev => ({ ...prev, [file.name]: null }));
-              }
-          } catch (err) {
-              console.error(`Failed to parse file ${file.name}`, err);
-              setParsingErrors(prev => ({ ...prev, [file.name]: '解析请求失败' }));
-          } finally {
-              setParsingFiles(prev => ({ ...prev, [file.name]: false }));
-          }
-      }
-    }
+    await processFiles(files);
     // Reset input value to allow selecting the same file again
     e.target.value = '';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files || []);
+    await processFiles(files);
   };
 
   const removeFile = (index) => {
@@ -573,10 +636,36 @@ const AIGenerator = () => {
     setIsDetailOpen(false);
   };
 
+  const handleMouseEnter = (e, content) => {
+    if (!content) return;
+    if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+        tooltipTimeoutRef.current = null;
+    }
+    const rect = e.target.getBoundingClientRect();
+    setTooltip({
+        content,
+        x: rect.left,
+        y: rect.bottom + 8 // Position below the element
+    });
+  };
+
+  const handleMouseLeave = () => {
+    tooltipTimeoutRef.current = setTimeout(() => {
+        setTooltip(null);
+    }, 300);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50 p-6 gap-6 overflow-hidden">
       {/* Top Section: Input */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col relative" style={{ minHeight: '300px' }}>
+      <div 
+        className={`bg-white rounded-2xl shadow-sm border p-6 flex flex-col relative transition-all ${isDragging ? 'border-black bg-gray-50 ring-2 ring-black/5' : 'border-gray-100'}`} 
+        style={{ minHeight: '300px' }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         
         {/* Header Row */}
         <div className="flex justify-between items-center mb-4 px-1">
@@ -772,16 +861,21 @@ const AIGenerator = () => {
                     </div>
                 </div>
 
-                {/* Send Button */}
-                <button
-                    onClick={handleGenerate}
-                    disabled={loading || !prompt.trim() || Object.values(parsingFiles).some(s => s)}
-                    title={Object.values(parsingFiles).some(s => s) ? "文件解析中，请稍候..." : ""}
-                    className="flex items-center gap-2 h-9 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-gray-200"
-                >
-                    {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    {loading ? '生成中...' : '生成'}
-                </button>
+                <div className="flex items-center gap-3">
+                    {generateError && (
+                        <span className="text-xs text-red-500 font-medium animate-in fade-in slide-in-from-right-2">{generateError}</span>
+                    )}
+                    {/* Send Button */}
+                    <button
+                        onClick={handleGenerate}
+                        disabled={loading || !prompt.trim() || Object.values(parsingFiles).some(s => s)}
+                        title={Object.values(parsingFiles).some(s => s) ? "文件解析中，请稍候..." : ""}
+                        className="flex items-center gap-2 h-9 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-gray-200"
+                    >
+                        {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        {loading ? '生成中...' : '生成'}
+                    </button>
+                </div>
             </div>
         </div>
       </div>
@@ -883,7 +977,6 @@ const AIGenerator = () => {
                         title="复制内容"
                     >
                         {copySuccess ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                        {copySuccess ? '已复制' : '复制结果'}
                     </button>
                     <div className="w-full h-full bg-gray-50 rounded-xl p-4 border border-gray-100 overflow-auto font-mono text-sm whitespace-pre-wrap text-gray-700">
 {renderFormattedText(rawResult.output)}
@@ -966,30 +1059,38 @@ const AIGenerator = () => {
                             onClick={() => restoreHistory(record)}
                             className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-black/10 relative"
                         >
-                            {/* Top Right: Model Icon */}
-                            <div className="absolute top-4 right-4 flex items-center gap-2 text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">
-                                <span className="text-[10px] font-bold">{MODELS.find(m => m.id === record.model)?.name || record.model}</span>
-                                {(() => {
-                                    const Icon = MODELS.find(m => m.id === record.model)?.icon || Sparkles;
-                                    return <Icon className="w-3.5 h-3.5" />;
-                                })()}
+                            {/* Top Right: Model Icon & File Badge */}
+                            <div className="absolute top-4 right-4 flex items-center gap-2">
+                                {record.uploadFileName && (
+                                    <div className="flex items-center justify-center bg-gray-100 w-7 h-6 rounded-lg">
+                                        <ImageIcon className="w-3.5 h-3.5 text-purple-600" />
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">
+                                    <span className="text-[10px] font-bold">{MODELS.find(m => m.id === record.model)?.name || record.model}</span>
+                                    {(() => {
+                                        const Icon = MODELS.find(m => m.id === record.model)?.icon || Sparkles;
+                                        return <Icon className="w-3.5 h-3.5" />;
+                                    })()}
+                                </div>
                             </div>
 
                             {/* Top Left: Title (Input Content) */}
-                            <div className="pr-20 mb-6">
-                                <p className="text-sm text-gray-800 font-medium truncate" title={record.inputContent}>{record.inputContent}</p>
+                            <div className="pr-24 mb-6">
+                                <p 
+                                    className="text-sm text-gray-800 font-medium cursor-default" 
+                                    onMouseEnter={(e) => handleMouseEnter(e, record.inputContent)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
+                                    {record.inputContent?.length > 20 ? record.inputContent.substring(0, 20) + '...' : record.inputContent}
+                                </p>
                             </div>
 
-                            {/* Bottom Left: Operator/File */}
+                            {/* Bottom Left: Operator */}
                             <div className="flex items-center gap-4 text-xs text-gray-400">
                                 <span className="flex items-center gap-1">
                                     <User className="w-3 h-3" /> {record.operator}
                                 </span>
-                                {record.uploadFileName && (
-                                    <span className="flex items-center gap-1 text-blue-500">
-                                        <File className="w-3 h-3" /> {record.uploadFileName}
-                                    </span>
-                                )}
                             </div>
 
                             {/* Bottom Right: Date */}
@@ -1139,6 +1240,27 @@ const AIGenerator = () => {
             </div>
         </div>
       )}
+
+      {/* Custom Tooltip */}
+       {tooltip && (
+         <div 
+             className="fixed z-[100] bg-white text-gray-700 text-xs p-3 rounded-xl shadow-xl border border-gray-100 max-w-xs break-words animate-in fade-in duration-200 max-h-60 overflow-y-auto custom-scrollbar"
+             style={{ 
+                 left: tooltip.x, 
+                 top: tooltip.y, 
+             }}
+             onMouseEnter={() => {
+                 if (tooltipTimeoutRef.current) {
+                     clearTimeout(tooltipTimeoutRef.current);
+                     tooltipTimeoutRef.current = null;
+                 }
+             }}
+             onMouseLeave={handleMouseLeave}
+         >
+             {tooltip.content}
+             <div className="absolute top-0 left-4 -translate-y-1/2 rotate-45 w-2 h-2 bg-white border-t border-l border-gray-100"></div>
+         </div>
+       )}
     </div>
   );
 };

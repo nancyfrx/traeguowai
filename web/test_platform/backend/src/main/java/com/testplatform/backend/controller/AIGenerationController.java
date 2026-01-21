@@ -42,10 +42,10 @@ public class AIGenerationController {
                                        @RequestParam("operator") String operator,
                                        @RequestParam(value = "files", required = false) MultipartFile[] files,
                                        @RequestParam(value = "skipParsing", defaultValue = "false") boolean skipParsing) {
+        StringBuilder uploadFileNames = new StringBuilder();
+        String finalPrompt = prompt;
+        
         try {
-            StringBuilder uploadFileNames = new StringBuilder();
-            String finalPrompt = prompt;
-
             // Handle file upload
             if (files != null && files.length > 0) {
                 for (MultipartFile file : files) {
@@ -77,10 +77,6 @@ public class AIGenerationController {
                     "Ensure 'preconditions', 'steps', and 'expectedResult' are detailed. If there are numbered lists, use '\\n' to separate lines. " +
                     "Do not include markdown formatting (like ```json). Just the raw JSON.";
             
-            // If the user didn't ask for specific format, we append our instruction
-            // But we should be careful not to override user intent. 
-            // However, the requirement is "format results put into table".
-            // So we'll try to guide the AI.
             String promptToSend = finalPrompt + systemInstruction;
 
             String generatedContent;
@@ -110,7 +106,7 @@ public class AIGenerationController {
                 .replace("\"type\": \"Security\"", "\"type\": \"安全用例\"");
 
             AIGenerationRecord record = new AIGenerationRecord();
-            record.setInputContent(prompt); // Record original prompt
+            record.setInputContent(finalPrompt); // Record full prompt including file content
             record.setGeneratedContent(generatedContent);
             record.setModel(model);
             record.setOperator(operator);
@@ -121,6 +117,19 @@ public class AIGenerationController {
             return record;
         } catch (Exception e) {
             e.printStackTrace();
+            // Save failed record with empty content
+            try {
+                AIGenerationRecord failedRecord = new AIGenerationRecord();
+                failedRecord.setInputContent(finalPrompt);
+                failedRecord.setGeneratedContent(""); // Empty content as requested
+                failedRecord.setModel(model);
+                failedRecord.setOperator(operator);
+                failedRecord.setUploadFileName(uploadFileNames.length() > 0 ? uploadFileNames.toString() : null);
+                failedRecord.setCreatedAt(LocalDateTime.now());
+                recordService.save(failedRecord);
+            } catch (Exception saveEx) {
+                System.err.println("Failed to save error record: " + saveEx.getMessage());
+            }
             throw new RuntimeException("AI Generation failed: " + e.getMessage());
         }
     }
