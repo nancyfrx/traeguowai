@@ -8,4 +8,6 @@ import java.util.List;
 public interface AIGenerationRecordMapper {
     int insert(AIGenerationRecord record);
     List<AIGenerationRecord> selectAll();
+    AIGenerationRecord findById(Long id);
+    int update(AIGenerationRecord record);
 }

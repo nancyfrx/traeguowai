@@ -171,6 +171,19 @@ public class AIGenerationController {
         return recordService.list(page, size);
     }
 
+    @PutMapping("/history/{id}")
+    public AIGenerationRecord updateHistory(@PathVariable Long id, @RequestBody java.util.Map<String, String> payload) {
+        AIGenerationRecord record = recordService.findById(id);
+        if (record == null) {
+            throw new RuntimeException("Record not found");
+        }
+        if (payload.containsKey("generatedContent")) {
+            record.setGeneratedContent(payload.get("generatedContent"));
+        }
+        recordService.update(record);
+        return record;
+    }
+
     private String saveFile(MultipartFile file) throws IOException {
         File directory = new File(UPLOAD_DIR);
         if (!directory.exists()) {

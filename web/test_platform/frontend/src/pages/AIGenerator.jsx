@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Sparkles, Zap, Copy, Trash2, FileText, Loader2, History, Upload, 
-  Send, ChevronRight, ChevronLeft, X, Calendar, User, File, Eye, ChevronDown, CheckCircle2, Check, Tag, Flag, Play, List, Image as ImageIcon, Save, FileImage, FileSpreadsheet, FileCode, FileType, AlertCircle, ScanEye
+  Send, ChevronRight, ChevronLeft, X, Calendar, User, File, Eye, ChevronDown, CheckCircle2, Check, Tag, Flag, Play, List, Image as ImageIcon, Save, FileImage, FileSpreadsheet, FileCode, FileType, AlertCircle, ScanEye, BookmarkPlus, Codesandbox, Webhook, Folder
 } from 'lucide-react';
 import axios from 'axios';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
@@ -90,8 +90,8 @@ const editorStyles = `
 
 const MODELS = [
     { id: 'glm-4.6', name: 'GLM-4.6', icon: Sparkles, desc: '最新旗舰，超强推理' },
-    { id: 'glm-4.6v', name: 'GLM-4.6v', icon: ScanEye, desc: '视觉增强，多模态支持' },
-    { id: 'deepseek-chat', name: 'DeepSeek-V3', icon: Zap, desc: '智能对话，快速响应' },
+    { id: 'glm-4.6v', name: 'GLM-4.6v', icon: Codesandbox, desc: '视觉增强，多模态支持' },
+    { id: 'deepseek-chat', name: 'DeepSeek-V3', icon: Webhook, desc: '智能对话，快速响应' },
     { id: 'deepseek-reasoner', name: 'DeepSeek-R1', icon: Zap, desc: '深度思考，逻辑严密' },
   ];
 
@@ -154,6 +154,245 @@ const AIGenerator = () => {
   const [generationModule, setGenerationModule] = useState('默认模块');
   const [activeResultTab, setActiveResultTab] = useState('table');
   const [rawResult, setRawResult] = useState({ input: '', output: '' });
+  
+  // Batch Adoption State
+  const [selectedCaseIds, setSelectedCaseIds] = useState(new Set());
+  const [isAdoptionModalOpen, setIsAdoptionModalOpen] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [selectedDeptId, setSelectedDeptId] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [adoptionLoading, setAdoptionLoading] = useState(false);
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+        const newSelected = new Set(selectedCaseIds);
+        paginatedCases.forEach(tc => {
+            if (!tc.adopted) newSelected.add(tc.id);
+        });
+        setSelectedCaseIds(newSelected);
+    } else {
+        const newSelected = new Set(selectedCaseIds);
+        paginatedCases.forEach(tc => newSelected.delete(tc.id));
+        setSelectedCaseIds(newSelected);
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    const c = generatedCases.find(c => c.id === id);
+    if (c && c.adopted) return;
+    
+    const newSelected = new Set(selectedCaseIds);
+    if (newSelected.has(id)) {
+        newSelected.delete(id);
+    } else {
+        newSelected.add(id);
+    }
+    setSelectedCaseIds(newSelected);
+  };
+
+  const openAdoptionModal = async () => {
+    if (selectedCaseIds.size === 0) {
+        alert('请先选择要采纳的用例');
+        return;
+    }
+    // Reset state
+    setIsCreatingProject(false);
+    setNewProjectName('');
+    setSelectedProjectId('');
+    setAdoptionSuccessMsg('');
+    if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+        tooltipTimeoutRef.current = null;
+    }
+    setTooltip(null);
+    
+    setIsAdoptionModalOpen(true);
+    // Fetch departments
+    try {
+        const res = await axios.get('/api/departments');
+        setDepartments(res.data);
+        if (res.data.length > 0) {
+             const defaultDept = selectedDeptId || res.data[0].id;
+             setSelectedDeptId(defaultDept);
+             fetchProjects(defaultDept);
+        } else if (selectedDeptId) {
+             // If departments loaded but empty (unlikely) or just refresh projects for current dept
+             fetchProjects(selectedDeptId);
+        }
+    } catch (e) {
+        console.error('Failed to fetch departments', e);
+    }
+  };
+
+  const fetchProjects = async (deptId) => {
+    try {
+        const res = await axios.get(`/api/cases/projects?departmentId=${deptId}`);
+        setProjects(res.data);
+    } catch (e) {
+        console.error('Failed to fetch projects', e);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedDeptId) {
+        fetchProjects(selectedDeptId);
+        setSelectedProjectId('');
+    }
+  }, [selectedDeptId]);
+
+  const [adoptionSuccessMsg, setAdoptionSuccessMsg] = useState('');
+
+  const handleAdopt = async () => {
+    if (!selectedProjectId && !isCreatingProject) {
+        alert('请选择项目或创建新项目');
+        return;
+    }
+    
+    setAdoptionLoading(true);
+    setAdoptionSuccessMsg('');
+    try {
+        let targetProjectId = selectedProjectId;
+        let targetProjectName = '';
+
+        // 1. Create Project if needed
+        if (isCreatingProject) {
+             if (!newProjectName.trim()) {
+                 alert('请输入项目名称');
+                 setAdoptionLoading(false);
+                 return;
+             }
+             const projRes = await axios.post('/api/cases/projects', {
+                 name: newProjectName,
+                 department: { id: selectedDeptId },
+                 description: 'Created from AI Generation'
+             });
+             targetProjectId = projRes.data.id;
+             targetProjectName = newProjectName;
+        } else {
+            const p = projects.find(p => p.id === targetProjectId);
+            targetProjectName = p ? p.name : 'Unknown Project';
+        }
+
+        // 2. Fetch existing modules of the target project to avoid duplicates
+        // We need to implement a helper to find module ID by name
+        const modulesRes = await axios.get(`/api/cases/modules?projectId=${targetProjectId}`);
+        let existingModules = modulesRes.data || [];
+        const moduleMap = {}; // name -> id
+        existingModules.forEach(m => moduleMap[m.name] = m.id);
+
+        // 3. Process selected cases
+        const casesToAdopt = generatedCases.filter(c => selectedCaseIds.has(c.id));
+        let successCount = 0;
+
+        for (const tc of casesToAdopt) {
+            const moduleName = tc.module || '默认模块';
+            let moduleId = moduleMap[moduleName];
+
+            // Create module if not exists
+            if (!moduleId) {
+                try {
+                    const modRes = await axios.post('/api/cases/modules', {
+                        name: moduleName,
+                        projectId: targetProjectId,
+                        parentId: null
+                    });
+                    moduleId = modRes.data.id;
+                    moduleMap[moduleName] = moduleId; // Cache it
+                } catch (e) {
+                    console.error(`Failed to create module ${moduleName}`, e);
+                    continue; // Skip this case if module creation fails
+                }
+            }
+
+            // Create Test Case
+            try {
+                await axios.post('/api/cases/test-case', {
+                    name: tc.name,
+                    moduleId: moduleId,
+                    projectId: targetProjectId,
+                    priority: tc.priority,
+                    type: tc.type,
+                    preconditions: formatField(tc.preconditions),
+                    steps: formatField(tc.steps),
+                    expectedResult: formatField(tc.expectedResult),
+                    status: 'PENDING'
+                });
+                successCount++;
+            } catch (e) {
+                console.error(`Failed to create case ${tc.name}`, e);
+            }
+        }
+
+        setAdoptionSuccessMsg(`成功采纳 ${successCount} 条用例`);
+
+        // Update local state and backend record
+        const updatedCases = generatedCases.map(tc => 
+            selectedCaseIds.has(tc.id) ? { 
+                ...tc, 
+                adopted: true,
+                adoptedPath: `${targetProjectName}/${tc.module || '默认模块'}`
+            } : tc
+        );
+        setGeneratedCases(updatedCases);
+        
+        if (rawResult.id) {
+            try {
+                await axios.put(`/api/ai/history/${rawResult.id}`, {
+                    generatedContent: JSON.stringify(updatedCases)
+                });
+                fetchHistory(); // Refresh history list to keep it in sync
+            } catch (e) {
+                console.error('Failed to update history record', e);
+            }
+        }
+
+        setTimeout(() => {
+            setIsAdoptionModalOpen(false);
+            setSelectedCaseIds(new Set());
+            setAdoptionSuccessMsg('');
+        }, 1500);
+    } catch (e) {
+        console.error('Adoption failed', e);
+        alert('采纳失败，请查看控制台日志');
+    } finally {
+        setAdoptionLoading(false);
+    }
+  };
+
+  const handleSingleAdopt = async (tc) => {
+    if (tc.adopted) return;
+    setSelectedCaseIds(new Set([tc.id]));
+     
+    // Reset state
+    setIsCreatingProject(false);
+    setNewProjectName('');
+    setSelectedProjectId('');
+    setAdoptionSuccessMsg('');
+    if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+        tooltipTimeoutRef.current = null;
+    }
+    setTooltip(null);
+    
+    setIsAdoptionModalOpen(true);
+    // Fetch departments
+    try {
+        const res = await axios.get('/api/departments');
+        setDepartments(res.data);
+        if (res.data.length > 0) {
+             const defaultDept = selectedDeptId || res.data[0].id;
+             setSelectedDeptId(defaultDept);
+             fetchProjects(defaultDept);
+        } else if (selectedDeptId) {
+             fetchProjects(selectedDeptId);
+        }
+    } catch (e) {
+        console.error('Failed to fetch departments', e);
+    }
+  };
 
   const formatContent = (content) => {
     if (!content) return '';
@@ -323,8 +562,26 @@ const AIGenerator = () => {
 
   const restoreHistory = (record) => {
     setPrompt(record.inputContent || '');
-    setRawResult({ input: record.inputContent || '', output: record.generatedContent || '' });
+    setRawResult({ input: record.inputContent || '', output: record.generatedContent || '', id: record.id });
     setActiveResultTab('table');
+
+    // Restore files if available
+    if (record.uploadFileName) {
+        // Handle both comma and semicolon separators (backend uses semicolon)
+        const fileNames = record.uploadFileName.split(/[;,]/).filter(n => n.trim());
+        const restoredFiles = fileNames.map(name => ({
+            name: name.trim(),
+            size: 0 // Unknown size from history record
+        }));
+        setUploadFiles(restoredFiles);
+        // Clear parsing states for these restored files
+        setParsingFiles({});
+        setParsingErrors({});
+        setParsedContentMap({});
+    } else {
+        setUploadFiles([]);
+    }
+
     if (record.generatedContent) {
         try {
             let jsonStr = record.generatedContent;
@@ -342,7 +599,10 @@ const AIGenerator = () => {
                 module: item.module || '默认模块',
                 status: 'PENDING',
                 creator: record.operator || 'AI',
-                updatedAt: record.createdAt || new Date().toISOString()
+                updatedAt: record.createdAt || new Date().toISOString(),
+                // Explicitly preserve adopted status if present
+                adopted: item.adopted || false,
+                adoptedPath: item.adoptedPath || ''
             })));
         } catch (e) {
             console.error('Failed to parse history content', e);
@@ -466,7 +726,7 @@ const AIGenerator = () => {
           }
       }
       
-      setRawResult({ input: displayInput, output: content });
+      setRawResult({ input: displayInput, output: content, id: res.data.id });
       setActiveResultTab('table');
       setPrompt('');
       setUploadFiles([]);
@@ -673,14 +933,33 @@ const AIGenerator = () => {
                 <Sparkles className="w-6 h-6" />
                 AI 智能用例生成
             </h2>
-            <button 
-                onClick={() => setIsHistoryOpen(true)}
-                className="flex items-center gap-1 px-2 py-1 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors border border-transparent hover:border-gray-200 shadow-sm text-[10px] font-medium"
-                title="历史记录"
-            >
-                <History className="w-3 h-3" />
-                <span>历史记录</span>
-            </button>
+            <div className="flex items-center gap-2">
+                <button 
+                    onClick={() => {
+                        setPrompt('');
+                        setUploadFiles([]);
+                        setParsingFiles({});
+                        setParsingErrors({});
+                        setParsedContentMap({});
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors border border-transparent hover:border-gray-200 shadow-sm text-[10px] font-medium"
+                    onMouseEnter={(e) => handleMouseEnter(e, "清空输入及文件")}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    <Trash2 className="w-3 h-3" />
+                    <span>清空</span>
+                </button>
+                <button 
+                    onClick={() => setIsHistoryOpen(true)}
+                    className="flex items-center gap-1 px-2 py-1 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors border border-transparent hover:border-gray-200 shadow-sm text-[10px] font-medium"
+                    onMouseEnter={(e) => handleMouseEnter(e, "历史记录")}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    <History className="w-3 h-3" />
+                    <span>历史记录</span>
+                </button>
+            </div>
           {/* Add Type Modal */}
       {isAddingType && (
         <div className="fixed inset-0 z-[3000] flex items-center justify-center">
@@ -869,7 +1148,12 @@ const AIGenerator = () => {
                     <button
                         onClick={handleGenerate}
                         disabled={loading || !prompt.trim() || Object.values(parsingFiles).some(s => s)}
-                        title={Object.values(parsingFiles).some(s => s) ? "文件解析中，请稍候..." : ""}
+                        onMouseEnter={(e) => {
+                            if (Object.values(parsingFiles).some(s => s)) {
+                                handleMouseEnter(e, "文件解析中，请稍候...");
+                            }
+                        }}
+                        onMouseLeave={handleMouseLeave}
                         className="flex items-center gap-2 h-9 px-4 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-gray-200"
                     >
                         {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
@@ -911,7 +1195,54 @@ const AIGenerator = () => {
                     </button>
                 </div>
             </div>
-            <span className="text-xs text-gray-500">共 {generatedCases.length} 条用例</span>
+            
+            <div className="flex items-center gap-4">
+                {activeResultTab === 'table' && generatedCases.length > 0 && (
+                    <div className="flex items-center gap-3">
+                        {adoptionSuccessMsg && (
+                            <span className="text-xs font-bold text-green-600 animate-in fade-in slide-in-from-right">
+                                {adoptionSuccessMsg}
+                            </span>
+                        )}
+                        
+                        {selectedCaseIds.size > 0 && (
+                            <>
+                                <span className="text-xs font-bold text-gray-500 ml-2">
+                                    已选择 <span className="text-black">{selectedCaseIds.size}</span> 条
+                                </span>
+                                <button
+                                    onClick={openAdoptionModal}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition-all shadow-sm"
+                                >
+                                    <BookmarkPlus className="w-3.5 h-3.5" />
+                                    批量采纳
+                                </button>
+                            </>
+                        )}
+
+                        {/* Adoption Stats */}
+                        <div className="flex items-center gap-4 px-3 py-1.5 bg-gray-100/50 rounded-lg border border-gray-100">
+                            <div className="flex flex-col items-center">
+                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">采纳率</span>
+                                <span className="text-sm font-black text-black">
+                                    {Math.round((generatedCases.filter(c => c.adopted).length / generatedCases.length) * 100)}%
+                                </span>
+                            </div>
+                            <div className="w-px h-6 bg-gray-200" />
+                            <div className="flex items-center gap-3">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">已采纳</span>
+                                    <span className="text-sm font-black text-green-600">{generatedCases.filter(c => c.adopted).length}</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">未采纳</span>
+                                    <span className="text-sm font-black text-gray-400">{generatedCases.filter(c => !c.adopted).length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
         
         <div className="flex-1 overflow-auto">
@@ -919,6 +1250,17 @@ const AIGenerator = () => {
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
+                            <th className="px-6 py-3 w-4">
+                                <div className="flex items-center justify-center">
+                                    <input 
+                                        type="checkbox" 
+                                        className={`rounded border-gray-300 text-black focus:ring-0 w-3.5 h-3.5 ${paginatedCases.every(tc => tc.adopted) ? 'cursor-not-allowed opacity-50 bg-gray-100' : 'cursor-pointer'}`}
+                                        onChange={handleSelectAll}
+                                        checked={paginatedCases.length > 0 && paginatedCases.filter(tc => !tc.adopted).length > 0 && paginatedCases.filter(tc => !tc.adopted).every(tc => selectedCaseIds.has(tc.id))}
+                                        disabled={paginatedCases.length === 0 || paginatedCases.every(tc => tc.adopted)}
+                                    />
+                                </div>
+                            </th>
                             <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
                             <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">用例标题</th>
                             <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">模块</th>
@@ -930,8 +1272,22 @@ const AIGenerator = () => {
                         {paginatedCases.length > 0 ? (
                             paginatedCases.map((tc, idx) => (
                                 <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center justify-center">
+                                            <input 
+                                                type="checkbox" 
+                                                className={`rounded border-gray-300 text-black focus:ring-0 w-3.5 h-3.5 ${tc.adopted ? 'cursor-not-allowed opacity-50 bg-gray-100' : 'cursor-pointer'}`}
+                                                checked={selectedCaseIds.has(tc.id)}
+                                                onChange={() => handleSelectOne(tc.id)}
+                                                disabled={tc.adopted}
+                                            />
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 text-xs text-gray-400 font-mono">TC-{String(tc.id).padStart(3, '0')}</td>
-                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{tc.name}</td>
+                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                                        {tc.name}
+                                        {tc.adopted && <span className="bg-green-50 text-green-600 px-2 py-1 rounded text-xs font-medium ml-2">已采纳</span>}
+                                    </td>
                                     <td className="px-6 py-4 text-xs text-gray-500">
                                         <span className="bg-gray-100 px-2 py-1 rounded text-gray-600 font-medium">
                                             {tc.module || 'Default'}
@@ -946,13 +1302,23 @@ const AIGenerator = () => {
                                             {tc.priority || 'P2'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 flex items-center">
                                         <button 
                                             onClick={() => openDetail(tc)}
                                             className="text-gray-400 hover:text-black transition-colors"
-                                            title="查看详情"
+                                            onMouseEnter={(e) => handleMouseEnter(e, "查看详情")}
+                                            onMouseLeave={handleMouseLeave}
                                         >
                                             <Eye className="w-4 h-4" />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleSingleAdopt(tc)}
+                                            disabled={tc.adopted}
+                                            className={`transition-colors ml-4 ${tc.adopted ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-black'}`}
+                                            onMouseEnter={(e) => handleMouseEnter(e, tc.adopted ? `已采纳: ${tc.adoptedPath || '未知路径'}` : "采纳用例")}
+                                            onMouseLeave={handleMouseLeave}
+                                        >
+                                            <BookmarkPlus className="w-4 h-4" />
                                         </button>
                                     </td>
                                 </tr>
@@ -974,7 +1340,8 @@ const AIGenerator = () => {
                     <button
                         onClick={handleCopyText}
                         className="absolute top-8 right-8 p-2 bg-white/80 hover:bg-white border border-gray-200 rounded-lg shadow-sm text-gray-500 hover:text-black transition-all z-10 flex items-center gap-2 text-xs font-bold"
-                        title="复制内容"
+                        onMouseEnter={(e) => handleMouseEnter(e, "复制内容")}
+                        onMouseLeave={handleMouseLeave}
                     >
                         {copySuccess ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                     </button>
@@ -1001,10 +1368,12 @@ const AIGenerator = () => {
         {/* Pagination Controls */}
         {activeResultTab === 'table' && generatedCases.length > 0 && (
             <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <div className="text-xs text-gray-500">
-                    显示 {(currentPage - 1) * pageSize + 1} 到 {Math.min(currentPage * pageSize, generatedCases.length)} 条，共 {generatedCases.length} 条
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>共 {generatedCases.length} 条</span>
                 </div>
+                
                 <div className="flex items-center gap-2">
+                    {/* Pager Buttons */}
                     <button
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
@@ -1034,6 +1403,38 @@ const AIGenerator = () => {
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>
+
+                    {/* Jump To */}
+                    <div className="flex items-center gap-2 mx-2 text-xs text-gray-500">
+                        <span>跳至</span>
+                        <input 
+                            type="number" 
+                            min="1" 
+                            max={totalPages}
+                            value={currentPage}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (val >= 1 && val <= totalPages) setCurrentPage(val);
+                            }}
+                            className="w-12 px-2 py-1 text-center border border-gray-200 rounded-lg focus:ring-0 focus:border-black"
+                        />
+                        <span>页</span>
+                    </div>
+
+                    {/* Page Size Select */}
+                    <select 
+                        value={pageSize}
+                        onChange={(e) => {
+                            setPageSize(Number(e.target.value));
+                            setCurrentPage(1);
+                        }}
+                        className="bg-white border border-gray-200 rounded-lg px-2 py-1 focus:ring-0 focus:border-black cursor-pointer text-xs text-gray-500"
+                    >
+                        <option value={10}>10 条/页</option>
+                        <option value={30}>30 条/页</option>
+                        <option value={50}>50 条/页</option>
+                        <option value={100}>100 条/页</option>
+                    </select>
                 </div>
             </div>
         )}
@@ -1060,13 +1461,23 @@ const AIGenerator = () => {
                             className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer hover:border-black/10 relative"
                         >
                             {/* Top Right: Model Icon & File Badge */}
-                            <div className="absolute top-4 right-4 flex items-center gap-2">
-                                {record.uploadFileName && (
-                                    <div className="flex items-center justify-center bg-gray-100 w-7 h-6 rounded-lg">
-                                        <ImageIcon className="w-3.5 h-3.5 text-purple-600" />
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">
+                            <div className="absolute top-4 right-4 flex items-center gap-2 max-w-[60%] flex-wrap justify-end">
+                                {record.uploadFileName && (() => {
+                                    const fileNames = record.uploadFileName.split(/[;,]/).filter(n => n.trim());
+                                    const hasImage = fileNames.some(n => /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(n));
+                                    
+                                    // If has image, use purple ImageIcon (user requested to keep this)
+                                    // Otherwise use a generic File icon
+                                    const Icon = hasImage ? ImageIcon : FileText;
+                                    const colorClass = hasImage ? "text-purple-600" : "text-gray-500";
+                                    
+                                    return (
+                                        <div className="flex items-center justify-center bg-gray-100 w-7 h-6 rounded-lg shrink-0" title={fileNames.join('\n')}>
+                                            <Icon className={`w-3.5 h-3.5 ${colorClass}`} />
+                                        </div>
+                                    );
+                                })()}
+                                <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-2 py-1 rounded-lg shrink-0">
                                     <span className="text-[10px] font-bold">{MODELS.find(m => m.id === record.model)?.name || record.model}</span>
                                     {(() => {
                                         const Icon = MODELS.find(m => m.id === record.model)?.icon || Sparkles;
@@ -1082,7 +1493,7 @@ const AIGenerator = () => {
                                     onMouseEnter={(e) => handleMouseEnter(e, record.inputContent)}
                                     onMouseLeave={handleMouseLeave}
                                 >
-                                    {record.inputContent?.length > 20 ? record.inputContent.substring(0, 20) + '...' : record.inputContent}
+                                    {record.inputContent?.length > 23 ? record.inputContent.substring(0, 23) + '...' : record.inputContent}
                                 </p>
                             </div>
 
@@ -1151,6 +1562,12 @@ const AIGenerator = () => {
                                 drawerData.priority === 'P1' ? 'bg-orange-50 text-orange-600' :
                                 'bg-gray-100 text-gray-600'
                             }`}>{drawerData.priority || 'P2'}</span>
+                            {drawerData.adopted && (
+                                <span className="bg-green-50 text-green-600 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    已采纳
+                                </span>
+                            )}
                         </div>
                         <div className="text-xl font-bold text-gray-900 w-full">{drawerData.name || ''}</div>
                     </div>
@@ -1174,7 +1591,7 @@ const AIGenerator = () => {
                                     {drawerData.priority || 'P2'}
                                 </div>
                             </div>
-
+                            
                             {/* Type */}
                             <div className="space-y-3">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -1194,6 +1611,19 @@ const AIGenerator = () => {
                                     {drawerData.module || 'Default'}
                                 </div>
                             </div>
+
+                            {/* Adopted Path */}
+                            {drawerData.adopted && (
+                                <div className="space-y-3 col-span-3">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                        <BookmarkPlus className="w-3.5 h-3.5" /> <strong>采纳位置 / Location</strong>
+                                    </label>
+                                    <div className="bg-white p-3 rounded-xl border border-gray-100 text-sm font-bold text-gray-900 flex items-center gap-2">
+                                        <Folder className="w-4 h-4 text-gray-400" />
+                                        {drawerData.adoptedPath || '未知路径'}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -1236,6 +1666,165 @@ const AIGenerator = () => {
                   >
                     取消
                   </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* Adoption Modal */}
+      {isAdoptionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsAdoptionModalOpen(false)} />
+            <div className="relative bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
+                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                    <div>
+                        <h3 className="text-lg font-black text-gray-900">批量采纳用例</h3>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Batch Adoption</p>
+                    </div>
+                    <button onClick={() => setIsAdoptionModalOpen(false)} className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-black">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                
+                <div className="flex-1 overflow-hidden flex">
+                    {/* Left: Departments */}
+                    <div className="w-1/3 border-r border-gray-100 bg-gray-50/30 overflow-y-auto p-4">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-2">选择部门</h4>
+                        <div className="space-y-1">
+                            {departments.map(dept => (
+                                <button
+                                    key={dept.id}
+                                    onClick={() => setSelectedDeptId(dept.id)}
+                                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                                        selectedDeptId === dept.id
+                                            ? 'bg-black text-white shadow-lg shadow-gray-200'
+                                            : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                                    }`}
+                                >
+                                    {dept.name}
+                                </button>
+                            ))}
+                            {departments.length === 0 && (
+                                <div className="text-center py-8 text-gray-400 text-xs">暂无部门</div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right: Projects & Modules */}
+                    <div className="flex-1 overflow-y-auto p-6 bg-white">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">选择目标项目</h4>
+                        
+                        <div className="space-y-2 mb-6">
+                            {/* Create New Project Option */}
+                            <div 
+                                onClick={() => {
+                                    setIsCreatingProject(true);
+                                    setSelectedProjectId('');
+                                }}
+                                className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                                    isCreatingProject 
+                                        ? 'border-black bg-gray-50' 
+                                        : 'border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                                        isCreatingProject ? 'border-black bg-black text-white' : 'border-gray-300'
+                                    }`}>
+                                        {isCreatingProject && <Check size={12} />}
+                                    </div>
+                                    <span className="font-bold text-gray-900">创建新项目 (根目录)</span>
+                                </div>
+                                {isCreatingProject && (
+                                    <div className="mt-3 pl-8">
+                                        <input
+                                            type="text"
+                                            value={newProjectName}
+                                            onChange={(e) => setNewProjectName(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            placeholder="输入新项目名称..."
+                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-0 focus:border-black"
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Existing Projects */}
+                            {projects.map(proj => (
+                                <div 
+                                    key={proj.id}
+                                    onClick={() => {
+                                        setIsCreatingProject(false);
+                                        setSelectedProjectId(proj.id);
+                                    }}
+                                    className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                                        !isCreatingProject && selectedProjectId === proj.id
+                                            ? 'border-black bg-gray-50' 
+                                            : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                                                !isCreatingProject && selectedProjectId === proj.id ? 'border-black bg-black text-white' : 'border-gray-300'
+                                            }`}>
+                                                {!isCreatingProject && selectedProjectId === proj.id && <Check size={12} />}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-gray-900">{proj.name}</div>
+                                                <div className="text-xs text-gray-400">{proj.description || '无描述'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                            {projects.length === 0 && !isCreatingProject && (
+                                <div className="text-center py-8 text-gray-400 text-xs">
+                                    该部门下暂无项目，请选择"创建新项目"
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="bg-blue-50 p-4 rounded-xl flex items-start gap-3">
+                            <div className="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                                <AlertCircle size={12} />
+                            </div>
+                            <div className="text-xs text-blue-700 leading-relaxed">
+                                <p className="font-bold mb-1">自动归档说明：</p>
+                                <p>系统将自动检测选中用例的<span className="font-bold">模块</span>字段：</p>
+                                <ul className="list-disc list-inside mt-1 space-y-1 opacity-80">
+                                    <li>如果目标项目中已存在同名模块文件夹，将直接存入。</li>
+                                    <li>如果不存在，系统将自动在项目下创建对应的模块文件夹。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-50 flex gap-3">
+                    <button 
+                        onClick={() => setIsAdoptionModalOpen(false)}
+                        className="flex-1 py-3 border-2 border-gray-100 text-gray-400 rounded-2xl text-sm font-bold hover:bg-white hover:text-gray-600 transition-all"
+                    >
+                        取消
+                    </button>
+                    <div className="flex-[2] flex items-center gap-2">
+                         {adoptionSuccessMsg && (
+                             <span className="text-green-600 text-xs font-bold animate-in fade-in slide-in-from-right-2 whitespace-nowrap">
+                                 {adoptionSuccessMsg}
+                             </span>
+                         )}
+                         <button 
+                            onClick={handleAdopt}
+                            disabled={adoptionLoading || (!selectedProjectId && !isCreatingProject)}
+                            className="w-full py-3 bg-black text-white rounded-2xl text-sm font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {adoptionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                            {adoptionLoading ? '正在采纳...' : `确认采纳 ${selectedCaseIds.size} 条用例`}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

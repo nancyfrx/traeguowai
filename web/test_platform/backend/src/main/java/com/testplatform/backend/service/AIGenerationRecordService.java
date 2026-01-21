@@ -20,6 +20,14 @@ public class AIGenerationRecordService {
         mapper.insert(record);
     }
 
+    public void update(AIGenerationRecord record) {
+        mapper.update(record);
+    }
+
+    public AIGenerationRecord findById(Long id) {
+        return mapper.findById(id);
+    }
+
     public PageInfo<AIGenerationRecord> list(int pageNum, int pageSize) {
         PageHelper.startPage(pageNum, pageSize);
         List<AIGenerationRecord> list = mapper.selectAll();

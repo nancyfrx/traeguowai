@@ -21,4 +21,14 @@
         SELECT * FROM ai_generation_record ORDER BY created_at DESC
     </select>
 
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM ai_generation_record WHERE id = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE ai_generation_record
+        SET generated_content = #{generatedContent}
+        WHERE id = #{id}
+    </update>
+
 </mapper>
