@@ -14,7 +14,11 @@ import {
   Moon, 
   ChevronRight,
   Menu,
-  LogOut
+  LogOut,
+  Database,
+  Repeat,
+  AlertTriangle,
+  ShieldCheck
 } from 'lucide-react';
 
 const Layout = () => {
@@ -75,6 +79,26 @@ const Layout = () => {
           <NavLink to="/ui-automation" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
             <Monitor className="w-4 h-4" />
             UI 自动化
+          </NavLink>
+
+          <NavLink to="/data-factory" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
+            <Database className="w-4 h-4" />
+            数据工厂
+          </NavLink>
+
+          <NavLink to="/traffic-replay" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
+            <Repeat className="w-4 h-4" />
+            流量回放
+          </NavLink>
+
+          <NavLink to="/chaos-engineering" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
+            <AlertTriangle className="w-4 h-4" />
+            故障演练
+          </NavLink>
+
+          <NavLink to="/fund-security" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
+            <ShieldCheck className="w-4 h-4" />
+            资金安全
           </NavLink>
         </nav>
       </aside>

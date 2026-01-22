@@ -7,6 +7,10 @@ import CaseManagement from './pages/CaseManagement';
 import InterfaceTest from './pages/InterfaceTest';
 import UIAutomation from './pages/UIAutomation';
 import DepartmentManagement from './pages/DepartmentManagement';
+import DataFactory from './pages/DataFactory';
+import TrafficReplay from './pages/TrafficReplay';
+import ChaosEngineering from './pages/ChaosEngineering';
+import FundSecurity from './pages/FundSecurity';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -42,6 +46,10 @@ function App() {
           <Route path="case-management" element={<CaseManagement />} />
           <Route path="interface-test" element={<InterfaceTest />} />
           <Route path="ui-automation" element={<UIAutomation />} />
+          <Route path="data-factory" element={<DataFactory />} />
+          <Route path="traffic-replay" element={<TrafficReplay />} />
+          <Route path="chaos-engineering" element={<ChaosEngineering />} />
+          <Route path="fund-security" element={<FundSecurity />} />
           <Route path="department-management" element={<DepartmentManagement />} />
         </Route>
       </Routes>
