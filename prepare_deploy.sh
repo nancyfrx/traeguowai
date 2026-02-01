@@ -40,7 +40,13 @@ build_vite_project() {
     echo "📦 构建 $name..."
     cd "$ROOT_DIR/$project_path" || exit
     if [ -f "package.json" ]; then
-        npm install
+        # 优先使用 npm ci 提高速度和稳定性
+        if [ -f "package-lock.json" ]; then
+            npm ci
+        else
+            npm install
+        fi
+        
         if [ $? -ne 0 ]; then
             echo "❌ $name 依赖安装失败"
             exit 1
