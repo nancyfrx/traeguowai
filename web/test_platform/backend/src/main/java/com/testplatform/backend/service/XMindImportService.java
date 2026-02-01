@@ -130,7 +130,7 @@ public class XMindImportService {
             Module module = new Module();
             module.setName(title);
             module.setProjectId(project.getId());
-            module.setProject(project);
+            // module.setProject(project); // Removed: Module entity does not have a Project object field
             if (parentModule != null) {
                 module.setParentId(parentModule.getId());
             }
