@@ -8,6 +8,7 @@ import java.util.List;
 public class Module {
     private Long id;
     private String name;
+    private Long projectId;
     private Long parentId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

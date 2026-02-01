@@ -225,7 +225,7 @@ public class CaseManagementController {
                 ModuleDTO dto = new ModuleDTO();
                 dto.setId(m.getId());
                 dto.setName(m.getName());
-                dto.setProjectId(m.getProject().getId());
+                dto.setProjectId(m.getProjectId());
                 dto.setParentId(m.getParentId());
                 dto.setCreatedAt(m.getCreatedAt());
                 dto.setUpdatedAt(m.getUpdatedAt());
