@@ -12,14 +12,6 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# 加载环境变量
-if [ -f "set_env.sh" ]; then
-    echo -e "${YELLOW}正在加载 set_env.sh 环境变量...${NC}"
-    source set_env.sh
-else
-    echo -e "${YELLOW}正在使用系统预设的环境变量...${NC}"
-fi
-
 # =================================================================
 # 1GB 内存环境优化配置 (NODE & MAVEN & JAVA)
 # =================================================================
@@ -27,9 +19,9 @@ export NODE_OPTIONS="--max-old-space-size=512"
 export MAVEN_OPTS="-Xmx512m"
 echo -e "${CYAN}🔧 已优化内存限制: NODE_OPTIONS=$NODE_OPTIONS, MAVEN_OPTS=$MAVEN_OPTS${NC}"
 
-# 验证关键环境变量是否存在
-if [ -z "$OSS_ACCESS_KEY_ID" ]; then
-    echo -e "${RED}⚠️ 警告: OSS_ACCESS_KEY_ID 未设置，后端部分功能可能受限。${NC}"
+# 验证关键环境变量是否存在 (由服务器系统环境提供)
+if [ -z "$DB_PASSWORD" ]; then
+    echo -e "${RED}⚠️ 警告: 未检测到 DB_PASSWORD 环境变量，请确保服务器已配置。${NC}"
 fi
 
 REPO_URL="https://github.com/nancyfrx/traeguowai.git"

@@ -15,12 +15,6 @@ if [ ! -z "$PID" ]; then
     kill -9 $PID
 fi
 
-# 加载环境变量 (如果存在)
-if [ -f "$ROOT_DIR/set_env.sh" ]; then
-    source "$ROOT_DIR/set_env.sh"
-    echo "✅ 已加载 set_env.sh 环境变量"
-fi
-
 # 切换到后端目录
 cd "$ROOT_DIR/web/test_platform/backend" || exit
 
@@ -35,9 +29,8 @@ fi
 
 # 启动后端
 echo "🚀 启动后端 (Headless 模式)..."
+# 注意：直接从系统环境变量读取 OSS 和数据库配置
 nohup java -Xmx512m -Djava.awt.headless=true -jar \
-  -DOSS_ACCESS_KEY_ID=${OSS_ACCESS_KEY_ID} \
-  -DOSS_ACCESS_KEY_SECRET=${OSS_ACCESS_KEY_SECRET} \
   target/backend-0.0.1-SNAPSHOT.jar > "$LOG_DIR/backend.log" 2>&1 &
 
 echo "✅ 后端已在后台启动，日志文件: $LOG_DIR/backend.log"
