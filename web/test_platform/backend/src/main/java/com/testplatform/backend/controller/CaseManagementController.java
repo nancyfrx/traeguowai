@@ -44,10 +44,10 @@ public class CaseManagementController {
     // private final StringRedisTemplate redisTemplate;
     // private final ObjectMapper objectMapper;
 
-    @Value("${aliyun.oss.baseUrl}")
+    @Value("${aliyun.oss.baseUrl:https://fengruxue.oss-cn-shenzhen.aliyuncs.com/}")
     private String ossBaseUrl;
 
-    @Value("${aliyun.oss.prefix}")
+    @Value("${aliyun.oss.prefix:testplatform/case/image/}")
     private String ossPrefix;
 
     // --- Project API ---

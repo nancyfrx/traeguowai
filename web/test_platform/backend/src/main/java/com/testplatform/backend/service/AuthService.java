@@ -40,7 +40,7 @@ public class AuthService {
     private final JavaMailSender mailSender;
     private final CompanyRepository companyRepository;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:}")
     private String mailFrom;
 
     private static final int MAX_FAILED_ATTEMPTS = 3;

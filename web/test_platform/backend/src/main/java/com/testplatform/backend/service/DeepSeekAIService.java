@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class DeepSeekAIService {
 
-    @Value("${ai.deepseek.api-key}")
+    @Value("${ai.deepseek.api-key:}")
     private String apiKey;
 
-    @Value("${ai.deepseek.base-url}")
+    @Value("${ai.deepseek.base-url:https://api.deepseek.com}")
     private String baseUrl;
 
     private final OkHttpClient client = new OkHttpClient.Builder()

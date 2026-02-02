@@ -46,22 +46,22 @@ public class OssService {
         }
     }
 
-    @Value("${aliyun.oss.endpoint}")
+    @Value("${aliyun.oss.endpoint:https://oss-cn-shenzhen.aliyuncs.com}")
     private String endpoint;
 
-    @Value("${aliyun.oss.accessKeyId}")
+    @Value("${aliyun.oss.accessKeyId:}")
     private String accessKeyId;
 
-    @Value("${aliyun.oss.accessKeySecret}")
+    @Value("${aliyun.oss.accessKeySecret:}")
     private String accessKeySecret;
 
-    @Value("${aliyun.oss.bucketName}")
+    @Value("${aliyun.oss.bucketName:fengruxue}")
     private String bucketName;
 
-    @Value("${aliyun.oss.baseUrl}")
+    @Value("${aliyun.oss.baseUrl:https://fengruxue.oss-cn-shenzhen.aliyuncs.com/}")
     private String baseUrl;
 
-    @Value("${aliyun.oss.prefix}")
+    @Value("${aliyun.oss.prefix:testplatform/case/image/}")
     private String prefix;
 
     private volatile OSS ossClient;

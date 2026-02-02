@@ -15,6 +15,11 @@ NC='\033[0m'
 # =================================================================
 # 1GB 内存环境优化配置 (NODE & MAVEN & JAVA)
 # =================================================================
+# 尝试加载系统环境变量
+[ -f /etc/profile ] && source /etc/profile
+[ -f ~/.bashrc ] && source ~/.bashrc
+[ -f ~/.bash_profile ] && source ~/.bash_profile
+
 export NODE_OPTIONS="--max-old-space-size=512"
 export MAVEN_OPTS="-Xmx512m"
 echo -e "${CYAN}🔧 已优化内存限制: NODE_OPTIONS=$NODE_OPTIONS, MAVEN_OPTS=$MAVEN_OPTS${NC}"
@@ -34,7 +39,26 @@ echo -e "${BLUE}===================================================${NC}"
 # 1. 环境检查
 echo -e "\n${YELLOW}Step 1: 正在检查系统环境...${NC}"
 
-# 1.0 强制修复 MySQL 路径环境
+# 1.0 检查并尝试启用 Swap (针对内存不足环境)
+check_swap() {
+    SWAP_SIZE=$(free -m | grep -i swap | awk '{print $2}')
+    if [ "$SWAP_SIZE" -lt 512 ]; then
+        echo -e "${YELLOW}⚠️ 检测到 Swap 分区过小 ($SWAP_SIZE MB)，正在尝试创建 1GB 临时 Swap...${NC}"
+        # 仅在有 root 权限且是非容器环境时尝试
+        if [ -f /etc/redhat-release ] || [ -f /etc/debian_version ]; then
+            sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+            echo -e "${GREEN}✅ 临时 Swap 已启用${NC}"
+        fi
+    else
+        echo -e "${GREEN}✅ Swap 分区充足 ($SWAP_SIZE MB)${NC}"
+    fi
+}
+check_swap
+
+# 1.1 强制修复 MySQL 路径环境
 export PATH=$PATH:/usr/local/mysql/bin
 
 # 检查 Java 版本是否为 17+
@@ -173,15 +197,23 @@ chmod +x mvnw
 ./mvnw clean package -DskipTests
 if [ $? -eq 0 ]; then
     # 停止旧进程
-    PID=$(pgrep -f "backend-0.0.1-SNAPSHOT.jar")
+    PID=$(lsof -t -i:8080)
     if [ ! -z "$PID" ]; then
-        echo "正在停止旧的后端进程 (PID: $PID)..."
+        echo "正在停止旧的博客后端进程 (PID: $PID)..."
         kill -9 $PID
     fi
     
     mkdir -p ../../../logs
-    nohup java -Xmx512m -jar target/backend-0.0.1-SNAPSHOT.jar > ../../../logs/blog-backend.log 2>&1 &
-    echo -e "${GREEN}✅ 后端服务已启动，日志: logs/blog-backend.log${NC}"
+    echo "正在启动博客后端，限制内存 256MB (Headless 模式)..."
+    nohup java -Xmx256m -Djava.awt.headless=true -jar target/backend-0.0.1-SNAPSHOT.jar > ../../../logs/blog-backend.log 2>&1 &
+    
+    echo -e "${YELLOW}正在验证博客服务启动状态...${NC}"
+    sleep 5
+    if lsof -i:8080 > /dev/null; then
+        echo -e "${GREEN}✅ 博客后端服务已成功启动并监听 8080 端口${NC}"
+    else
+        echo -e "${RED}❌ 博客后端服务启动失败，请检查日志: logs/blog-backend.log${NC}"
+    fi
 else
     echo -e "${RED}❌ 后端构建失败${NC}"
 fi
@@ -216,8 +248,8 @@ if [ $? -eq 0 ]; then
     # Find the jar file
     JAR_FILE=$(find target -name "*.jar" | head -n 1)
     if [ ! -z "$JAR_FILE" ]; then
-        echo "正在启动服务，限制内存 512MB (Headless 模式)，日志目录: $LOG_DIR"
-        nohup java -Xmx512m -Djava.awt.headless=true -jar "$JAR_FILE" --logging.file.path="$LOG_DIR" > "$LOG_DIR/console.log" 2>&1 &
+        echo "正在启动测试平台服务，限制内存 320MB (Headless 模式)，日志目录: $LOG_DIR"
+        nohup java -Xmx320m -Djava.awt.headless=true -jar "$JAR_FILE" --logging.file.path="$LOG_DIR" > "$LOG_DIR/console.log" 2>&1 &
         echo -e "${YELLOW}正在验证服务启动状态...${NC}"
         sleep 10
         if lsof -i:8081 > /dev/null; then

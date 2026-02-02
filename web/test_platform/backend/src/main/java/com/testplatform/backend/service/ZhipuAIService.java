@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ZhipuAIService {
 
-    @Value("${ai.zhipu.api-key}")
+    @Value("${ai.zhipu.api-key:}")
     private String apiKey;
 
     private static final String API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
