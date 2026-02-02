@@ -14,8 +14,22 @@ NC='\033[0m'
 
 # 加载环境变量
 if [ -f "set_env.sh" ]; then
-    echo -e "${YELLOW}正在加载环境变量...${NC}"
+    echo -e "${YELLOW}正在加载 set_env.sh 环境变量...${NC}"
     source set_env.sh
+else
+    echo -e "${YELLOW}正在使用系统预设的环境变量...${NC}"
+fi
+
+# =================================================================
+# 1GB 内存环境优化配置 (NODE & MAVEN & JAVA)
+# =================================================================
+export NODE_OPTIONS="--max-old-space-size=512"
+export MAVEN_OPTS="-Xmx512m"
+echo -e "${CYAN}🔧 已优化内存限制: NODE_OPTIONS=$NODE_OPTIONS, MAVEN_OPTS=$MAVEN_OPTS${NC}"
+
+# 验证关键环境变量是否存在
+if [ -z "$OSS_ACCESS_KEY_ID" ]; then
+    echo -e "${RED}⚠️ 警告: OSS_ACCESS_KEY_ID 未设置，后端部分功能可能受限。${NC}"
 fi
 
 REPO_URL="https://github.com/nancyfrx/traeguowai.git"
@@ -174,7 +188,7 @@ if [ $? -eq 0 ]; then
     fi
     
     mkdir -p ../../../logs
-    nohup java -jar target/backend-0.0.1-SNAPSHOT.jar > ../../../logs/blog-backend.log 2>&1 &
+    nohup java -Xmx512m -jar target/backend-0.0.1-SNAPSHOT.jar > ../../../logs/blog-backend.log 2>&1 &
     echo -e "${GREEN}✅ 后端服务已启动，日志: logs/blog-backend.log${NC}"
 else
     echo -e "${RED}❌ 后端构建失败${NC}"
@@ -210,8 +224,8 @@ if [ $? -eq 0 ]; then
     # Find the jar file
     JAR_FILE=$(find target -name "*.jar" | head -n 1)
     if [ ! -z "$JAR_FILE" ]; then
-        echo "正在启动服务，日志目录: $LOG_DIR"
-        nohup java -jar "$JAR_FILE" --logging.file.path="$LOG_DIR" > "$LOG_DIR/console.log" 2>&1 &
+        echo "正在启动服务，限制内存 512MB，日志目录: $LOG_DIR"
+        nohup java -Xmx512m -jar "$JAR_FILE" --logging.file.path="$LOG_DIR" > "$LOG_DIR/console.log" 2>&1 &
         echo -e "${GREEN}✅ 测试平台后端服务已启动${NC}"
         echo -e "${GREEN}   - 控制台日志: $LOG_DIR/console.log${NC}"
         echo -e "${GREEN}   - 应用日志: $LOG_DIR (spring.log)${NC}"

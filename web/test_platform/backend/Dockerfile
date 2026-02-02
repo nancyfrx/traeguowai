@@ -1,6 +1,10 @@
 FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
 COPY pom.xml .
+
+# 设置 Maven 内存限制，防止在小内存机器上 OOM
+ENV MAVEN_OPTS="-Xmx512m"
+
 RUN mvn dependency:go-offline
 COPY src ./src
 RUN mvn package -DskipTests
@@ -19,4 +23,5 @@ EXPOSE 8081
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV LOG_PATH=/root/logs/testplatform
 
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Djava.awt.headless=true", "-jar", "app.jar"]
+# 限制运行内存，适配 1GB 左右内存的服务器
+ENTRYPOINT ["java", "-Xmx512m", "-Djava.security.egd=file:/dev/./urandom", "-Djava.awt.headless=true", "-jar", "app.jar"]

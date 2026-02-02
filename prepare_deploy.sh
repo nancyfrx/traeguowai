@@ -4,6 +4,10 @@
 DEPLOY_DIR="./deploy/www"
 ROOT_DIR=$(pwd)
 
+# 全局设置 Node 内存限制，防止 OOM (针对 770MB 内存环境优化)
+export NODE_OPTIONS="--max-old-space-size=512"
+echo "🔧 已设置 NODE_OPTIONS=$NODE_OPTIONS"
+
 echo "🚀 开始准备部署文件..."
 
 # 清理旧的部署文件
