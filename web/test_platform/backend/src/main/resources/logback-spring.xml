@@ -80,9 +80,10 @@
         </root>
     </springProfile>
 
-    <!-- 生产环境: 输出到文件 -->
+    <!-- 生产环境: 输出到文件和控制台 (方便 nohup 模式查看错误) -->
     <springProfile name="prod">
         <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_INFO"/>
             <appender-ref ref="ASYNC_ERROR"/>
         </root>

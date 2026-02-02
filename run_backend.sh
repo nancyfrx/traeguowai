@@ -10,13 +10,23 @@ mkdir -p "$LOG_DIR"
 
 # 停止旧的后端进程
 echo "🛑 停止旧的后端进程..."
-pkill -f "test_platform/backend" || true
+PID=$(lsof -t -i:8081)
+if [ ! -z "$PID" ]; then
+    kill -9 $PID
+fi
+
+# 加载环境变量 (如果存在)
+if [ -f "$ROOT_DIR/set_env.sh" ]; then
+    source "$ROOT_DIR/set_env.sh"
+    echo "✅ 已加载 set_env.sh 环境变量"
+fi
 
 # 切换到后端目录
 cd "$ROOT_DIR/web/test_platform/backend" || exit
 
 # 编译后端
 echo "📦 编译后端..."
+chmod +x mvnw
 ./mvnw clean package -DskipTests
 if [ $? -ne 0 ]; then
     echo "❌ 后端编译失败"
@@ -24,8 +34,8 @@ if [ $? -ne 0 ]; then
 fi
 
 # 启动后端
-echo "🚀 启动后端..."
-nohup java -jar \
+echo "🚀 启动后端 (Headless 模式)..."
+nohup java -Xmx512m -Djava.awt.headless=true -jar \
   -DOSS_ACCESS_KEY_ID=${OSS_ACCESS_KEY_ID} \
   -DOSS_ACCESS_KEY_SECRET=${OSS_ACCESS_KEY_SECRET} \
   target/backend-0.0.1-SNAPSHOT.jar > "$LOG_DIR/backend.log" 2>&1 &

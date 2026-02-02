@@ -224,9 +224,15 @@ if [ $? -eq 0 ]; then
     # Find the jar file
     JAR_FILE=$(find target -name "*.jar" | head -n 1)
     if [ ! -z "$JAR_FILE" ]; then
-        echo "正在启动服务，限制内存 512MB，日志目录: $LOG_DIR"
-        nohup java -Xmx512m -jar "$JAR_FILE" --logging.file.path="$LOG_DIR" > "$LOG_DIR/console.log" 2>&1 &
-        echo -e "${GREEN}✅ 测试平台后端服务已启动${NC}"
+        echo "正在启动服务，限制内存 512MB (Headless 模式)，日志目录: $LOG_DIR"
+        nohup java -Xmx512m -Djava.awt.headless=true -jar "$JAR_FILE" --logging.file.path="$LOG_DIR" > "$LOG_DIR/console.log" 2>&1 &
+        echo -e "${YELLOW}正在验证服务启动状态...${NC}"
+        sleep 10
+        if lsof -i:8081 > /dev/null; then
+            echo -e "${GREEN}✅ 测试平台后端服务已成功启动并监听 8081 端口${NC}"
+        else
+            echo -e "${RED}❌ 测试平台后端服务启动失败，请检查日志: $LOG_DIR/console.log${NC}"
+        fi
         echo -e "${GREEN}   - 控制台日志: $LOG_DIR/console.log${NC}"
         echo -e "${GREEN}   - 应用日志: $LOG_DIR (spring.log)${NC}"
     else
