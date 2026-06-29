@@ -267,8 +267,8 @@ else
 fi
 
 if [ -f "$TP_PKG" ]; then
-    sed -i 's/--max-old-space-size=[0-9]*/--max-old-space-size=384/g' "$TP_PKG"
-    echo "  ✅ package.json: NODE_OPTIONS 已改为 384MB（minify=false + inlineDynamicImports=true）"
+    sed -i 's/--max-old-space-size=[0-9]*/--max-old-space-size=1024/g' "$TP_PKG"
+    echo "  ✅ package.json: NODE_OPTIONS 已改为 1024MB"
 else
     echo "  ⚠️  $TP_PKG 不存在"
 fi
