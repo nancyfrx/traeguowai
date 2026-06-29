@@ -5,23 +5,35 @@ DEPLOY_DIR="./deploy/www"
 ROOT_DIR=$(pwd)
 
 # 全局设置 Node 内存限制，防止 OOM (低配服务器优化)
-# 注意：设小反而更安全 —— V8 会提前触发 GC，实际 RSS 占用更少
-export NODE_OPTIONS="--max-old-space-size=256 --expose-gc"
+# 384MB 是甜点：256 太紧会 GC 风暴自噬，512 太松会被 OOM-killer 盯上
+export NODE_OPTIONS="--max-old-space-size=384"
 echo "🔧 已设置 NODE_OPTIONS=$NODE_OPTIONS"
 
-# 0. 构建前先确保 Swap 已启用
-echo "💾 检查 Swap 状态..."
-SWAP_SIZE=$(free -m 2>/dev/null | grep -i swap | awk '{print $2}')
-if [ -z "$SWAP_SIZE" ]; then SWAP_SIZE=0; fi
-if [ "$SWAP_SIZE" -lt 128 ]; then
-    if [ -f /swapfile ]; then
-        sudo swapon /swapfile 2>/dev/null && echo "✅ 已启用 /swapfile" || echo "⚠️ /swapfile 启用失败"
+# 0. 构建前先确保 Swap 已启用 (低内存服务器关键步骤)
+echo "💾 检查并启用 Swap..."
+free -m | head -2
+if [ -f /swapfile ]; then
+    # 已有 swap 文件，确保挂载
+    if ! swapon --show 2>/dev/null | grep -q /swapfile; then
+        sudo swapon /swapfile 2>/dev/null && echo "✅ /swapfile 已启用" || echo "⚠️ /swapfile 启用失败"
     else
-        echo "⚠️ 无 Swap 文件，小内存环境可能构建失败"
+        echo "✅ /swapfile 已在挂载中"
     fi
 else
-    echo "✅ Swap 大小: ${SWAP_SIZE}MB"
+    echo "⚠️ 无 /swapfile，尝试创建..."
+    AVAIL_KB=$(df / | awk 'NR==2 {print $4}')
+    if [ "$AVAIL_KB" -gt 524288 ]; then
+        sudo dd if=/dev/zero of=/swapfile bs=1M count=512 2>/dev/null && \
+        sudo chmod 600 /swapfile && \
+        sudo mkswap /swapfile 2>/dev/null && \
+        sudo swapon /swapfile && \
+        echo "✅ 已创建 512MB Swap" || echo "⚠️ Swap 创建失败"
+    else
+        echo "⚠️ 磁盘空间不足 (${AVAIL_KB}KB)，无法创建 Swap"
+    fi
 fi
+# 降低 swappiness，让系统优先用物理内存
+sudo sysctl vm.swappiness=30 2>/dev/null || true
 
 echo "🚀 开始准备部署文件..."
 

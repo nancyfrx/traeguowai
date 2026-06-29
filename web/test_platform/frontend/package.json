@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "NODE_OPTIONS='--max-old-space-size=256 --expose-gc' vite build --logLevel warn",
+    "build": "NODE_OPTIONS='--max-old-space-size=384' vite build --logLevel warn",
     "lint": "eslint .",
     "preview": "vite preview"
   },
