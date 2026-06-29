@@ -6,10 +6,10 @@ import bgGradient from '../assets/bg-gradient.png';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: localStorage.getItem('lastLoginUsername') || '',
+    username: localStorage.getItem('lastLoginUsername') || 'Test',
     password: (() => {
       const saved = localStorage.getItem('lastLoginPassword');
-      if (!saved) return '';
+      if (!saved) return '123456';
       try {
         return atob(saved);
       } catch (e) {
