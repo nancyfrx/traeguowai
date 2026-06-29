@@ -4,9 +4,24 @@
 DEPLOY_DIR="./deploy/www"
 ROOT_DIR=$(pwd)
 
-# 全局设置 Node 内存限制，防止 OOM (针对 770MB 内存环境优化)
-export NODE_OPTIONS="--max-old-space-size=512"
+# 全局设置 Node 内存限制，防止 OOM (低配服务器优化)
+# 注意：设小反而更安全 —— V8 会提前触发 GC，实际 RSS 占用更少
+export NODE_OPTIONS="--max-old-space-size=256 --expose-gc"
 echo "🔧 已设置 NODE_OPTIONS=$NODE_OPTIONS"
+
+# 0. 构建前先确保 Swap 已启用
+echo "💾 检查 Swap 状态..."
+SWAP_SIZE=$(free -m 2>/dev/null | grep -i swap | awk '{print $2}')
+if [ -z "$SWAP_SIZE" ]; then SWAP_SIZE=0; fi
+if [ "$SWAP_SIZE" -lt 128 ]; then
+    if [ -f /swapfile ]; then
+        sudo swapon /swapfile 2>/dev/null && echo "✅ 已启用 /swapfile" || echo "⚠️ /swapfile 启用失败"
+    else
+        echo "⚠️ 无 Swap 文件，小内存环境可能构建失败"
+    fi
+else
+    echo "✅ Swap 大小: ${SWAP_SIZE}MB"
+fi
 
 echo "🚀 开始准备部署文件..."
 
