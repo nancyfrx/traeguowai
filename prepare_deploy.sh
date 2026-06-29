@@ -4,9 +4,9 @@
 DEPLOY_DIR="./deploy/www"
 ROOT_DIR=$(pwd)
 
-# 全局设置 Node 内存限制，防止 OOM (低配服务器优化)
-# 384MB 是甜点：256 太紧会 GC 风暴自噬，512 太松会被 OOM-killer 盯上
-export NODE_OPTIONS="--max-old-space-size=384"
+# 全局设置 Node 内存限制，防止 OOM
+# 512MB + swap 兜底才是正确姿势；设 1024 在 1GB 服务器上会让 OS OOM-killer 直接杀进程
+export NODE_OPTIONS="--max-old-space-size=512"
 echo "🔧 已设置 NODE_OPTIONS=$NODE_OPTIONS"
 
 # 0. 构建前先确保 Swap 已启用 (低内存服务器关键步骤)
