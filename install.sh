@@ -41,16 +41,50 @@ echo -e "\n${YELLOW}Step 1: 正在检查系统环境...${NC}"
 
 # 1.0 检查并尝试启用 Swap (针对内存不足环境)
 check_swap() {
-    SWAP_SIZE=$(free -m | grep -i swap | awk '{print $2}')
-    if [ "$SWAP_SIZE" -lt 512 ]; then
-        echo -e "${YELLOW}⚠️ 检测到 Swap 分区过小 ($SWAP_SIZE MB)，正在尝试创建 1GB 临时 Swap...${NC}"
+    SWAP_SIZE=$(free -m 2>/dev/null | grep -i swap | awk '{print $2}')
+    if [ -z "$SWAP_SIZE" ]; then SWAP_SIZE=0; fi
+
+    if [ "$SWAP_SIZE" -lt 256 ]; then
+        echo -e "${YELLOW}⚠️ 检测到 Swap 分区过小 ($SWAP_SIZE MB)${NC}"
+
+        # 如果 /swapfile 已存在，直接尝试启用
+        if [ -f /swapfile ]; then
+            echo -e "${YELLOW}发现已有 /swapfile，跳过创建，直接启用...${NC}"
+            sudo swapon /swapfile 2>/dev/null && echo -e "${GREEN}✅ 已有 Swap 已启用${NC}" || echo -e "${YELLOW}⚠️ Swap 文件存在但启用失败，跳过${NC}"
+            return 0
+        fi
+
+        # 检查可用磁盘空间 (单位MB)
+        AVAIL_MB=$(df -m / 2>/dev/null | awk 'NR==2 {print $4}')
+        if [ -z "$AVAIL_MB" ]; then AVAIL_MB=0; fi
+
+        if [ "$AVAIL_MB" -lt 512 ]; then
+            echo -e "${RED}❌ 磁盘剩余空间不足 ($AVAIL_MB MB)，无法创建 Swap 文件，跳过此步骤${NC}"
+            echo -e "${YELLOW}💡 建议手动清理磁盘: du -sh /* 查看大文件，或清理 Docker 镜像/日志${NC}"
+            return 0
+        fi
+
+        # 根据可用空间动态决定 Swap 大小 (取 512MB 和可用空间的1/3中较小的)
+        SWAP_TARGET=512
+        if [ "$AVAIL_MB" -lt 1536 ]; then
+            SWAP_TARGET=$((AVAIL_MB / 3))
+            [ "$SWAP_TARGET" -lt 256 ] && SWAP_TARGET=256
+        fi
+
+        echo -e "${YELLOW}磁盘剩余 ${AVAIL_MB}MB，尝试创建 ${SWAP_TARGET}MB Swap 文件...${NC}"
+
         # 仅在有 root 权限且是非容器环境时尝试
         if [ -f /etc/redhat-release ] || [ -f /etc/debian_version ]; then
-            sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
-            sudo chmod 600 /swapfile
-            sudo mkswap /swapfile
-            sudo swapon /swapfile
-            echo -e "${GREEN}✅ 临时 Swap 已启用${NC}"
+            if sudo dd if=/dev/zero of=/swapfile bs=1M count=$SWAP_TARGET 2>/dev/null; then
+                sudo chmod 600 /swapfile
+                sudo mkswap /swapfile
+                sudo swapon /swapfile
+                echo -e "${GREEN}✅ Swap 已启用 (${SWAP_TARGET}MB)${NC}"
+            else
+                echo -e "${YELLOW}⚠️ Swap 文件创建失败 (磁盘空间不足)，跳过此步骤${NC}"
+            fi
+        else
+            echo -e "${YELLOW}💡 当前非标准 Linux 环境，跳过 Swap 创建${NC}"
         fi
     else
         echo -e "${GREEN}✅ Swap 分区充足 ($SWAP_SIZE MB)${NC}"
