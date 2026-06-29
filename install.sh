@@ -64,12 +64,10 @@ check_swap() {
             return 0
         fi
 
-        # 根据可用空间动态决定 Swap 大小 (取 512MB 和可用空间的1/3中较小的)
-        SWAP_TARGET=512
-        if [ "$AVAIL_MB" -lt 1536 ]; then
-            SWAP_TARGET=$((AVAIL_MB / 3))
-            [ "$SWAP_TARGET" -lt 256 ] && SWAP_TARGET=256
-        fi
+        # 根据可用空间动态决定 Swap 大小 (取可用空间的1/4，上限2GB，下限256MB)
+        SWAP_TARGET=$((AVAIL_MB / 4))
+        [ "$SWAP_TARGET" -gt 2048 ] && SWAP_TARGET=2048
+        [ "$SWAP_TARGET" -lt 256 ] && SWAP_TARGET=256
 
         echo -e "${YELLOW}磁盘剩余 ${AVAIL_MB}MB，尝试创建 ${SWAP_TARGET}MB Swap 文件...${NC}"
 
@@ -77,9 +75,13 @@ check_swap() {
         if [ -f /etc/redhat-release ] || [ -f /etc/debian_version ]; then
             if sudo dd if=/dev/zero of=/swapfile bs=1M count=$SWAP_TARGET 2>/dev/null; then
                 sudo chmod 600 /swapfile
-                sudo mkswap /swapfile
+                sudo mkswap /swapfile 2>/dev/null
                 sudo swapon /swapfile
-                echo -e "${GREEN}✅ Swap 已启用 (${SWAP_TARGET}MB)${NC}"
+                # 写入 fstab 确保持久化
+                if ! grep -q "/swapfile" /etc/fstab 2>/dev/null; then
+                    echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab > /dev/null
+                fi
+                echo -e "${GREEN}✅ Swap 已启用 (${SWAP_TARGET}MB) 并写入 /etc/fstab${NC}"
             else
                 echo -e "${YELLOW}⚠️ Swap 文件创建失败 (磁盘空间不足)，跳过此步骤${NC}"
             fi
@@ -89,6 +91,9 @@ check_swap() {
     else
         echo -e "${GREEN}✅ Swap 分区充足 ($SWAP_SIZE MB)${NC}"
     fi
+
+    # 降低 swappiness，避免系统频繁换入换出拖慢构建
+    sudo sysctl vm.swappiness=30 2>/dev/null || true
 }
 check_swap
 
