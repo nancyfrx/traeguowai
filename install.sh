@@ -220,6 +220,59 @@ else
     echo -e "${RED}❌ 未能在当前目录找到 install.sh${NC}"
 fi
 
+# 3. 低内存服务器补丁：绕过 Vite 构建的内存瓶颈
+echo -e "\n${YELLOW}Step 2.2: 低内存优化 - 修补测试平台构建配置...${NC}"
+TP_VITE="web/test_platform/frontend/vite.config.js"
+TP_PKG="web/test_platform/frontend/package.json"
+
+if [ -f "$TP_VITE" ]; then
+    cat > "$TP_VITE" << 'VITEEOF'
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  base: './',
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true
+      }
+    }
+  },
+  build: {
+    sourcemap: false,
+    minify: false,
+    cssMinify: false,
+    cssCodeSplit: false,
+    chunkSizeWarningLimit: 5000,
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      }
+    }
+  }
+})
+VITEEOF
+    echo "  ✅ vite.config.js 已覆盖（minify=false, inlineDynamicImports=true）"
+else
+    echo "  ⚠️  $TP_VITE 不存在"
+fi
+
+if [ -f "$TP_PKG" ]; then
+    sed -i 's/--max-old-space-size=[0-9]*/--max-old-space-size=256/g' "$TP_PKG"
+    echo "  ✅ package.json: NODE_OPTIONS 已改为 256MB"
+else
+    echo "  ⚠️  $TP_PKG 不存在"
+fi
+
 # 3. 执行前端部署脚本
 echo -e "\n${YELLOW}Step 3: 启动自动化构建与前端部署...${NC}"
 chmod +x prepare_deploy.sh
