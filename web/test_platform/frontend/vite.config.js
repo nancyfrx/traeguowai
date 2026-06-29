@@ -22,20 +22,13 @@ export default defineConfig({
   build: {
     sourcemap: false,
     minify: false,
-    chunkSizeWarningLimit: 1500,
+    cssMinify: false,
+    cssCodeSplit: false,
+    chunkSizeWarningLimit: 5000,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('recharts') || id.includes('d3')) {
-              return 'charts';
-            }
-            if (id.includes('@wangeditor')) {
-              return 'editor';
-            }
-            return 'vendor';
-          }
-        }
+        inlineDynamicImports: true,
+        manualChunks: undefined,
       }
     }
   }
